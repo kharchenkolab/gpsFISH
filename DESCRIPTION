@@ -1,13 +1,12 @@
 Package: gpsFISH
-Title: What the Package Does (One Line, Title Case)
+Title: Optimization of gene panels for targeted spatial transcriptomics
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Yida",
+           family = "Zhang",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+           email = "yidazhang@ucla.edu")
+Description: Methods for spatial transcriptomic analysis based on highly multiplexed single-molecule fluorescence in situ hybridization (hm-smFISH) hold particular promise in analysis of complex tissues. Most such methods, however, measure only a panel of genes, which need to be selected in advance to recognize cell types or processes relevant to the tissue being studied. Here, we develop GPS-FISH, a computational method that selects a panel of genes to optimize detection of previously annotated cell types or cell type hierarchies, based on scRNA-seq data. During the gene panel design, we account for platform effects between single cell RNA sequencing and spatial transcriptomics technologies. In addition, GPS-FISH can incorporate the hierarchical structure of cell types to account for complex cell type relationships. We also provide flexible options for other complex custom preferences. 
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
 Encoding: UTF-8
