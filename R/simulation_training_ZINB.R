@@ -30,7 +30,7 @@
 #' * \code{cs}: cell size, i.e., total number of molecule per cell, of cells in the spatial transcriptomics data
 #'
 #' \item{model.summary}{A named list with elements \code{summary} and \code{c_summary}, which contain summaries of a stanfit object.}
-#' \item{fixed.effect}{A named list with elements \code{summary} and \code{c_summary}, which contain summaries of specified parameters.}
+#' \item{fixed.effect}{A named list with elements \code{summary} and \code{c_summary}, which contain summaries of specified variables.}
 #' \item{c_i_full}{A matrix containing the estimated gene specific intercept \eqn{c_i} for each gene.}
 #' \item{gamma_i_full}{A matrix containing the estimated gene specific coefficient \eqn{\gamma_i} for each gene.}
 #' \item{lib.size}{A numeric vector containing the library size, i.e., total number of molecule per cell, of cells in the spatial transcriptomics data.}
@@ -545,3 +545,75 @@ simulation_training_ZINB=function(sc_count, spatial_count,
   setwd(current.dir)
   return(simulation.model)
 }
+
+
+#' Trim Bayesian model fitting result
+#'
+#' @description simulation_training_ZINB_trim takes the result returned by simulation_training_ZINB and reduces its size by keeping the minimum amount of information needed for future use (e.g., simulate new spatial transcriptomics data using fitted model)
+#' @param simulation.params The list returned by simulation_training_ZINB
+#'
+#' @return A list containing the trimmed model fitting result:
+#' \item{data2fit}{A data frame containing the input data for fitting the Bayesian model.}
+#' \item{model.summary}{A named list with elements \code{summary} and \code{c_summary}, which contain summaries of a stanfit object.}
+#' \item{fixed.effect}{A named list with elements \code{summary} and \code{c_summary}, which contain summaries of specified parameters.}
+#' \item{c_i_full}{A matrix containing the estimated gene specific intercept \eqn{c_i} for each gene.}
+#' \item{gamma_i_full}{A matrix containing the estimated gene specific coefficient \eqn{\gamma_i} for each gene.}
+#' \item{lib.size}{A numeric vector containing the library size, i.e., total number of molecule per cell, of cells in the spatial transcriptomics data.}
+#' \item{posterior}{A list containing the extracted samples of variables in the Bayesian model from their posterior distribution.}
+#' @export
+#'
+#' @examples
+#' data(sc_count)
+#' data(sc_cluster)
+#' data(spatial_count)
+#' data(spatial_cluster)
+#' overlap_gene = intersect(unique(rownames(sc_count)),unique(rownames(spatial_count)))
+#' unique_cluster_label=intersect(as.character(unique(sc_cluster$class_label)),
+#'                                as.character(unique(spatial_cluster$class_label)))
+#' outputpath = "~"
+#' simulation.params=simulation_training_ZINB(sc_count = sc_count,
+#'                                            spatial_count = spatial_count,
+#'                                            overlap_gene = overlap_gene,
+#'                                            unique_cluster_label = unique_cluster_label,
+#'                                            sc_cluster = sc_cluster,
+#'                                            spatial_cluster = spatial_cluster,
+#'                                            outputpath = outputpath,
+#'                                            optimizer = "variational_inference",
+#'                                            mcmc.check = "FALSE",
+#'                                            num.iter = 300,
+#'                                            num.chain = 4,
+#'                                            num.core = 4,
+#'                                            max.treedepth = 10,
+#'                                            seed = 3,
+#'                                            saveplot = FALSE)
+#'
+#' #check object size
+#' format(object.size(simulation.params), units = "Mb")
+#'
+#' simulation.params.trimmed = simulation_training_ZINB_trim(simulation.params)
+#'
+#' #check object size again
+#' format(object.size(simulation.params.trimmed), units = "Mb")
+simulation_training_ZINB_trim=function(simulation.params){
+  fit.m = simulation.params$distortion_model
+  posterior.alpha = rstan::extract(fit.m, pars="alpha")$alpha
+  posterior.beta = rstan::extract(fit.m, pars="beta")$beta
+  posterior.zi = rstan::extract(fit.m, pars="zi")$zi
+  posterior.mu_gamma = rstan::extract(fit.m, pars="mu_gamma")$mu_gamma
+  posterior.sigma_gamma = rstan::extract(fit.m, pars="sigma_gamma")$sigma_gamma
+  posterior.mu_c = rstan::extract(fit.m, pars="mu_c")$mu_c
+  posterior.sigma_c = rstan::extract(fit.m, pars="sigma_c")$sigma_c
+
+  simulation.params.slim = simulation.params
+  simulation.params.slim$distortion_model = NULL       #remove the simulation model
+  simulation.params.slim$posterior = list(posterior.alpha = posterior.alpha,
+                                          posterior.beta = posterior.beta,
+                                          posterior.zi = posterior.zi,
+                                          posterior.mu_gamma = posterior.mu_gamma,
+                                          posterior.sigma_gamma = posterior.sigma_gamma,
+                                          posterior.mu_c = posterior.mu_c,
+                                          posterior.sigma_c = posterior.sigma_c)
+  return(simulation.params.slim)
+}
+
+

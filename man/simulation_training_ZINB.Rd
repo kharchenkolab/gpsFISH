@@ -71,7 +71,7 @@ A list with the following elements:
 }
 
 \item{model.summary}{A named list with elements \code{summary} and \code{c_summary}, which contain summaries of a stanfit object.}
-\item{fixed.effect}{A named list with elements \code{summary} and \code{c_summary}, which contain summaries of specified parameters.}
+\item{fixed.effect}{A named list with elements \code{summary} and \code{c_summary}, which contain summaries of specified variables.}
 \item{c_i_full}{A matrix containing the estimated gene specific intercept \eqn{c_i} for each gene.}
 \item{gamma_i_full}{A matrix containing the estimated gene specific coefficient \eqn{\gamma_i} for each gene.}
 \item{lib.size}{A numeric vector containing the library size, i.e., total number of molecule per cell, of cells in the spatial transcriptomics data.}
