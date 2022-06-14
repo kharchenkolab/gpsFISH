@@ -67,6 +67,8 @@ simulation_training_ZINB=function(sc_count, spatial_count,
                                   overlap_gene, unique_cluster_label, sc_cluster, spatial_cluster,
                                   outputpath, optimizer, mcmc.check = FALSE, saveplot=FALSE,
                                   num.iter = 2000, num.chain = 4, num.core = 1, max.treedepth = 10, seed = 3){
+  current.dir = getwd()
+
   #################
   #1. prepare data#
   #################
@@ -540,5 +542,6 @@ simulation_training_ZINB=function(sc_count, spatial_count,
                         c_i_full = c_i_full,
                         gamma_i_full = gamma_i_full,
                         lib.size = lib.size)
+  setwd(current.dir)
   return(simulation.model)
 }
