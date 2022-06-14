@@ -83,3 +83,61 @@ densityscatter=function(x, y, xlab = NULL, ylab = NULL, main = NULL, add.diagona
   print(p)
 }
 
+#' Data transformation
+#'
+#' @description data_transformation performs basic data transformations, e.g., log transformation
+#' @param input_data A numeric vector of values to transform
+#' @param trans_type Type of transformation:
+#'
+#' * \code{log}: log transformation
+#' * \code{square_root}: square root transformation
+#' * \code{logit}: logit transformation
+#' * \code{none}: no transformation
+#' @param base Base of log transformation, e.g., 10
+#'
+#' @details For log and logit transofmration, if the value before transformation is 0, we will replace it by a small value before the transformation to avoid negative infinity. The small value is calculated as the minimum of all non-zero values from the input divided by 2
+#' @return A numeric vector of transformed values
+#' @export
+#'
+#' @examples
+#' x = sample(1:100, size = 10)
+#' data_transformation(x, trans_type = "log", base=10)
+data_transformation=function(input_data ,trans_type, base=10){
+  if (trans_type=="none"){
+    return(input_data)
+  }
+  if (trans_type=="log"){
+    if (sum(input_data==0)>0){             #if we have zeros
+      #find the minimum value besides 0
+      temp=min(input_data[input_data!=0], na.rm=T)    #find a pseudocount
+      if (base==10){
+        return(log10(input_data+temp/2))
+      }
+      if (base==exp(1)){
+        return(log(input_data+temp/2))
+      }
+    }
+    if (sum(input_data==0)==0){            #if there is no zero
+      if (base==10){
+        return(log10(input_data))            #direct log transformation without adding pseudocount
+      }
+      if (base==exp(1)){
+        return(log(input_data))
+      }
+    }
+  }
+  if (trans_type=="square_root"){
+    return(sqrt(input_data))
+  }
+  if (trans_type=="logit"){
+    if (sum(input_data==0)>0){
+      #find the minimum value besides 0
+      temp=min(input_data[input_data!=0], na.rm=T)    #find a pseudocount
+
+      return(log((input_data+temp/2)/(1-(input_data+temp/2))))
+    }
+    if (sum(input_data==0)==0){
+      return(log(input_data/(1-input_data)))
+    }
+  }
+}
