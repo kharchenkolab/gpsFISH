@@ -153,18 +153,18 @@ simulation_training_ZINB=function(sc_count, spatial_count,
     print("Generating basic data inspection plot")
     setwd(outputpath)
 
-    pdf("Relationship between relative expression in scRNA-seq and relative expression in spatial data (based on overlapping genes).pdf", height=8, width=8)
+    grDevices::pdf("Relationship between relative expression in scRNA-seq and relative expression in spatial data (based on overlapping genes).pdf", height=8, width=8)
     densityscatter(x=as.numeric(as.matrix(prop_ik_sc)), y=as.numeric(as.matrix(prop_ik_spatial)),
                    xlab="relative expression in snRNA-seq (original)", ylab="relative expression in spatial data (original)", main = "original spatial data (overlapping genes)")
     densityscatter(x=data_transformation(as.numeric(as.matrix(prop_ik_sc)), "log", base=exp(1)), y=data_transformation(as.numeric(as.matrix(prop_ik_spatial)), "log", base=exp(1)),
                    xlab="relative expression in snRNA-seq (log)", ylab="relative expression in spatial data (log)", main = "original spatial data (overlapping genes)")
     dev.off()
-    pdf("Relationship between relative expression in scRNA-seq and relative expression in spatial data (based on overlapping genes) per gene.pdf", height=8, width=8)
+    grDevices::pdf("Relationship between relative expression in scRNA-seq and relative expression in spatial data (based on overlapping genes) per gene.pdf", height=8, width=8)
     for (i in 1:dim(prop_ik_sc)[1]){
       densityscatter(x=data_transformation(as.numeric(as.matrix(prop_ik_sc[i,])), "log", base=exp(1)), y=data_transformation(as.numeric(as.matrix(prop_ik_spatial[i,])), "log", base=exp(1)),
                      xlab="relative expression in snRNA-seq (log)", ylab="relative expression in spatial data (log)", main = paste("original spatial data (overlapping genes)", rownames(prop_ik_sc)[i]))
     }
-    dev.off()
+    grDevices::dev.off()
 
     ###############################
     #check the level of distortion#
@@ -175,20 +175,20 @@ simulation_training_ZINB=function(sc_count, spatial_count,
     distortion=t(apply(prop_matrix, 1, distortion_test, group_label=group_label))
     colnames(distortion)=c("beta.regular", "beta.deming")
 
-    pdf("Distortion based on differential expression.pdf")
-    hist(distortion[,"beta.regular"], xlab = "regression coefficient", main = "regression coefficient (linear regression)",
+    grDevices::pdf("Distortion based on differential expression.pdf")
+    graphics::hist(distortion[,"beta.regular"], xlab = "regression coefficient", main = "regression coefficient (linear regression)",
          breaks = seq(0, ceiling(max(distortion[,"beta.regular"])), by = 1), xlim = range(c(0, ceiling(max(distortion[,"beta.regular"])))))
-    hist(distortion[,"beta.deming"], xlab = "regression coefficient", main = "regression coefficient (Deming regression)",
+    graphics::hist(distortion[,"beta.deming"], xlab = "regression coefficient", main = "regression coefficient (Deming regression)",
          breaks = seq(0, ceiling(max(distortion[,"beta.deming"], na.rm=T)), by = 1), xlim = range(c(0, ceiling(max(distortion[,"beta.deming"], na.rm=T)))))
 
     #hist(log(distortion[,"fc"]), xlab = "Fold change (log)", main = "Fold change (log)")
-    hist(log(distortion[,"beta.regular"]), xlab = "Linear regression coefficient (log)", main = "Linear regression coefficient (log)")
-    hist(log(distortion[,"beta.deming"]), xlab = "Deming regression coefficient (log)", main = "Deming regression coefficient (log)")
+    graphics::hist(log(distortion[,"beta.regular"]), xlab = "Linear regression coefficient (log)", main = "Linear regression coefficient (log)")
+    graphics::hist(log(distortion[,"beta.deming"]), xlab = "Deming regression coefficient (log)", main = "Deming regression coefficient (log)")
 
     #plot(density(log(distortion[,"fc"])), xlab = "Fold change (log)", main = "Fold change (log)")
-    plot(density(log(distortion[,"beta.regular"])), xlab = "Linear regression coefficient (log)", main = "Linear regression coefficient (log)")
-    plot(density(log(distortion[,"beta.deming"][!is.na(distortion[,"beta.deming"])])), xlab = "Deming regression coefficient (log)", main = "Deming regression coefficient (log)")
-    dev.off()
+    plot(stats::density(log(distortion[,"beta.regular"])), xlab = "Linear regression coefficient (log)", main = "Linear regression coefficient (log)")
+    plot(stats::density(log(distortion[,"beta.deming"][!is.na(distortion[,"beta.deming"])])), xlab = "Deming regression coefficient (log)", main = "Deming regression coefficient (log)")
+    grDevices::dev.off()
   }
 
 
@@ -355,16 +355,16 @@ simulation_training_ZINB=function(sc_count, spatial_count,
     print("Generating model fit summary plot")
 
     ###basic summary###
-    pdf("model fit summary.pdf")
+    grDevices::pdf("model fit summary.pdf")
     p=rstan::stan_dens(fit.m, pars = params2check)
     print(p)
-    dev.off()
+    grDevices::dev.off()
 
     ###trace plot###
-    pdf("trace plot.pdf", height = 16, width = 16)
+    grDevices::pdf("trace plot.pdf", height = 16, width = 16)
     p=rstan::traceplot(fit.m, pars = params2check)
     print(p)
-    dev.off()
+    grDevices::dev.off()
 
     ###Posterior predictive check###
     #In order to use the PPC functions from the bayesplot package we need a vector y of outcome values,
@@ -376,41 +376,41 @@ simulation_training_ZINB=function(sc_count, spatial_count,
 
     #1. The first PPC we’ll look at is a comparison of the distribution of y and the distributions of some of the simulated datasets (rows) in the yrep matrix.
     bayesplot::color_scheme_set("brightblue")
-    pdf("Posterior predictive check - ppc_dens_overlay.pdf")
+    grDevices::pdf("Posterior predictive check - ppc_dens_overlay.pdf")
     p1=bayesplot::ppc_dens_overlay(y, yrep_zinb[1:nsamples, ])
     #In the plot above, the dark line is the distribution of the observed outcomes y and each of the 50 lighter lines is the kernel density estimate of one of the replications of y from the posterior predictive distribution (i.e., one of the rows in yrep).
     #To see the discrepancy at the lower values of more clearly we can use the xlim function from ggplot2 to restrict the range of the x-axis:
-    p2=bayesplot::ppc_dens_overlay(y, yrep_zinb[1:nsamples, ]) + xlim(0, 10)
-    p3=bayesplot::ppc_dens_overlay(y, yrep_zinb[1:nsamples, ]) + xlim(0, 2.5)
+    p2=bayesplot::ppc_dens_overlay(y, yrep_zinb[1:nsamples, ]) + ggplot2::xlim(0, 10)
+    p3=bayesplot::ppc_dens_overlay(y, yrep_zinb[1:nsamples, ]) + ggplot2::xlim(0, 2.5)
     print(p1)
     print(p2)
     print(p3)
-    dev.off()
+    grDevices::dev.off()
 
-    png("Posterior predictive check - qqplot.png", height = 1000, width = 1000)
-    par(mfrow=c(3,3))
+    grDevices::png("Posterior predictive check - qqplot.png", height = 1000, width = 1000)
+    graphics::par(mfrow=c(3,3))
     for (i in 1:nsamples){
-      qqplot(y, yrep_zinb[i,], xlab="observed y", ylab=paste("simulated y", i), main="QQ plot")
-      abline(0,1)
+      stats::qqplot(y, yrep_zinb[i,], xlab="observed y", ylab=paste("simulated y", i), main="QQ plot")
+      graphics::abline(0,1)
     }
-    dev.off()
+    grDevices::dev.off()
 
     #2. check the distribution of test statistics, e.g., estimated 0s (are we generating enough 0? Too many 0 or too few?)
     #First we define a function that takes a vector as input and returns the proportion of zeros:
     prop_zero <- function(x) mean(x == 0)
     prop_zero(y) # check proportion of zeros in y
     #The stat argument to ppc_stat accepts a function or the name of a function for computing a test statistic from a vector of data. In our case we can specify stat = "prop_zero"
-    pdf("Posterior predictive check - ppc_stat.pdf")
-    p=bayesplot::ppc_stat(y, yrep_zinb, stat = "prop_zero", binwidth = 0.005) + ggtitle("Proportion of zero")
+    grDevices::pdf("Posterior predictive check - ppc_stat.pdf")
+    p=bayesplot::ppc_stat(y, yrep_zinb, stat = "prop_zero", binwidth = 0.005) + ggplot2::ggtitle("Proportion of zero")
     print(p)
-    dev.off()
+    grDevices::dev.off()
     #The dark line is at the value T(y), i.e. the value of the test statistic computed from the observed y, in this case prop_zero(y).
     #The lighter area on the left is actually a histogram of the proportion of zeros in in the yrep simulations
 
     #3. for each simulation, check the percentage of 0 count per gene between observed data and simulated data
     N=length(genes.2.keep)
     M=dim(sp.count.matrix)[2]
-    pdf("Percentage of 0 per gene between original data and simulated data.pdf")
+    grDevices::pdf("Percentage of 0 per gene between original data and simulated data.pdf")
     for (i in 1:nsamples){
       data2fit.all$pred=yrep_zinb[i,]
       #Do we have probe failure in this simulation? Let's first calculate the percentage of 0 counts per gene
@@ -424,11 +424,11 @@ simulation_training_ZINB=function(sc_count, spatial_count,
       perc.0.simu = num.0.simu/M
       densityscatter(perc.0, perc.0.simu, xlab="percentage of 0 count per gene in observed data", ylab="percentage of 0 count per gene in simulated data", main = paste("simulation", i), add.diagonal = T)
     }
-    dev.off()
+    grDevices::dev.off()
 
 
     ###agreement between scRNA-seq data and spatial data check###
-    pdf("Relationship between relative expression in scRNA-seq and simulated spatial data.pdf", height=8, width=8)
+    grDevices::pdf("Relationship between relative expression in scRNA-seq and simulated spatial data.pdf", height=8, width=8)
     for (s in 1:nsamples){
       data2fit.all$simu.sp.count = yrep_zinb[s,]               #we choose one of the simulations as the simulated spatial count
 
@@ -461,7 +461,7 @@ simulation_training_ZINB=function(sc_count, spatial_count,
       densityscatter(x=data_transformation(as.numeric(as.matrix(prop_ik_sc[genes.2.keep,])), "log", base=exp(1)), y=data_transformation(as.numeric(as.matrix(prop_ik_sp_gene2keep_simu)), "log", base=exp(1)),
                      xlab="relative expression in snRNA-seq (log)", ylab="relative expression in spatial data (log)", main = paste("simulated spatial data", s, "(overlapping genes)"))
     }
-    dev.off()
+    grDevices::dev.off()
   }
 
   ###MCMC summary plot###
@@ -473,13 +473,13 @@ simulation_training_ZINB=function(sc_count, spatial_count,
     transformation = list("zi" = "logit", "sigma_alpha" = "log", "sigma_beta" = "log",  "sigma_gamma" = "log", "sigma_c" = "log")
 
     #Posterior uncertainty intervals
-    pdf("MCMC draws - Posterior uncertainty intervals.pdf")
+    grDevices::pdf("MCMC draws - Posterior uncertainty intervals.pdf")
     p=bayesplot::mcmc_intervals(fit.m, pars = params.list)
     print(p)
-    dev.off()
+    grDevices::dev.off()
 
     #Bivariate plots
-    png("MCMC draws - Bivariate plots.png", height = 2000, width = 2000)
+    grDevices::png("MCMC draws - Bivariate plots.png", height = 2000, width = 2000)
     p1=bayesplot::mcmc_pairs(fit.m, pars = params.list,
                              off_diag_args = list(size = 1.5))
     p2=bayesplot::mcmc_pairs(fit.m, pars = params.list,
@@ -487,13 +487,13 @@ simulation_training_ZINB=function(sc_count, spatial_count,
                              off_diag_args = list(size = 1.5))
     print(p1)
     print(p2)
-    dev.off()
+    grDevices::dev.off()
 
     #autocorrelation
-    pdf("MCMC diagnostics - mmcmc_acf (autocorrelation).pdf", height = 16, width = 16)
+    grDevices::pdf("MCMC diagnostics - mmcmc_acf (autocorrelation).pdf", height = 16, width = 16)
     p=bayesplot::mcmc_acf(fit.m, pars = params.interest, lags = 100)
     print(p)
-    dev.off()
+    grDevices::dev.off()
 
     if (optimizer == "sampling"){
       #Diagnostics for the No-U-Turn Sampler
@@ -502,28 +502,28 @@ simulation_training_ZINB=function(sc_count, spatial_count,
 
       #Energy and Bayesian fraction of missing information
       setwd(outputpath)
-      pdf("MCMC diagnostics - mcmc_nuts_energy.pdf")
+      grDevices::pdf("MCMC diagnostics - mcmc_nuts_energy.pdf")
       bayesplot::color_scheme_set("red")
       p=bayesplot::mcmc_nuts_energy(np)
       print(p)
-      dev.off()
+      grDevices::dev.off()
 
       #General MCMC diagnostics
       rhats <- bayesplot::rhat(fit.m)
-      pdf("MCMC diagnostics - mcmc_rhat.pdf")
+      grDevices::pdf("MCMC diagnostics - mcmc_rhat.pdf")
       bayesplot::color_scheme_set("brightblue") # see help("color_scheme_set")
       p1=bayesplot::mcmc_rhat(rhats)
       p2=bayesplot::mcmc_rhat_hist(rhats)
       print(p1)
       print(p2)
-      dev.off()
+      grDevices::dev.off()
 
       #Effective sample size
       ratios <- bayesplot::neff_ratio(fit.m)      #get the neff value
-      pdf("MCMC diagnostics - mcmc_neff (Effective sample size).pdf")
+      grDevices::pdf("MCMC diagnostics - mcmc_neff (Effective sample size).pdf")
       p=bayesplot::mcmc_neff(ratios, size = 2)
       print(p)
-      dev.off()
+      grDevices::dev.off()
     }
   }
 
