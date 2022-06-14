@@ -28,7 +28,7 @@ densityscatter(
 
 \item{main}{an overall title for the plot}
 
-\item{add.diagonal}{a logical value indicating whether you want to add \code{x = y} line to the plot}
+\item{add.diagonal}{a logical value indicating whether to add \code{x = y} line to the plot}
 
 \item{x_low}{A numeric value representing the lower limit of \code{x} coordinate}
 

@@ -32,7 +32,7 @@ relative_freq=function(count_matrix, gene_list, cluster_label, cell_cluster_conv
 #' @param xlab a title for the x axis
 #' @param ylab a title for the y axis
 #' @param main an overall title for the plot
-#' @param add.diagonal a logical value indicating whether you want to add \code{x = y} line to the plot
+#' @param add.diagonal a logical value indicating whether to add \code{x = y} line to the plot
 #' @param x_low A numeric value representing the lower limit of \code{x} coordinate
 #' @param x_high A numeric value representing the upper limit of \code{x} coordinate
 #' @param y_low A numeric value representing the lower limit of \code{y} coordinate
