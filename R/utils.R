@@ -141,3 +141,43 @@ data_transformation=function(input_data ,trans_type, base=10){
     }
   }
 }
+
+
+#' Check distortion of gene expression between scRNA-seq and spatial transcriptomics
+#'
+#' @description distortion_test performs linear regression and deming regression on gene expression from scRNA-seq and spatial transcriptomics to check their agreement
+#' @param prop_vector A numeric vector containing the expression level of one gene from two data modalities
+#' @param group_label A character vector indicating which value is from which data modality (\code{sc} for scRNA-seq and \code{spatial} for spatial transcriptomics)
+#'
+#' @return Coefficients from linear and deming regression
+#' @export
+#'
+#' @examples
+#' x = sample(1:10, 100, replace=TRUE)
+#' y = sample(100:1000, 100, replace=TRUE)
+#' label = c(rep("sc", 100), rep("spatial", 100))
+#' distortion_test(c(x,y), label)
+distortion_test=function(prop_vector, group_label){
+  prop_sc=as.numeric(prop_vector)[which(group_label=="sc")]
+  prop_spatial=as.numeric(prop_vector)[which(group_label=="spatial")]
+  dat=data.frame(x=prop_sc, y=prop_spatial)
+
+  #fit a linear regression model
+  lr = stats::lm(y ~ 0 + x, data = dat)
+  #lr=lm(dat$y ~ dat$x, data=dat)
+  beta.regular = as.numeric(lr$coefficients[1])
+  #intercept=as.numeric(lr$coefficients[1])
+
+  #fit a Deming regression model to account for regression dilution
+  fit = try(deming::deming(y ~ 0 + x, data=dat), silent = T)
+  if (class(fit)=="try-error"){
+    beta.deming=NA
+  }else{
+    beta.deming = as.numeric(fit$coefficients[2])
+  }
+  return(c(beta.regular, beta.deming))
+}
+
+
+
+

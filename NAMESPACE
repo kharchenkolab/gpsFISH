@@ -2,4 +2,5 @@
 
 export(data_transformation)
 export(densityscatter)
+export(distortion_test)
 export(relative_freq)
