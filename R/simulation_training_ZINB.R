@@ -158,7 +158,7 @@ simulation_training_ZINB=function(sc_count, spatial_count,
                    xlab="relative expression in snRNA-seq (original)", ylab="relative expression in spatial data (original)", main = "original spatial data (overlapping genes)")
     densityscatter(x=data_transformation(as.numeric(as.matrix(prop_ik_sc)), "log", base=exp(1)), y=data_transformation(as.numeric(as.matrix(prop_ik_spatial)), "log", base=exp(1)),
                    xlab="relative expression in snRNA-seq (log)", ylab="relative expression in spatial data (log)", main = "original spatial data (overlapping genes)")
-    dev.off()
+    grDevices::dev.off()
     grDevices::pdf("Relationship between relative expression in scRNA-seq and relative expression in spatial data (based on overlapping genes) per gene.pdf", height=8, width=8)
     for (i in 1:dim(prop_ik_sc)[1]){
       densityscatter(x=data_transformation(as.numeric(as.matrix(prop_ik_sc[i,])), "log", base=exp(1)), y=data_transformation(as.numeric(as.matrix(prop_ik_spatial[i,])), "log", base=exp(1)),
