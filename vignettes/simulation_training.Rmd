@@ -111,21 +111,24 @@ outputpath = "~/gpsFISH_walkthrough/simulation_training"
 After having all the data, we can start to fit the model. To reduce the running time, we use variational inference for model fitting (`optimizer = "variational_inference"`). In addition, we set the number of iterations to 100 (`num.iter = 100`). Of note, this is just for demonstration purpose. For fitting the model on real data, it is suggested to use at least 2000 iterations if `optimizer = "sampling"` and 10000 iterations if `optimizer = "variational_inference"`. The code below will take a few minutes to finish. 
 
 ```{r, include = TRUE}
-# simulation.params=simulation_training_ZINB(sc_count = sc_count,
-#                                            spatial_count = spatial_count,
-#                                            overlap_gene = overlap_gene,
-#                                            unique_cluster_label = unique_cluster_label,
-#                                            sc_cluster = sc_cluster,
-#                                            spatial_cluster = spatial_cluster,
-#                                            outputpath = outputpath,
-#                                            optimizer = "variational_inference",
-#                                            mcmc.check = FALSE,
-#                                            num.iter = 100,
-#                                            num.chain = 4,
-#                                            num.core = 4,
-#                                            saveplot = FALSE)
-simulation.params = readRDS("/home/yzhang/Projects/Marker_panel_generation/configuration/seqFISH_sscortex/platform_effect_estimation/subclass.l1/data_for_R_package/vi_test/simulation_params.rds")
+simulation.params=simulation_training_ZINB(sc_count = sc_count,
+                                           spatial_count = spatial_count,
+                                           overlap_gene = overlap_gene,
+                                           unique_cluster_label = unique_cluster_label,
+                                           sc_cluster = sc_cluster,
+                                           spatial_cluster = spatial_cluster,
+                                           outputpath = outputpath,
+                                           optimizer = "variational_inference",
+                                           mcmc.check = FALSE,
+                                           num.iter = 100,
+                                           num.chain = 4,
+                                           num.core = 4,
+                                           saveplot = FALSE)
 ```
+```{r, echo=FALSE}
+# simulation.params = readRDS("/home/yzhang/Projects/Marker_panel_generation/configuration/seqFISH_sscortex/platform_effect_estimation/subclass.l1/data_for_R_package/vi_test/simulation_params.rds")
+```
+
 
 
 ## Inspect model fitting result
