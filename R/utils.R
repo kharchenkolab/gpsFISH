@@ -175,6 +175,11 @@ data_transformation=function(input_data ,trans_type, base=10){
 #' label = c(rep("sc", 100), rep("spatial", 100))
 #' distortion_test(c(x,y), label)
 distortion_test=function(prop_vector, group_label){
+  if (!is.numeric(prop_vector)) stop("'prop_vector' should be a numeric vector")
+  if (!is.character(group_label)) stop("'group_label' should be a character vector")
+  if (length(prop_vector) != length(group_label)) stop("'prop_vector' and 'group_label' should have the same length")
+  if (length(unique(group_label)) != 2) stop("'group_label' should contain only two unique labels")
+
   prop_sc=as.numeric(prop_vector)[which(group_label=="sc")]
   prop_spatial=as.numeric(prop_vector)[which(group_label=="spatial")]
   dat=data.frame(x=prop_sc, y=prop_spatial)
