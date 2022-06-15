@@ -493,7 +493,7 @@ simulation_training_ZINB=function(sc_count, spatial_count,
 
     #autocorrelation
     grDevices::pdf("MCMC diagnostics - mmcmc_acf (autocorrelation).pdf", height = 16, width = 16)
-    p=bayesplot::mcmc_acf(fit.m, pars = params.interest)
+    p=bayesplot::mcmc_acf(fit.m, pars = params.interest, lags = 20)
     print(p)
     grDevices::dev.off()
 
