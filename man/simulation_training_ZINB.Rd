@@ -31,9 +31,9 @@ simulation_training_ZINB(
 
 \item{unique_cluster_label}{A character vector of cell type names that show up in both scRNA-seq and spatial transcriptomics data}
 
-\item{sc_cluster}{A data frame with two columns and cell name as row name. The first column contains the name of cells from scRNA-seq data and the second column contains each cell's corresponding cell type.}
+\item{sc_cluster}{A data frame with two columns and cell name as row name. The first column ("cell_name") contains the name of cells from scRNA-seq data and the second column ("class_label") contains each cell's corresponding cell type.}
 
-\item{spatial_cluster}{A data frame with two columns and cell name as row name. The first column contains the name of cells from spatial transcriptomics data and the second column contains each cell's corresponding cell type.}
+\item{spatial_cluster}{A data frame with two columns and cell name as row name. The first column ("cell_name") contains the name of cells from spatial transcriptomics data and the second column ("class_label") contains each cell's corresponding cell type.}
 
 \item{outputpath}{A character specifying the path for output}
 
@@ -96,7 +96,7 @@ simulation.params=simulation_training_ZINB(sc_count = sc_count,
                                            spatial_cluster = spatial_cluster,
                                            outputpath = outputpath,
                                            optimizer = "variational_inference",
-                                           mcmc.check = "FALSE",
+                                           mcmc.check = FALSE,
                                            num.iter = 300,
                                            num.chain = 4,
                                            num.core = 4,

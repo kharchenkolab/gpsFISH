@@ -5,8 +5,8 @@
 #' @param spatial_count A count matrix containing the expression of each gene in each cell from the spatial transcriptomics data. Each row represents one gene and each column represents one column, with gene name as row name and cell name as column name.
 #' @param overlap_gene A character vector of gene names that show up in both scRNA-seq and spatial transcriptomics data
 #' @param unique_cluster_label A character vector of cell type names that show up in both scRNA-seq and spatial transcriptomics data
-#' @param sc_cluster A data frame with two columns and cell name as row name. The first column contains the name of cells from scRNA-seq data and the second column contains each cell's corresponding cell type.
-#' @param spatial_cluster A data frame with two columns and cell name as row name. The first column contains the name of cells from spatial transcriptomics data and the second column contains each cell's corresponding cell type.
+#' @param sc_cluster A data frame with two columns and cell name as row name. The first column ("cell_name") contains the name of cells from scRNA-seq data and the second column ("class_label") contains each cell's corresponding cell type.
+#' @param spatial_cluster A data frame with two columns and cell name as row name. The first column ("cell_name") contains the name of cells from spatial transcriptomics data and the second column ("class_label") contains each cell's corresponding cell type.
 #' @param outputpath A character specifying the path for output
 #' @param optimizer Optimizer for Bayesian model fitting.
 #' * \code{variational_inference}: The Bayesian model will be fitted using the \code{meanfield} variational inference
@@ -54,7 +54,7 @@
 #'                                            spatial_cluster = spatial_cluster,
 #'                                            outputpath = outputpath,
 #'                                            optimizer = "variational_inference",
-#'                                            mcmc.check = "FALSE",
+#'                                            mcmc.check = FALSE,
 #'                                            num.iter = 300,
 #'                                            num.chain = 4,
 #'                                            num.core = 4,
@@ -67,6 +67,29 @@ simulation_training_ZINB=function(sc_count, spatial_count,
                                   overlap_gene, unique_cluster_label, sc_cluster, spatial_cluster,
                                   outputpath, optimizer, mcmc.check = FALSE, saveplot=FALSE,
                                   num.iter = 2000, num.chain = 4, num.core = 1, max.treedepth = 10, seed = 3){
+
+  if (is.null(rownames(sc_count))) stop("'sc_count' should have gene name as row name")
+  if (is.null(colnames(sc_count))) stop("'sc_count' should have cell name as column name")
+
+  if (is.null(rownames(spatial_count))) stop("'spatial_count' should have gene name as row name")
+  if (is.null(colnames(spatial_count))) stop("'spatial_count' should have cell name as column name")
+
+  if (!identical(colnames(sc_count), rownames(sc_cluster))) stop("column name of 'sc_count' should match the row name of 'sc_cluster'")
+  if (!identical(colnames(spatial_count), rownames(spatial_cluster))) stop("column name of 'spatial_count' should match the row name of 'spatial_cluster'")
+
+  if (!identical(colnames(sc_cluster), c("cell_name", "class_label"))) stop("'sc_cluster' should have column name as 'cell_name' and 'class_label'")
+  if (!identical(colnames(spatial_cluster), c("cell_name", "class_label"))) stop("'spatial_cluster' should have column name as 'cell_name' and 'class_label'")
+
+  if (length(setdiff(overlap_gene, rownames(sc_count)))>0) stop("There are genes in 'overlap_gene' that are not in 'sc_count'")
+  if (length(setdiff(overlap_gene, rownames(spatial_count)))>0) stop("There are genes in 'overlap_gene' that are not in 'spatial_count'")
+
+  if (length(setdiff(unique_cluster_label, unique(sc_cluster$class_label)))>0) stop("There are cell types in 'unique_cluster_label' that are not in 'sc_cluster'")
+  if (length(setdiff(unique_cluster_label, unique(spatial_cluster$class_label)))>0) stop("There are cell types in 'unique_cluster_label' that are not in 'spatial_cluster'")
+
+  if (optimizer != "sampling" && optimizer != "variational_inference") stop("'optimizer' needs to be 'sampling' or 'variational_inference'")
+
+  if (optimizer == "variational_inference" && mcmc.check) stop("'mcmc.check' needs to be FALSE if 'optimizer' is 'variational_inference'")
+
   #################
   #1. prepare data#
   #################
@@ -574,7 +597,7 @@ simulation_training_ZINB=function(sc_count, spatial_count,
 #'                                            spatial_cluster = spatial_cluster,
 #'                                            outputpath = outputpath,
 #'                                            optimizer = "variational_inference",
-#'                                            mcmc.check = "FALSE",
+#'                                            mcmc.check = FALSE,
 #'                                            num.iter = 300,
 #'                                            num.chain = 4,
 #'                                            num.core = 4,
