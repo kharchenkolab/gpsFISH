@@ -58,6 +58,10 @@ relative_freq=function(count_matrix, gene_list, cluster_label, cell_cluster_conv
 #'                x_low = 0, x_high = 3, y_low = 0, y_high = 3)
 densityscatter=function(x, y, xlab = NULL, ylab = NULL, main = NULL, add.diagonal = F,
                         x_low = NULL, x_high = NULL, y_low = NULL, y_high = NULL){
+  if (!is.numeric(x)) stop("'x' should be a numeric vector")
+  if (!is.numeric(y)) stop("'y' should be a numeric vector")
+  if (length(x) != length(y)) stop("'x' and 'y' should have the same length")
+
   df=data.frame(x=x, y=y)
   if (is.null(x_low)){
     x_low = floor(min(df$x))
@@ -113,6 +117,9 @@ densityscatter=function(x, y, xlab = NULL, ylab = NULL, main = NULL, add.diagona
 #' x = sample(1:100, size = 10)
 #' data_transformation(x, trans_type = "log", base=10)
 data_transformation=function(input_data ,trans_type, base=10){
+  if (!is.numeric(input_data)) stop("'input_data' should be a numeric vector")
+  if (length(setdiff(trans_type, c("log","square_root","logit","none")))>0) stop("'trans_type' should be one of 'log', 'logit', 'square_root', or 'none'")
+
   if (trans_type=="none"){
     return(input_data)
   }
