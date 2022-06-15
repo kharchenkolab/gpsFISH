@@ -17,6 +17,16 @@
 #' rf = relative_freq(spatial_count, rownames(spatial_count), cell.type, spatial_cluster)
 #' rf
 relative_freq=function(count_matrix, gene_list, cluster_label, cell_cluster_conversion){
+  if (is.null(rownames(count_matrix))) stop("'count_matrix' should have gene name as row name")
+  if (is.null(colnames(count_matrix))) stop("'count_matrix' should have cell name as column name")
+
+  if (length(setdiff(gene_list, rownames(count_matrix)))>0) stop("There are genes in 'gene_list' that are not in 'count_matrix'")
+
+  if (!identical(colnames(cell_cluster_conversion), c("cell_name", "class_label"))) stop("'cell_cluster_conversion' should have column name as 'cell_name' and 'class_label'")
+
+  if (length(cluster_label)>1) stop("length of 'cluster_label' should be 1")
+  if (length(setdiff(cluster_label, unique(cell_cluster_conversion$class_label)))>0) stop("'cluster_label' is not a cell type in 'cell_cluster_conversion'")
+
   cells_in_cluster=colnames(count_matrix)[which(as.character(cell_cluster_conversion[colnames(count_matrix),"class_label"]) %in% cluster_label)]
   total_count=sum(count_matrix[,cells_in_cluster])
   proportion=rowSums(as.matrix(count_matrix[gene_list,cells_in_cluster]))/total_count
