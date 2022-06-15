@@ -475,7 +475,7 @@ simulation_training_ZINB=function(sc_count, spatial_count,
                                        cell_cluster_conversion=spatial_cluster)
 
       #(Plot) Relative expression in scRNA-seq data vs. relative expression expression in simulated spatial data
-      sc=as.numeric(as.matrix(prop_ik_sc_all_gene[genes.2.keep,]))
+      # sc=as.numeric(as.matrix(prop_ik_sc_all_gene[genes.2.keep,]))
       # sp=as.numeric(as.matrix(ave_count_ik_sp_gene2keep_simu))
 
       # densityscatter(x=data_transformation(sc, "log", base=exp(1)), y=data_transformation(sp, "log", base=exp(1)),
