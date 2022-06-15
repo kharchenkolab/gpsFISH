@@ -472,7 +472,7 @@ simulation_training_ZINB=function(sc_count, spatial_count,
 
     #specify parameters to check
     params.list=params.interest=params2check
-    transformation = list("zi" = "boot::logit", "sigma_alpha" = "log", "sigma_beta" = "log",  "sigma_gamma" = "log", "sigma_c" = "log")
+    # transformation = list("zi" = "boot::logit", "sigma_alpha" = "log", "sigma_beta" = "log",  "sigma_gamma" = "log", "sigma_c" = "log")
 
     #Posterior uncertainty intervals
     grDevices::pdf("MCMC draws - Posterior uncertainty intervals.pdf")
@@ -484,11 +484,11 @@ simulation_training_ZINB=function(sc_count, spatial_count,
     grDevices::png("MCMC draws - Bivariate plots.png", height = 2000, width = 2000)
     p1=bayesplot::mcmc_pairs(fit.m, pars = params.list,
                              off_diag_args = list(size = 1.5))
-    p2=bayesplot::mcmc_pairs(fit.m, pars = params.list,
-                             transform = transformation,
-                             off_diag_args = list(size = 1.5))
+    # p2=bayesplot::mcmc_pairs(fit.m, pars = params.list,
+    #                          transform = transformation,
+    #                          off_diag_args = list(size = 1.5))
     print(p1)
-    print(p2)
+    # print(p2)
     grDevices::dev.off()
 
     #autocorrelation
