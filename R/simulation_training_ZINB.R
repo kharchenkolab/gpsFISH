@@ -472,7 +472,7 @@ simulation_training_ZINB=function(sc_count, spatial_count,
 
     #specify parameters to check
     params.list=params.interest=params2check
-    transformation = list("zi" = "logit", "sigma_alpha" = "log", "sigma_beta" = "log",  "sigma_gamma" = "log", "sigma_c" = "log")
+    transformation = list("zi" = "boot::logit", "sigma_alpha" = "log", "sigma_beta" = "log",  "sigma_gamma" = "log", "sigma_c" = "log")
 
     #Posterior uncertainty intervals
     grDevices::pdf("MCMC draws - Posterior uncertainty intervals.pdf")
