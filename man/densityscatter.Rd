@@ -22,21 +22,21 @@ densityscatter(
 
 \item{y}{A numeric vector containing the \code{y} coordinates of points in the plot}
 
-\item{xlab}{a title for the x axis}
+\item{xlab}{a title for the x axis. Default is NULL}
 
-\item{ylab}{a title for the y axis}
+\item{ylab}{a title for the y axis. Default is NULL}
 
-\item{main}{an overall title for the plot}
+\item{main}{an overall title for the plot. Default is NULL}
 
-\item{add.diagonal}{a logical value indicating whether to add \code{x = y} line to the plot}
+\item{add.diagonal}{a logical value indicating whether to add \code{x = y} line to the plot. Default is FALSE}
 
-\item{x_low}{A numeric value representing the lower limit of \code{x} coordinate}
+\item{x_low}{A numeric value representing the lower limit of \code{x} coordinate. Default is NULL}
 
-\item{x_high}{A numeric value representing the upper limit of \code{x} coordinate}
+\item{x_high}{A numeric value representing the upper limit of \code{x} coordinate. Default is NULL}
 
-\item{y_low}{A numeric value representing the lower limit of \code{y} coordinate}
+\item{y_low}{A numeric value representing the lower limit of \code{y} coordinate. Default is NULL}
 
-\item{y_high}{A numeric value representing the upper limit of \code{y} coordinate}
+\item{y_high}{A numeric value representing the upper limit of \code{y} coordinate. Default is NULL}
 }
 \description{
 Visualize two dimensional data using scatterplot with density information

@@ -17,7 +17,7 @@ data_transformation(input_data, trans_type, base = 10)
 \item \code{none}: no transformation
 }}
 
-\item{base}{Base of log transformation, e.g., 10}
+\item{base}{Base of log transformation. Default is 10}
 }
 \value{
 A numeric vector of transformed values

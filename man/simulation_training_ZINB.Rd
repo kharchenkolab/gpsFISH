@@ -43,9 +43,9 @@ simulation_training_ZINB(
 \item \code{sampling}: The Bayesian model will be fitted using the No-U-Turn sampler variant of Hamiltonian Monte Carlo
 }}
 
-\item{mcmc.check}{a logical value indicating whether to do MCMC diagnostics. Keep it as FALSE if \code{optimizer} is \code{variational_inference}}
+\item{mcmc.check}{a logical value indicating whether to do MCMC diagnostics. Default is FALSE. Keep it as FALSE if \code{optimizer} is \code{variational_inference}}
 
-\item{saveplot}{a logical value indicating whether to save plot}
+\item{saveplot}{a logical value indicating whether to save plot. Default is FALSE.}
 
 \item{num.iter}{A positive integer specifying the number of iterations for each chain (including warmup). The default is 2000. It is recommended to use at least 10000 if \code{optimizer} is \code{variational_inference}}
 

@@ -39,14 +39,14 @@ relative_freq=function(count_matrix, gene_list, cluster_label, cell_cluster_conv
 #' @description Visualize two dimensional data using scatterplot with density information
 #' @param x A numeric vector containing the \code{x} coordinates of points in the plot
 #' @param y A numeric vector containing the \code{y} coordinates of points in the plot
-#' @param xlab a title for the x axis
-#' @param ylab a title for the y axis
-#' @param main an overall title for the plot
-#' @param add.diagonal a logical value indicating whether to add \code{x = y} line to the plot
-#' @param x_low A numeric value representing the lower limit of \code{x} coordinate
-#' @param x_high A numeric value representing the upper limit of \code{x} coordinate
-#' @param y_low A numeric value representing the lower limit of \code{y} coordinate
-#' @param y_high A numeric value representing the upper limit of \code{y} coordinate
+#' @param xlab a title for the x axis. Default is NULL
+#' @param ylab a title for the y axis. Default is NULL
+#' @param main an overall title for the plot. Default is NULL
+#' @param add.diagonal a logical value indicating whether to add \code{x = y} line to the plot. Default is FALSE
+#' @param x_low A numeric value representing the lower limit of \code{x} coordinate. Default is NULL
+#' @param x_high A numeric value representing the upper limit of \code{x} coordinate. Default is NULL
+#' @param y_low A numeric value representing the lower limit of \code{y} coordinate. Default is NULL
+#' @param y_high A numeric value representing the upper limit of \code{y} coordinate. Default is NULL
 #'
 #' @export
 #'
@@ -107,7 +107,7 @@ densityscatter=function(x, y, xlab = NULL, ylab = NULL, main = NULL, add.diagona
 #' * \code{square_root}: square root transformation
 #' * \code{logit}: logit transformation
 #' * \code{none}: no transformation
-#' @param base Base of log transformation, e.g., 10
+#' @param base Base of log transformation. Default is 10
 #'
 #' @details For log and logit transofmration, if the value before transformation is 0, we will replace it by a small value before the transformation to avoid negative infinity. The small value is calculated as the minimum of all non-zero values from the input divided by 2
 #' @return A numeric vector of transformed values

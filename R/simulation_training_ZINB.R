@@ -11,8 +11,8 @@
 #' @param optimizer Optimizer for Bayesian model fitting.
 #' * \code{variational_inference}: The Bayesian model will be fitted using the \code{meanfield} variational inference
 #' * \code{sampling}: The Bayesian model will be fitted using the No-U-Turn sampler variant of Hamiltonian Monte Carlo
-#' @param mcmc.check a logical value indicating whether to do MCMC diagnostics. Keep it as FALSE if \code{optimizer} is \code{variational_inference}
-#' @param saveplot a logical value indicating whether to save plot
+#' @param mcmc.check a logical value indicating whether to do MCMC diagnostics. Default is FALSE. Keep it as FALSE if \code{optimizer} is \code{variational_inference}
+#' @param saveplot a logical value indicating whether to save plot. Default is FALSE.
 #' @param num.iter A positive integer specifying the number of iterations for each chain (including warmup). The default is 2000. It is recommended to use at least 10000 if \code{optimizer} is \code{variational_inference}
 #' @param num.chain A positive integer specifying the number of Markov chains. The default is 4.
 #' @param num.core The number of cores to use when executing the Markov chains in parallel. The default is to 1 core. However, we recommend setting it to be as many processors as the hardware and RAM allow (up to the number of chains).
