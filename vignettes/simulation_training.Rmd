@@ -168,7 +168,7 @@ obs = simulation.params$data2fit$sp.count
 pred = rstan::extract(simulation.params$distortion_model, pars = "y_rep")[[1]]  #each row is one set of simulation from posterior predictive distribution
 
 #QQ plot comparing observed vs. simulated spatial transcriptomics data
-qqplot(obs, pred[1,], xlab="observed data", ylab=paste("simulated data", 1), main="observed vs. simulated spatial transcriptomics data")
+qqplot(obs, pred[1,], xlab="observed data", ylab=paste("simulated data", 1), main="observed vs. simulated spatial data")
 graphics::abline(0,1)
 ```
 
