@@ -25,12 +25,14 @@ Depends:
     R (>= 2.10)
 Imports: 
     bayesplot (>= 1.8.1),
+    data.table (>= 1.14.0),
     boot (>= 1.3-28),
     deming (>= 1.4),
     ggplot2,
     ggpointdensity (>= 0.1.0),
     rstan (>= 2.21.2),
-    viridis (>= 0.6.1)
+    viridis (>= 0.6.1),
+    pagoda2 (>= 1.0.4)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
