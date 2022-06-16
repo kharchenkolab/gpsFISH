@@ -36,6 +36,8 @@ relative_freq=function(count_matrix, gene_list, cluster_label, cell_cluster_conv
 
 #' Calculate average expression of genes in a given cell type
 #'
+#' @description average_count calculates average expression of genes in a given cell type
+#'
 #' @param count_matrix A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name
 #' @param gene_list A character vector of gene names for which we want to calculate the average expression. The gene name should match the row name of \code{count_matrix}
 #' @param cluster_label A character vector with one element representing the cell type name
@@ -235,4 +237,85 @@ distortion_test=function(prop_vector, group_label){
 
 
 
+
+#' Clustering of cell types
+#'
+#' @description cluster_dis first calculates distance between cell types and then performs hierarchical clustering.
+#' Specifically, expression of cells from the same cell type is averaged to represent the expression level of a cell type.
+#' Then, highly variable genes are selected based on each gene's average expression across cell types.
+#' Expression information of top highly expressed genes is used to calculate distance between cell types.
+#' The calculated distance is finally used for hierarchical clustering.
+#'
+#' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name
+#' @param cell_cluster_conversion A data frame with each row representing information of one cell. First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+#' @param dist_metric A character specifying the metric for distance calculation. Default is "correlation", which uses 1 - Pearson correlation coefficient as distance. Other options are "euclidean" for Euclidean distance and "manhattan" for Manhattan distance.
+#' @param cluster_metric A character specifying the agglomeration method to be used. This should be (an unambiguous abbreviation of) one of "ward.D", "ward.D2", "single", "complete" (default), "average" (= UPGMA), "mcquitty" (= WPGMA), "median" (= WPGMC) or "centroid" (= UPGMC).
+#' @param top.var.gene A numeric value specifying the number of top highly variable genes to use for distance calculation. Default is 1000
+#' @param log.transform A logical value indicating whether to perform log transformation on input count data. Default is TRUE.
+#'
+#' @return A list containing 3 slots:
+#' \item{distance_matrix}{A \code{dist} object containing the distance between all pairs of cell types.}
+#' \item{hierarchy}{Hierarchical clustering result returned by \code{hclust}.}
+#' \item{dendrogram}{Clustering dendrogram.}
+#' @export
+#'
+#' @examples
+#' data(norm_sc_count)
+#' data(sc_cluster)
+#' cluster_distance=cluster_dis(count_table = norm_sc_count, cell_cluster_conversion = sc_cluster,
+#'                              cluster_metric = "complete", dist_metric = "correlation",
+#'                              log.transform = F, top.var.gene = 1000)
+cluster_dis=function(count_table, cell_cluster_conversion, dist_metric = "correlation", cluster_metric = "complete", top.var.gene = 1000, log.transform = T){
+  if (is.null(rownames(count_table))) stop("'count_table' should have gene name as row name")
+  if (is.null(colnames(count_table))) stop("'count_table' should have cell name as column name")
+
+  if (!identical(colnames(count_table), rownames(cell_cluster_conversion))) stop("column name of 'count_table' should match the row name of 'cell_cluster_conversion'")
+
+  if (!identical(colnames(cell_cluster_conversion), c("cell_name", "class_label"))) stop("'cell_cluster_conversion' should have column name as 'cell_name' and 'class_label'")
+
+  if (!(dist_metric %in% c("correlation", "euclidean", "manhattan"))) stop("'dist_metric' should be one of 'correlation', 'euclidean', or 'manhattan'")
+
+  cluster_label=base::unique(as.character(cell_cluster_conversion[colnames(count_table),"class_label"]))
+  metacellcount=sapply(cluster_label, merge_column, count_table=count_table, cell_cluster_conversion=cell_cluster_conversion)         #we collapse cells in a cluster into one cell
+
+  #remove genes with 0 average count per cluster
+  num.0=apply(metacellcount, 1, function(x) return(sum(x==0)))
+  metacellcount=metacellcount[which(num.0==0),]
+
+  #log transform data
+  if (log.transform){
+    logmetacellcount=log10(metacellcount)      #we may have -Inf here if we have 0 in the count_table
+  }else{
+    logmetacellcount=metacellcount
+  }
+
+  #we use the expression of the top top.var.gene genes for distance calculation
+  if (top.var.gene>=dim(logmetacellcount)[1]){
+    top.var.gene=dim(logmetacellcount)[1]
+  }
+  var.per.gene=apply(logmetacellcount, 1, var)
+  top.logmetacellcount=logmetacellcount[order(var.per.gene, decreasing=T)[1:top.var.gene],]
+
+  data2compute=t(top.logmetacellcount)           #clustering is performed on rows
+
+  #calculate distance
+  if (dist_metric=="correlation"){
+    dist_matrix=stats::as.dist(1-stats::cor(top.logmetacellcount))
+  }
+  if (dist_metric=="euclidean" || dist_metric=="manhattan"){
+    dist_matrix=stats::dist(data2compute, method=dist_metric)
+  }
+  #hierarchical cluster
+  hc <- stats::hclust(dist_matrix, method = cluster_metric)
+  # Create dendrogram
+  dend <- stats::as.dendrogram (hc)
+  return(list(distance_matrix=dist_matrix, hierarchy=hc, dendrogram=dend))       #dist_matrix here is a matrix with cell type names as row and column names
+}
+
+
+merge_column=function(count_table, cell_cluster_conversion, current_label){
+  cells=which(cell_cluster_conversion[colnames(count_table),"class_label"] %in% current_label)
+  result=rowSums(count_table[,cells])/length(cells)
+  return(result)
+}
 

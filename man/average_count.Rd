@@ -19,7 +19,7 @@ average_count(count_matrix, gene_list, cluster_label, cell_cluster_conversion)
 A numeric vector of average expression of each gene in the cell type specified by cluster_label
 }
 \description{
-Calculate average expression of genes in a given cell type
+average_count calculates average expression of genes in a given cell type
 }
 \examples{
 data(spatial_count)
