@@ -9,7 +9,6 @@ A data frame with 537 rows and 2 columns:
 \describe{
 \item{cell_name}{name of each cell}
 \item{class_label}{annotated cell type of each cell}
-...
 }
 }
 \usage{
