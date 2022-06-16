@@ -25,8 +25,7 @@ devtools::install_github("kharchenkolab/gpsFISH")
 Please see the following tutorials for detailed examples of how to use conos: 
 
 ### Platform effect estimation:
-* [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/main/docs/simulation_training.html?token=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) (for private repo)
-* [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/main/docs/simulation_training.html) (for public repo)
+* [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/main/docs/simulation_training.html)
 * [Markdown version](docs/simulation_training.Rmd)
 
 ### Gene panel selection:
