@@ -47,7 +47,6 @@ simulation.params=simulation_training_ZINB(sc_count = sc_count,
                                            max.treedepth = 10,
                                            seed = 3,
                                            saveplot = FALSE)
-}
 
 #check object size
 format(object.size(simulation.params), units = "Mb")
@@ -56,4 +55,5 @@ simulation.params.trimmed = simulation_training_ZINB_trim(simulation.params)
 
 #check object size again
 format(object.size(simulation.params.trimmed), units = "Mb")
+}
 }
