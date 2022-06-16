@@ -22,7 +22,7 @@ devtools::install_github("kharchenkolab/gpsFISH")
 
 ## Tutorials
 
-Please see the following tutorials for detailed examples of how to use conos: 
+Please see the following tutorials for detailed examples of how to use gpsFISH: 
 
 ### Platform effect estimation:
 * [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/main/doc/simulation_training.html)
