@@ -1,0 +1,256 @@
+---
+title: "Platform effect estimation"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Platform effect estimation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+- [Load the data](#load-the-data)
+  * [Model fit summary](#model-fit-summary)
+  * [Gene specific platform effect](#gene-specific-platform-effect)
+  * [Posterior predictive check](#posterior-predictive-check)
+  * [Other model fitting diagnostics](#other-model-fitting-diagnostics)
+- [Fit the Bayesian model](#fit-the-bayesian-model)
+- [Inspect model fitting result](#inspect-model-fitting-result)
+- [Save result for future use](#save-result-for-future-use)
+  
+In this tutorial, we will go over the analysis of estimating platform effect between 
+single cell RNA-seq and spatial transcriptomis technologies using gpsFISH. We estimate 
+the platform effect by training a Bayesian model on scRNA-seq and spatial transcriptomics 
+data with cell type annotation. The trained model can then be used to simulate spatial
+transcriptomics data from scRNA-seq data.
+
+
+First, let’s load libraries:
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(gpsFISH)
+library(ggplot2)
+library(boot)             
+library(bayesplot)       
+library(ggpointdensity) 
+library(viridis)          
+library(deming)          
+library(rstan)  
+library(patchwork)
+```
+
+
+To avoid recompilation of unchanged Stan programs, we recommend calling
+```{r}
+rstan_options(auto_write = TRUE)
+rstan_options(javascript=FALSE)
+```
+
+
+## Load the data
+
+Next we will load the example scRNA-seq data, spatial transcriptomics data, and their corresponding cell type annotation information: 
+
+```{r}
+data(sc_count)
+data(sc_cluster)
+data(spatial_count)
+data(spatial_cluster)
+```
+
+
+Let's take a quick look at the data:
+
+```{r, include = TRUE}
+dim(sc_count)
+
+sc_count[1:5,1:5]
+
+dim(sc_cluster)
+
+sc_cluster[1:5,]
+
+table(sc_cluster$class_label)
+
+dim(spatial_count)
+
+spatial_count[1:5,1:5]
+
+dim(spatial_cluster)
+
+spatial_cluster[1:5,]
+
+table(spatial_cluster$class_label)
+```
+
+
+Here, we use the _Codeluppi_ dataset as an example. To reduce the computation time, the loaded example datasets are subsampled from their corresponding full datasets by keeping at most 50 cells for each cell type. For the subsampled example scRNA-seq data, we have 19972 genes and 550 cells, covering 11 cell types. For the subsampled example spatial transcriptomics data, we have 33 genes and 537 cells, also covering 11 cell types. 
+
+
+Then we prepare other information that is needed for model fitting:
+
+```{r}
+#get overlapping cell types
+unique_cluster_label=intersect(as.character(unique(sc_cluster[colnames(sc_count),]$class_label)), as.character(unique(spatial_cluster[colnames(spatial_count),]$class_label)))
+
+#get overlapping genes
+overlap_gene=intersect(unique(rownames(sc_count)),unique(rownames(spatial_count)))
+
+#set up output folder
+outputpath = "~/gpsFISH_walkthrough/simulation_training"
+```
+
+
+## Fit the Bayesian model
+
+After having all the data, we can start to fit the model. To reduce the running time, we use variational inference for model fitting (`optimizer = "variational_inference"`). In addition, we set the number of iterations to 100 (`num.iter = 100`). Of note, this is just for demonstration purpose. For fitting the model on real data, it is suggested to use at least 2000 iterations if `optimizer = "sampling"` and 10000 iterations if `optimizer = "variational_inference"`. The code below will take a few minutes to finish. 
+
+```{r, include = TRUE}
+simulation.params=simulation_training_ZINB(sc_count = sc_count,
+                                           spatial_count = spatial_count,
+                                           overlap_gene = overlap_gene,
+                                           unique_cluster_label = unique_cluster_label,
+                                           sc_cluster = sc_cluster,
+                                           spatial_cluster = spatial_cluster,
+                                           outputpath = outputpath,
+                                           optimizer = "variational_inference",
+                                           mcmc.check = FALSE,
+                                           num.iter = 100,
+                                           num.chain = 4,
+                                           num.core = 4,
+                                           saveplot = FALSE)
+```
+```{r, echo=FALSE}
+# simulation.params = readRDS("/home/yzhang/Projects/Marker_panel_generation/configuration/seqFISH_sscortex/platform_effect_estimation/subclass.l1/data_for_R_package/vi_test/simulation_params.rds")
+```
+
+
+
+## Inspect model fitting result
+
+**Note**: because we only used 100 iterations, the model fit didn't converge. The inspections below are for demonstration purpose only.  
+
+### Model fit summary
+
+Let's take a look at the model fitting result. First, we plot the posterior distribution of variables in the Bayesian model:
+
+```{r, fig.width = 7, fig.height = 7, include = TRUE}
+params2check = c("alpha_tilde", "beta_tilde", "zi", "sigma_alpha", "sigma_beta", "mu_gamma", "sigma_gamma", "mu_c", "sigma_c", "alpha", "beta")
+rstan::stan_dens(simulation.params$distortion_model, pars = params2check)
+```
+
+
+### Gene specific platform effect
+
+Estimated gene specific intercept $c_i$ and coefficient $\gamma_i$ are stored in the `c_i_full` and `gamma_i_full` slot:
+
+```{r, include = TRUE}
+head(simulation.params$c_i_full)
+
+head(simulation.params$gamma_i_full)
+```
+
+
+### Posterior predictive check
+
+Then we can perform posterior predictive check:
+
+```{r, include = TRUE, fig.height=5, fig.width=5, fig.align='center'}
+#observed spatial transcriptomics data
+obs = simulation.params$data2fit$sp.count
+
+#simulated spatial transcriptomics data using draws from the posterior predictive distribution,
+pred = rstan::extract(simulation.params$distortion_model, pars = "y_rep")[[1]]  #each row is one set of simulation from posterior predictive distribution
+
+#QQ plot comparing observed vs. simulated spatial transcriptomics data
+qqplot(obs, pred[1,], xlab="observed data", ylab=paste("simulated data", 1), main="observed vs. simulated spatial data")
+graphics::abline(0,1)
+```
+
+
+We can also check the relationship between relative expression in scRNA-seq data and relative expression in observed vs. simulated spatial transcriptomics data:
+
+```{r, include = TRUE, fig.width=5, fig.height=5, fig.show='hold', fig.align='center'}
+#calculate relative expression in scRNA-seq and observed spatial transcriptomics data
+#scRNA-seq data:
+sub_sc_count=sc_count[overlap_gene,]
+prop_ik_sc=sapply(unique_cluster_label, gene_list=overlap_gene, relative_freq,
+                  count_matrix=sub_sc_count,
+                  cell_cluster_conversion=sc_cluster)
+#spatial transcriptomics data:
+sub_spatial_count=spatial_count[overlap_gene,]
+prop_ik_spatial=sapply(unique_cluster_label, gene_list=overlap_gene, relative_freq,
+                       count_matrix=sub_spatial_count,
+                       cell_cluster_conversion=spatial_cluster)
+
+#scatter plot of relative expression in scRNA-seq data vs. observed spatial transcriptomics data
+densityscatter(x=data_transformation(as.numeric(as.matrix(prop_ik_sc)), "log", base=exp(1)), y=data_transformation(as.numeric(as.matrix(prop_ik_spatial)), "log", base=exp(1)),
+                  xlab="relative expression in scRNA-seq (log)", ylab="relative expression in spatial data (log)", main = "original spatial data")
+
+#calculate relative expression in simulated spatial transcriptomics data
+simulation.params$data2fit$simu.sp.count = pred[1,]               #we choose one of the simulations as the simulated spatial count
+temp=simulation.params$data2fit[,c("simu.sp.count", "gene", "cell")]
+simu_spatial_count = stats::reshape(temp, idvar = "gene", timevar = "cell", direction = "wide")
+rownames(simu_spatial_count)=simu_spatial_count$gene
+simu_spatial_count=simu_spatial_count[,-1]
+colnames(simu_spatial_count)=colnames(spatial_count)
+
+prop_ik_spatial_simu=sapply(unique_cluster_label, gene_list=overlap_gene, relative_freq,
+                            count_matrix=simu_spatial_count,
+                            cell_cluster_conversion=spatial_cluster)
+
+#scatter plot of relative expression in scRNA-seq data vs. simulated spatial transcriptomics data
+densityscatter(x=data_transformation(as.numeric(as.matrix(prop_ik_sc)), "log", base=exp(1)), y=data_transformation(as.numeric(as.matrix(prop_ik_spatial_simu)), "log", base=exp(1)),
+                 xlab="relative expression in scRNA-seq (log)", ylab="relative expression in spatial data (log)", main = "simulated spatial data")
+```
+
+
+### Other model fitting diagnostics
+
+`simulation.params$distortion_model` is a `stanfit` object from the `rstan` package. Any diagnostic function that can be used on a `stanfit` object can be used on `simulation.params$distortion_model`. For example, we can make a trace plot to visualize the change of parameter vector over the iterations of one or many Markov chains:
+
+```{r, include=TRUE, fig.height=7, fig.width=7}
+rstan::traceplot(simulation.params$distortion_model, pars = params2check)
+```
+
+
+We can also check the autocorrelation of each Markov chain:
+```{r, include=TRUE, fig.height=7, fig.width=7}
+bayesplot::mcmc_acf(simulation.params$distortion_model, pars = params2check, lags = 20)
+```
+
+
+The plots are not that useful since we are using variational inference for model fitting. But the way these plots are generated is the same for model fitting using sampling. More diagnostic plot can be found in the package [bayesplot](https://mc-stan.org/bayesplot/articles/visual-mcmc-diagnostics.html)
+
+
+**Note**: All the plots above will be automatically generated and outputted to `outputpath` if `saveplot = TRUE`
+
+
+## Save result for future use
+
+The size of `simulation.params` can be big given the size of input data and number of iterations. However, a large chunk of the information will not be used in future analysis. Therefore, we can trim the result and only keep the minimum amount of information that we will need for future use:
+
+```{r}
+#check the size of simulation.params
+format(object.size(simulation.params), units = "Mb")
+
+#trim simulation.params
+simulation.params.trimmed = simulation_training_ZINB_trim(simulation.params)
+
+#check the size after trimming
+format(object.size(simulation.params.trimmed), units = "Mb")
+```
+
+
+Specifically, what is changed is that we replaced the `distortion_model` slot from `simulation.params`, which contains the full fitted Bayesian model, with the `posterior` slot in `simulation.params.trimmed`, which only contains the extracted samples of variables in the Bayesian model from their posterior distributions: 
+
+```{r, include = TRUE}
+names(simulation.params)
+
+names(simulation.params.trimmed)
+```
