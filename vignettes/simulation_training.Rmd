@@ -15,6 +15,7 @@ vignette: >
 - [Fit the Bayesian model](#fit-the-bayesian-model)
 - [Inspect model fitting result](#inspect-model-fitting-result)
 - [Save result for future use](#save-result-for-future-use)
+- [Session Info](#session-info)
   
 In this tutorial, we will go over the analysis of estimating platform effect between 
 single cell RNA-seq and spatial transcriptomis technologies using gpsFISH. We estimate 
@@ -252,4 +253,10 @@ Specifically, what is changed is that we replaced the `distortion_model` slot fr
 names(simulation.params)
 
 names(simulation.params.trimmed)
+```
+
+
+## Session Info
+```{r, include = TRUE}
+sessionInfo()
 ```
