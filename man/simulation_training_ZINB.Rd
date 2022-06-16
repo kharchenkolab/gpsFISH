@@ -80,6 +80,7 @@ A list with the following elements:
 simulation_training_ZINB estimates platform effects between scRNA-seq and spatial transcriptomics technologies using Bayesian modelling. The Bayesian model is fitted using rstan
 }
 \examples{
+\dontrun{
 data(sc_count)
 data(sc_cluster)
 data(spatial_count)
@@ -103,6 +104,7 @@ simulation.params=simulation_training_ZINB(sc_count = sc_count,
                                            max.treedepth = 10,
                                            seed = 3,
                                            saveplot = FALSE)
+}
 
 }
 \seealso{

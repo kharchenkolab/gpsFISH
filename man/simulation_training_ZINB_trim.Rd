@@ -23,6 +23,7 @@ A list containing the trimmed model fitting result:
 simulation_training_ZINB_trim takes the result returned by simulation_training_ZINB and reduces its size by keeping the minimum amount of information needed for future use (e.g., simulate new spatial transcriptomics data using fitted model)
 }
 \examples{
+\dontrun{
 data(sc_count)
 data(sc_cluster)
 data(spatial_count)
@@ -46,6 +47,7 @@ simulation.params=simulation_training_ZINB(sc_count = sc_count,
                                            max.treedepth = 10,
                                            seed = 3,
                                            saveplot = FALSE)
+}
 
 #check object size
 format(object.size(simulation.params), units = "Mb")

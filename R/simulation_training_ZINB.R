@@ -607,7 +607,6 @@ simulation_training_ZINB=function(sc_count, spatial_count,
 #'                                            max.treedepth = 10,
 #'                                            seed = 3,
 #'                                            saveplot = FALSE)
-#' }
 #'
 #' #check object size
 #' format(object.size(simulation.params), units = "Mb")
@@ -616,6 +615,7 @@ simulation_training_ZINB=function(sc_count, spatial_count,
 #'
 #' #check object size again
 #' format(object.size(simulation.params.trimmed), units = "Mb")
+#' }
 simulation_training_ZINB_trim=function(simulation.params){
   fit.m = simulation.params$distortion_model
   posterior.alpha = rstan::extract(fit.m, pars="alpha")$alpha
