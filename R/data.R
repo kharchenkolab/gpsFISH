@@ -53,3 +53,17 @@
 #'   \item{posterior}{A list containing the extracted samples of variables in the Bayesian model from their posterior distribution.}
 #' }
 "simulation_params"
+
+
+#' Probe count per gene.
+#'
+#' A data frame containing the number of probe count that can be designed to target a gene
+#'
+#' @format A data frame with 27308 rows and 3 columns. Each row corresponds to one gene. Of note, one gene could appear in multiple rows. For the 3 columns:
+#' \describe{
+#'   \item{gene_name}{Gene name.}
+#'   \item{chr}{The chromosome that the gene is located.}
+#'   \item{probe_count}{Number of probe count.}
+#' }
+"probe_count"
+
