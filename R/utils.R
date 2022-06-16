@@ -34,6 +34,39 @@ relative_freq=function(count_matrix, gene_list, cluster_label, cell_cluster_conv
 }
 
 
+#' Calculate average expression of genes in a given cell type
+#'
+#' @param count_matrix A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name
+#' @param gene_list A character vector of gene names for which we want to calculate the average expression. The gene name should match the row name of \code{count_matrix}
+#' @param cluster_label A character vector with one element representing the cell type name
+#' @param cell_cluster_conversion A data frame with each row representing information of one cell. First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+#'
+#' @return A numeric vector of average expression of each gene in the cell type specified by cluster_label
+#' @export
+#'
+#' @examples
+#' data(spatial_count)
+#' data(spatial_cluster)
+#' cell.type = unique(spatial_cluster$class_label)[1]
+#' average_expr = average_count(spatial_count, rownames(spatial_count), cell.type, spatial_cluster)
+#' average_expr
+average_count=function(count_matrix, gene_list, cluster_label, cell_cluster_conversion){
+  if (is.null(rownames(count_matrix))) stop("'count_matrix' should have gene name as row name")
+  if (is.null(colnames(count_matrix))) stop("'count_matrix' should have cell name as column name")
+
+  if (length(setdiff(gene_list, rownames(count_matrix)))>0) stop("There are genes in 'gene_list' that are not in 'count_matrix'")
+
+  if (!identical(colnames(cell_cluster_conversion), c("cell_name", "class_label"))) stop("'cell_cluster_conversion' should have column name as 'cell_name' and 'class_label'")
+
+  if (length(cluster_label)>1) stop("length of 'cluster_label' should be 1")
+  if (length(setdiff(cluster_label, unique(cell_cluster_conversion$class_label)))>0) stop("'cluster_label' is not a cell type in 'cell_cluster_conversion'")
+
+  cells_in_cluster=colnames(count_matrix)[which(as.character(cell_cluster_conversion[colnames(count_matrix),"class_label"]) %in% cluster_label)]
+  ave_count=rowSums(as.matrix(count_matrix[gene_list,cells_in_cluster]))/length(cells_in_cluster)
+  return(ave_count)
+}
+
+
 #' A scatterplot with color corresponding to density
 #'
 #' @description Visualize two dimensional data using scatterplot with density information
