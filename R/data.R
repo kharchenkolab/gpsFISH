@@ -75,3 +75,16 @@
 #' }
 "probe_count"
 
+
+#' Cell type hierarchy.
+#'
+#' A data frame containing the cell type hierarchy information. Specifically, each column contains cell type annotation at a given granularity.
+#' Columns are the left representing more broadly defined cell types and columns on the right representing more detailed subpopulations.
+#' Each row represents one cell type.
+#'
+#' @format A data frame with 11 rows and 2 columns. Each row represents one cell type. For the 2 columns:
+#' \describe{
+#'   \item{class}{Cell type at the class level.}
+#'   \item{subclass}{Cell type at the subclass level.}
+#' }
+"cell_type_hierarchy"
