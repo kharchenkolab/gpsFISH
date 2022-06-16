@@ -38,6 +38,7 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' data(sc_count)
 #' data(sc_cluster)
 #' data(spatial_count)
@@ -61,6 +62,7 @@
 #'                                            max.treedepth = 10,
 #'                                            seed = 3,
 #'                                            saveplot = FALSE)
+#' }
 #'
 #' @seealso \code{\link[rstan]{stan}},  \code{\link[rstan]{vb}} from the \code{rstan} package
 simulation_training_ZINB=function(sc_count, spatial_count,
@@ -581,6 +583,7 @@ simulation_training_ZINB=function(sc_count, spatial_count,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' data(sc_count)
 #' data(sc_cluster)
 #' data(spatial_count)
@@ -604,6 +607,7 @@ simulation_training_ZINB=function(sc_count, spatial_count,
 #'                                            max.treedepth = 10,
 #'                                            seed = 3,
 #'                                            saveplot = FALSE)
+#' }
 #'
 #' #check object size
 #' format(object.size(simulation.params), units = "Mb")
