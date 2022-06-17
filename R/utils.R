@@ -461,3 +461,107 @@ diff_gene_cluster=function(pagoda_object, cell_cluster_conversion, n.core = 1, z
   result = r$getDifferentialGenes(groups=r$clusters, z.threshold=z.threshold, append.auc=T)
   return(list(pagoda.obj=r, diff_result=result))
 }
+
+
+#' Initialize population for genetic algorithm based on differential expression result
+#'
+#' @param pop.size Size of the population, i.e., the number of gene panels to initialize
+#' @param panel.size Size of gene panel, i.e., the number of genes in a gene panel
+#' @param diff_expr_result A list containing the differential expression result. Each slot in the list contains a data frame corresponding to differentially expressed genes in one cell type.
+#' Within each data frame, each row is one differentially expressed gene. Columns contain differential expression statistics of a gene, e.g., AUC, z-score, precision, etc.
+#' @param diff_metric Metric used to select significant differentially expressed genes. Needs to be one column of the data frame in \code{diff_expr_result}
+#' @param diff_metric_cutoff A numeric value representing the significance cutoff for differential expression.
+#' @param gene.list A character vector of genes used to initialize the population
+#' @param gene2include A character vector of genes that must be included in each panel of the population. Default is NULL
+#'
+#' @return A matrix with each row representing one gene panel and each column representing one gene in a gene panel.
+#' The genes are encoded by their location in \code{gene.list}
+#' @export
+#'
+#' @examples
+#' data(sc_count)
+#' data(sc_cluster)
+#'
+#' gene2include.symbol = sample(rownames(sc_count), 20)
+#'
+#' #adjust variance
+#' sc_count.adjust_variance = preprocess_normalize(sc_count, n.core = 2)
+#'
+#' #run differential expression
+#' diff_expr = diff_gene_cluster(pagoda_object = sc_count.adjust_variance$pagoda.object,
+#'                               cell_cluster_conversion = sc_cluster, n.core = 1)
+#'
+#' initpop.DE=initialize_population(pop.size = 100,
+#'                                  panel.size = 200,
+#'                                  diff_expr_result = diff_expr$diff_result,
+#'                                  diff_metric = "AUC",
+#'                                  diff_metric_cutoff = 0.7,
+#'                                  gene.list = rownames(sc_count),
+#'                                  gene2include = gene2include.symbol)
+#'
+#' head(initpop.DE)
+initialize_population = function(pop.size, panel.size, diff_expr_result, diff_metric, diff_metric_cutoff, gene.list, gene2include=NULL){
+  clusters = names(diff_expr_result)
+
+  if (is.null(gene2include)){          #if we don't have genes that we must include
+    initpop = sapply(seq(1:pop.size), initialize_solution,
+                     panel.size = panel.size, diff_expr_result = diff_expr_result, cluster.list = clusters,
+                     diff_metric = diff_metric, diff_metric_cutoff = diff_metric_cutoff,
+                     gene.list = gene.list, gene2include = gene2include)
+  }else{                               #if there are genes that we must include
+    new.panel.size=panel.size-length(gene2include)
+    initpop = sapply(seq(1:pop.size), initialize_solution,
+                     panel.size = new.panel.size, diff_expr_result = diff_expr_result, cluster.list = clusters,
+                     diff_metric = diff_metric, diff_metric_cutoff = diff_metric_cutoff,
+                     gene.list = gene.list, gene2include = gene2include)
+    initpop=base::rbind(initpop, replicate(pop.size, which(gene.list %in% gene2include)))
+  }
+  return(t(initpop))
+}
+
+initialize_solution = function(sol.num, panel.size, diff_expr_result, diff_metric, diff_metric_cutoff, cluster.list, gene.list, gene2include=NULL){
+  candidate=c()
+  gene2include.per.ct=floor(panel.size/length(cluster.list))
+  all.DEGs=c()
+
+  for(ct in cluster.list){
+    DEG.table = subset(diff_expr_result[[ct]], diff_expr_result[[ct]][[diff_metric]]>diff_metric_cutoff)
+    #sort DEG table by AUC
+    DEG.table = DEG.table[order(DEG.table$AUC, decreasing = TRUE),]
+    DEGs = DEG.table$Gene
+
+    DEG.pool = setdiff(DEGs, gene2include)         #we select from DEGs that are not in gene2include
+    all.DEGs = c(all.DEGs, DEG.pool)
+
+    if (length(DEG.pool)>=gene2include.per.ct){
+      candidate = c(candidate, sample(DEG.pool, gene2include.per.ct, prob = DEG.table[DEG.pool, diff_metric]))
+    }else{
+      candidate = c(candidate, DEG.pool)
+    }
+  }
+
+  all.DEGs=unique(all.DEGs)
+  candidate=unique(candidate)
+
+  #for the rest of the panel, randomly select from the rest DEGs
+  candidate = c(candidate, sample(setdiff(all.DEGs, candidate), panel.size - length(candidate)))
+  return(which(gene.list %in% candidate))
+}
+
+#random initialize initpop
+initialize_population_random=function(pop.size, panel.size, gene.list, gene2include.id){
+  indices = 1:length(gene.list)
+  if (!is.null(gene2include.id)){                  #if we have gene we must include
+    pop1 <- t(replicate(pop.size, gene2include.id))
+    if (length(gene2include.id)<panel.size){
+      pop2 <- t(replicate(pop.size, sample(setdiff(indices, gene2include.id), (panel.size-length(gene2include.id)))))
+      initpop <- cbind(pop1, pop2)
+    }
+    if (length(gene2include.id)==panel.size){
+      initpop <- pop1
+    }
+  }else{
+    initpop <- t(replicate(pop.size, sample(indices, panel.size)))
+  }
+  return(initpop)
+}
