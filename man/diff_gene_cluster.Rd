@@ -36,7 +36,8 @@ data(sc_cluster)
 sc_count.adjust_variance = preprocess_normalize(sc_count, n.core = 2)
 
 #run differential expression
-diff_expr = diff_gene_cluster(pagoda_object = sc_count.adjust_variance$pagoda.object, cell_cluster_conversion = sc_cluster, n.core = 1)
+diff_expr = diff_gene_cluster(pagoda_object = sc_count.adjust_variance$pagoda.object,
+                              cell_cluster_conversion = sc_cluster, n.core = 1)
 
 #Get differentially expressed genes for a specific cell type, e.g., Pvm:
 head(diff_expr$diff_result$Pvm)
