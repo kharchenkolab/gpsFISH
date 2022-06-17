@@ -29,7 +29,7 @@ Within each data frame, each row is one gene. Columns contain differential expre
 
 \item{cluster.list}{A character vector of cell type names. It must be the same or a subset of \code{names(diff_expr_result)}}
 
-\item{gene.list}{A character vector of genes used to initialize the population}
+\item{gene.list}{A character vector of all candidate genes used to initialize the population}
 
 \item{gene2include}{A character vector of genes that must be included in each panel of the population. Default is NULL}
 }

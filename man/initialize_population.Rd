@@ -26,7 +26,7 @@ Within each data frame, each row is one gene. Columns contain differential expre
 
 \item{diff_metric_cutoff}{A numeric value representing the significance cutoff for differential expression.}
 
-\item{gene.list}{A character vector of genes used to initialize the population}
+\item{gene.list}{A character vector of all candidate genes used to initialize the population}
 
 \item{gene2include}{A character vector of genes that must be included in each panel of the population. Default is NULL}
 }

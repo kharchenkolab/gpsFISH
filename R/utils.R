@@ -474,7 +474,7 @@ diff_gene_cluster=function(pagoda_object, cell_cluster_conversion, n.core = 1, z
 #' Within each data frame, each row is one gene. Columns contain differential expression statistics of a gene, e.g., "AUC", "z-score", "precision", etc.
 #' @param diff_metric A character specifying the metric used to select significant differentially expressed genes. Needs to be one of the column names of the data frame in \code{diff_expr_result}, e.g., "AUC".
 #' @param diff_metric_cutoff A numeric value representing the significance cutoff for differential expression.
-#' @param gene.list A character vector of genes used to initialize the population
+#' @param gene.list A character vector of all candidate genes used to initialize the population
 #' @param gene2include A character vector of genes that must be included in each panel of the population. Default is NULL
 #'
 #' @return A matrix with each row representing one gene panel and each column representing one gene in a gene panel.
@@ -541,7 +541,7 @@ initialize_population = function(pop.size, panel.size, diff_expr_result, diff_me
 #' @param diff_metric A character specifying the metric used to select significant differentially expressed genes. Needs to be one of the column names of the data frame in \code{diff_expr_result}, e.g., "AUC".
 #' @param diff_metric_cutoff A numeric value representing the significance cutoff for differential expression.
 #' @param cluster.list A character vector of cell type names. It must be the same or a subset of \code{names(diff_expr_result)}
-#' @param gene.list A character vector of genes used to initialize the population
+#' @param gene.list A character vector of all candidate genes used to initialize the population
 #' @param gene2include A character vector of genes that must be included in each panel of the population. Default is NULL
 #'
 #' @return A numeric vector representing an initialized solution with \code{panel.size} genes.
@@ -585,17 +585,36 @@ initialize_solution = function(sol.num, panel.size, diff_expr_result, diff_metri
 }
 
 
-
-
-
-
-#random initialize initpop
+#' Initialize population randomly from all candidate genes
+#'
+#' @param pop.size Size of the population, i.e., the number of gene panels to initialize
+#' @param panel.size Size of a gene panel, i.e., the number of genes in a gene panel
+#' @param gene.list A character vector of all candidate genes used to initialize the population
+#' @param gene2include.id A numeric vector specifying the location of genes in \code{gene.list} that must be included in each panel of the population. Default is NULL
+#'
+#' @return A matrix with each row representing one gene panel and each column representing one gene in a gene panel.
+#' The genes are encoded by their location in \code{gene.list}
+#' @export
+#'
+#' @examples
+#' data(sc_count)
+#'
+#' gene2include.symbol = sample(rownames(sc_count), 20)
+#' gene2include.id=which(rownames(sc_count) %in% gene2include.symbol)
+#'
+#' initpop.random=initialize_population_random(pop.size = 100,
+#'                                             panel.size = 200,
+#'                                             gene.list = rownames(sc_count),
+#'                                             gene2include.id = gene2include.id)
+#' head(initpop.random)
 initialize_population_random=function(pop.size, panel.size, gene.list, gene2include.id){
+  if (length(base::setdiff(gene2include.id, 1:length(gene.list)))>0) stop("genes in 'gene2include.id' must also be in 'gene.list'")
+
   indices = 1:length(gene.list)
   if (!is.null(gene2include.id)){                  #if we have gene we must include
     pop1 <- t(replicate(pop.size, gene2include.id))
     if (length(gene2include.id)<panel.size){
-      pop2 <- t(replicate(pop.size, sample(setdiff(indices, gene2include.id), (panel.size-length(gene2include.id)))))
+      pop2 <- t(replicate(pop.size, sample(base::setdiff(indices, gene2include.id), (panel.size-length(gene2include.id)))))
       initpop <- cbind(pop1, pop2)
     }
     if (length(gene2include.id)==panel.size){
