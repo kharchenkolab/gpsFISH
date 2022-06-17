@@ -264,7 +264,7 @@ distortion_test=function(prop_vector, group_label){
 #' data(sc_cluster)
 #' cluster_distance=cluster_dis(count_table = norm_sc_count, cell_cluster_conversion = sc_cluster,
 #'                              cluster_metric = "complete", dist_metric = "correlation",
-#'                              log.transform = F, top.var.gene = 1000)
+#'                              log.transform = FALSE, top.var.gene = 1000)
 cluster_dis=function(count_table, cell_cluster_conversion, dist_metric = "correlation", cluster_metric = "complete", top.var.gene = 1000, log.transform = T){
   if (is.null(rownames(count_table))) stop("'count_table' should have gene name as row name")
   if (is.null(colnames(count_table))) stop("'count_table' should have cell name as column name")
@@ -293,7 +293,7 @@ cluster_dis=function(count_table, cell_cluster_conversion, dist_metric = "correl
   if (top.var.gene>=dim(logmetacellcount)[1]){
     top.var.gene=dim(logmetacellcount)[1]
   }
-  var.per.gene=apply(logmetacellcount, 1, var)
+  var.per.gene=apply(logmetacellcount, 1, stats::var)
   top.logmetacellcount=logmetacellcount[order(var.per.gene, decreasing=T)[1:top.var.gene],]
 
   data2compute=t(top.logmetacellcount)           #clustering is performed on rows
