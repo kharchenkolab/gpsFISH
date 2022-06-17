@@ -366,8 +366,11 @@ merge_column=function(count_table, cell_cluster_conversion, current_label){
 #'                              log.transform = FALSE, top.var.gene = 1000)
 #' raw_weight_penalty = as.matrix(cluster_distance$distance_matrix)
 #' raw_weight_penalty = raw_weight_penalty/max(raw_weight_penalty)
-#' weight_penalty = hierarchical_penalty(weight.matrix = raw_weight_penalty, cell.type.hierarchy = cell_type_hierarchy,
-#'                                       reference.resolution = "class", current.resolution = "subclass", penalty = 2)
+#' weight_penalty = hierarchical_penalty(weight.matrix = raw_weight_penalty,
+#'                                       cell.type.hierarchy = cell_type_hierarchy,
+#'                                       reference.resolution = "class",
+#'                                       current.resolution = "subclass",
+#'                                       penalty = 2)
 #' diag(weight_penalty)=1
 hierarchical_penalty=function(weight.matrix, cell.type.hierarchy, reference.resolution, current.resolution, penalty = 1){
   if (!is.numeric(penalty)) stop("'penalty' needs to be numeric")

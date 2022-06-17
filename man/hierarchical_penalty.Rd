@@ -37,13 +37,13 @@ if \eqn{p_ij > 1}, an extra penalty is given to misclassifying cells from cell t
 
 Essentially, the weighted penalty matrix can be constructed arbitrarily by user’s preference. \code{hierarchical_penalty} constructs the weighted penalty matrix from cell type hierarchy.
 Input is a square matrix specifying the pairwise distance between cell types (\code{weight.matrix}).
-The pairwise distance matrix is then adjusted based on cell type hierarchy (\code{cell.type.hierarchy}).
-Cell types can be organized in a hierarchical manner. Each level represents a different granularity
+The pairwise distance matrix is then adjusted based on cell type hierarchy (\code{cell.type.hierarchy}) to construct the weighted penalty matrix.
+Specifically, cell types can be organized in a hierarchical manner. Each level represents a different granularity
 with higher level representing broad cell types (e.g., neuron) and lower level representing detailed cell types that are further divided from broad cell types, i.e., subpopulations (e.g., excitatory neuron and inhibitory neuron).
 To adjust the pairwise distance matrix based on cell type hierarchy, a reference level is specified.
 For cell types below the reference level that are from the same cell type at the reference level, the pairwise distance (between 0 and 1) between them is kept unchanged to reflect partial credit to wrong classifications among them.
 For cell types below the reference level that are from different cell types at the reference level, the pairwise distance between them is changed to \code{penalty} to reflect extra penalty.
-Finally, the diagonal value is changed to 1 to reflect no extra credit to correct classifications. This weighted penalty matrix is used for hierarchical classification.
+This weighted penalty matrix can then be used for hierarchical classification.
 }
 \examples{
 data(norm_sc_count)
@@ -53,7 +53,10 @@ cluster_distance=cluster_dis(count_table = norm_sc_count, cell_cluster_conversio
                              log.transform = FALSE, top.var.gene = 1000)
 raw_weight_penalty = as.matrix(cluster_distance$distance_matrix)
 raw_weight_penalty = raw_weight_penalty/max(raw_weight_penalty)
-weight_penalty = hierarchical_penalty(weight.matrix = raw_weight_penalty, cell.type.hierarchy = cell_type_hierarchy,
-                                      reference.resolution = "class", current.resolution = "subclass", penalty = 2)
+weight_penalty = hierarchical_penalty(weight.matrix = raw_weight_penalty,
+                                      cell.type.hierarchy = cell_type_hierarchy,
+                                      reference.resolution = "class",
+                                      current.resolution = "subclass",
+                                      penalty = 2)
 diag(weight_penalty)=1
 }
