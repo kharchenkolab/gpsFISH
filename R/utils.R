@@ -405,7 +405,9 @@ hierarchical_penalty=function(weight.matrix, cell.type.hierarchy, reference.reso
 #' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name
 #' @param n.core Number of cores to use. Default is 1.
 #'
-#' @return A list containing the adjusted count matrix ("sparse.matrix" slot) and the pagoda2 object ("pagoda.object" slot)
+#' @return A list with:
+#' \item{sparse.matrix}{the adjusted count matrix}
+#' \item{pagoda.object}{the pagoda2 object}
 #' @export
 #'
 #' @examples
@@ -427,17 +429,22 @@ preprocess_normalize=function(count_table, n.core = 1){
 #' @param n.core Number of cores to use. Default is 1.
 #' @param z.threshold A numeric value specifying the minimal absolute Z score (adjusted) to report. Default is 3.
 #'
-#' @return A list containing the differential expression result ("diff_result" slot) and the pagoda2 object ("pagoda.obj" slot)
+#' @return A list with:
+#' \item{diff_result}{differential expression result}
+#' \item{pagoda.obj}{the pagoda2 object}
 #' @export
 #'
 #' @examples
 #' data(sc_count)
 #' data(sc_cluster)
 #'
+#' #adjust variance
 #' sc_count.adjust_variance = preprocess_normalize(sc_count, n.core = 2)
+#'
+#' #run differential expression
 #' diff_expr = diff_gene_cluster(pagoda_object = sc_count.adjust_variance$pagoda.object, cell_cluster_conversion = sc_cluster, n.core = 1)
 #'
-#' #Differentially expressed genes for Pvm:
+#' #Get differentially expressed genes for a specific cell type, e.g., Pvm:
 #' head(diff_expr$diff_result$Pvm)
 diff_gene_cluster=function(pagoda_object, cell_cluster_conversion, n.core = 1, z.threshold = 3){
   if (class(sc_count.adjust_variance$pagoda.object)[1] != "Pagoda2") stop("'pagoda_object' needs to be a pagoda2 object")

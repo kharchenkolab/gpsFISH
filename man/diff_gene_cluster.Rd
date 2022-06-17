@@ -21,7 +21,9 @@ diff_gene_cluster(
 \item{z.threshold}{A numeric value specifying the minimal absolute Z score (adjusted) to report. Default is 3.}
 }
 \value{
-A list containing the differential expression result ("diff_result" slot) and the pagoda2 object ("pagoda.obj" slot)
+A list with:
+\item{diff_result}{differential expression result}
+\item{pagoda.obj}{the pagoda2 object}
 }
 \description{
 diff_gene_cluster performs differential gene expression between clusters using Pagoda2
@@ -30,9 +32,12 @@ diff_gene_cluster performs differential gene expression between clusters using P
 data(sc_count)
 data(sc_cluster)
 
+#adjust variance
 sc_count.adjust_variance = preprocess_normalize(sc_count, n.core = 2)
+
+#run differential expression
 diff_expr = diff_gene_cluster(pagoda_object = sc_count.adjust_variance$pagoda.object, cell_cluster_conversion = sc_cluster, n.core = 1)
 
-#Differentially expressed genes for Pvm:
+#Get differentially expressed genes for a specific cell type, e.g., Pvm:
 head(diff_expr$diff_result$Pvm)
 }

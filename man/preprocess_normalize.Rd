@@ -12,7 +12,9 @@ preprocess_normalize(count_table, n.core = 1)
 \item{n.core}{Number of cores to use. Default is 1.}
 }
 \value{
-A list containing the adjusted count matrix ("sparse.matrix" slot) and the pagoda2 object ("pagoda.object" slot)
+A list with:
+\item{sparse.matrix}{the adjusted count matrix}
+\item{pagoda.object}{the pagoda2 object}
 }
 \description{
 preprocess_normalize takes scRNA-seq expression data as input and adjust the variance to normalize the extent to which genes with different expression magnitudes will contribute to the downstream anlaysis
