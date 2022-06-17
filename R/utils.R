@@ -399,13 +399,13 @@ hierarchical_penalty=function(weight.matrix, cell.type.hierarchy, reference.reso
 }
 
 
-#' Adjust variance of count data using Pagoda2
+#' Adjust variance of scRNA-seq expression data using Pagoda2
 #'
-#' @description preprocess_normalize takes count data as input and adjust the variance to normalize the extent to which genes with different expression magnitudes will contribute to the downstream anlaysis
+#' @description preprocess_normalize takes scRNA-seq expression data as input and adjust the variance to normalize the extent to which genes with different expression magnitudes will contribute to the downstream anlaysis
 #' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name
 #' @param n.core Number of cores to use. Default is 1.
 #'
-#' @return A list containing the adjusted count matrix ("sparse.matrix" slot) and the Pagoda2 object ("pagoda.object" slot)
+#' @return A list containing the adjusted count matrix ("sparse.matrix" slot) and the pagoda2 object ("pagoda.object" slot)
 #' @export
 #'
 #' @examples
@@ -418,3 +418,38 @@ preprocess_normalize=function(count_table, n.core = 1){
   return(list(sparse.matrix=sm, pagoda.object=r))
 }
 
+
+#' Differential gene expression between clusters
+#'
+#' @description diff_gene_cluster performs differential gene expression between clusters using Pagoda2
+#' @param pagoda_object A pagoda2 object
+#' @param cell_cluster_conversion A data frame with each row representing information of one cell. First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+#' @param n.core Number of cores to use. Default is 1.
+#' @param z.threshold A numeric value specifying the minimal absolute Z score (adjusted) to report. Default is 3.
+#'
+#' @return A list containing the differential expression result ("diff_result" slot) and the pagoda2 object ("pagoda.obj" slot)
+#' @export
+#'
+#' @examples
+#' data(sc_count)
+#' data(sc_cluster)
+#'
+#' sc_count.adjust_variance = preprocess_normalize(sc_count, n.core = 2)
+#' diff_expr = diff_gene_cluster(pagoda_object = sc_count.adjust_variance$pagoda.object, cell_cluster_conversion = sc_cluster, n.core = 1)
+#'
+#' #Differentially expressed genes for Pvm:
+#' head(diff_expr$diff_result$Pvm)
+diff_gene_cluster=function(pagoda_object, cell_cluster_conversion, n.core = 1, z.threshold = 3){
+  if (class(sc_count.adjust_variance$pagoda.object)[1] != "Pagoda2") stop("'pagoda_object' needs to be a pagoda2 object")
+
+  r <- pagoda_object
+
+  group=as.character(cell_cluster_conversion[rownames(r$counts),"class_label"])
+  group=as.factor((group))
+  names(group)=rownames(r$counts)
+
+  r$clusters=group
+
+  result = r$getDifferentialGenes(groups=r$clusters, z.threshold=z.threshold, append.auc=T)
+  return(list(pagoda.obj=r, diff_result=result))
+}

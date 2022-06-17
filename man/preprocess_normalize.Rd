@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{preprocess_normalize}
 \alias{preprocess_normalize}
-\title{Adjust variance of count data using Pagoda2}
+\title{Adjust variance of scRNA-seq expression data using Pagoda2}
 \usage{
 preprocess_normalize(count_table, n.core = 1)
 }
@@ -12,12 +12,12 @@ preprocess_normalize(count_table, n.core = 1)
 \item{n.core}{Number of cores to use. Default is 1.}
 }
 \value{
-A list containing the adjusted count matrix ("sparse.matrix" slot) and the Pagoda2 object ("pagoda.object" slot)
+A list containing the adjusted count matrix ("sparse.matrix" slot) and the pagoda2 object ("pagoda.object" slot)
 }
 \description{
-preprocess_normalize takes count data as input and adjust the variance to normalize the extent to which genes with different expression magnitudes will contribute to the downstream anlaysis
+preprocess_normalize takes scRNA-seq expression data as input and adjust the variance to normalize the extent to which genes with different expression magnitudes will contribute to the downstream anlaysis
 }
 \examples{
 data(sc_count)
-preprocess_normalize(sc_count, ncore = 2)
+preprocess_normalize(sc_count, n.core = 2)
 }
