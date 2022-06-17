@@ -44,5 +44,5 @@ data(norm_sc_count)
 data(sc_cluster)
 cluster_distance=cluster_dis(count_table = norm_sc_count, cell_cluster_conversion = sc_cluster,
                              cluster_metric = "complete", dist_metric = "correlation",
-                             log.transform = F, top.var.gene = 1000)
+                             log.transform = FALSE, top.var.gene = 1000)
 }
