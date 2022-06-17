@@ -18,13 +18,13 @@ cluster_dis(
 
 \item{cell_cluster_conversion}{A data frame with each row representing information of one cell. First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.}
 
-\item{dist_metric}{A character specifying the metric for distance calculation. Default is \code{correlation}, which uses 1 - Pearson correlation coefficient as distance. Other options are "euclidean" for Euclidean distance and "manhattan" for Manhattan distance.}
+\item{dist_metric}{A character specifying the metric for distance calculation. Default is "correlation", which uses 1 - Pearson correlation coefficient as distance. Other options are "euclidean" for Euclidean distance and "manhattan" for Manhattan distance.}
 
 \item{cluster_metric}{A character specifying the agglomeration method to be used. This should be (an unambiguous abbreviation of) one of "ward.D", "ward.D2", "single", "complete" (default), "average" (= UPGMA), "mcquitty" (= WPGMA), "median" (= WPGMC) or "centroid" (= UPGMC).}
 
 \item{top.var.gene}{A numeric value specifying the number of top highly variable genes to use for distance calculation. Default is 1000}
 
-\item{log.transform}{A logical value indicating whether to perform log transformation on input count data.Default is TRUE.}
+\item{log.transform}{A logical value indicating whether to perform log transformation on input count data. Default is TRUE.}
 }
 \value{
 A list containing 3 slots:

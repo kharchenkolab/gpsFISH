@@ -313,6 +313,16 @@ cluster_dis=function(count_table, cell_cluster_conversion, dist_metric = "correl
 }
 
 
+#' Merge expression of cells from the same cell type
+#'
+#' @description merge_column calculates expression of genes in a cell type by taking the average from cells of the same cell type
+#' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name
+#' @param cell_cluster_conversion A data frame with each row representing information of one cell. First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+#' @param current_label A character specifying the current cell type name
+#'
+#' @return A numeric vector with average gene expression for the current cell type
+#' @export
+#'
 merge_column=function(count_table, cell_cluster_conversion, current_label){
   cells=which(cell_cluster_conversion[colnames(count_table),"class_label"] %in% current_label)
   result=rowSums(count_table[,cells])/length(cells)
