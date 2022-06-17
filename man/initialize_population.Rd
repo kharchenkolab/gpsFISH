@@ -37,7 +37,6 @@ The genes are encoded by their location in \code{gene.list}
 \description{
 initialize_population initializes a population for genetic algorithm optimization using information from differential expression analysis.
 The idea is that for each gene panel, we include significantlly differentially expressed genes of each cell type (if there is any).
-If there are more spots, we randomly select from non-differentially expressed genes.
 Detailed information of how each gene panel is initialized can be found by \code{?initialize_solution}.
 }
 \examples{

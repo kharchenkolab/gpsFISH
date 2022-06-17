@@ -467,7 +467,6 @@ diff_gene_cluster=function(pagoda_object, cell_cluster_conversion, n.core = 1, z
 #'
 #' @description initialize_population initializes a population for genetic algorithm optimization using information from differential expression analysis.
 #' The idea is that for each gene panel, we include significantlly differentially expressed genes of each cell type (if there is any).
-#' If there are more spots, we randomly select from non-differentially expressed genes.
 #' Detailed information of how each gene panel is initialized can be found by \code{?initialize_solution}.
 #' @param pop.size Size of the population, i.e., the number of gene panels to initialize
 #' @param panel.size Size of a gene panel, i.e., the number of genes in a gene panel
@@ -528,18 +527,46 @@ initialize_population = function(pop.size, panel.size, diff_expr_result, diff_me
 }
 
 
+#' Initialize a gene panel within a population for genetic algorithm based on differential gene expression
+#'
+#' @description initialize_solution initializes one gene panel within a population using information from differential expression analysis.
+#' Specifically, given the panel size and number of cell types, we first calculate on average how many significantly differentially expressed genes we can include from each cell type.
+#' Then we select this number of genes from the differentially expressed genes of each cell type (or all the differentially expressed genes if the number of them is smaller than this number).
+#' We select the most significant genes first followed by less significant ones.
+#' After doing this for all the cell types, for the rest of the panel, we randomly select genes from the rest of the differentially expressed genes.
+#' @param sol.num A numeric value, can be any number.
+#' @param panel.size Size of a gene panel, i.e., the number of genes in a gene panel
+#' @param diff_expr_result A list containing the differential expression result. Each slot in the list contains a data frame corresponding to differentially expressed genes in one cell type.
+#' Within each data frame, each row is one gene. Columns contain differential expression statistics of a gene, e.g., "AUC", "z-score", "precision", etc.
+#' @param diff_metric A character specifying the metric used to select significant differentially expressed genes. Needs to be one of the column names of the data frame in \code{diff_expr_result}, e.g., "AUC".
+#' @param diff_metric_cutoff A numeric value representing the significance cutoff for differential expression.
+#' @param cluster.list A character vector of cell type names. It must be the same or a subset of \code{names(diff_expr_result)}
+#' @param gene.list A character vector of genes used to initialize the population
+#' @param gene2include A character vector of genes that must be included in each panel of the population. Default is NULL
+#'
+#' @return A numeric vector representing an initialized solution with \code{panel.size} genes.
+#' The genes are encoded by their location in \code{gene.list}
+#' @export
+#'
 initialize_solution = function(sol.num, panel.size, diff_expr_result, diff_metric, diff_metric_cutoff, cluster.list, gene.list, gene2include=NULL){
+  if (!(diff_metric %in% colnames(diff_expr_result[[1]]))) stop(paste("'diff_metric' must be one of:", paste(colnames(diff_expr_result[[1]]), collapse = ", ")))
+
+  if (length(setdiff(gene2include, gene.list))>0) stop("genes in 'gene2include' must also be in 'gene.list'")
+
+  if (length(setdiff(cluster.list, names(diff_expr_result)))>0) stop("cell types in 'cluster.list' must also be in names(diff_expr_result)")
+
   candidate=c()
-  gene2include.per.ct=floor(panel.size/length(cluster.list))
+  gene2include.per.ct = floor(panel.size/length(cluster.list))    #calculate average number of DE genes we can include given the number of cell types and panel size
   all.DEGs=c()
 
+  #for each cell type, add significant DE genes. We add the most significant ones first
   for(ct in cluster.list){
     DEG.table = subset(diff_expr_result[[ct]], diff_expr_result[[ct]][[diff_metric]]>diff_metric_cutoff)
     #sort DEG table by AUC
-    DEG.table = DEG.table[order(DEG.table$AUC, decreasing = TRUE),]
+    DEG.table = DEG.table[base::order(DEG.table$AUC, decreasing = TRUE),]
     DEGs = DEG.table$Gene
 
-    DEG.pool = setdiff(DEGs, gene2include)         #we select from DEGs that are not in gene2include
+    DEG.pool = base::setdiff(DEGs, gene2include)         #we select from DEGs that are not in gene2include
     all.DEGs = c(all.DEGs, DEG.pool)
 
     if (length(DEG.pool)>=gene2include.per.ct){
@@ -549,13 +576,18 @@ initialize_solution = function(sol.num, panel.size, diff_expr_result, diff_metri
     }
   }
 
-  all.DEGs=unique(all.DEGs)
-  candidate=unique(candidate)
+  all.DEGs=base::unique(all.DEGs)
+  candidate=base::unique(candidate)
 
   #for the rest of the panel, randomly select from the rest DEGs
-  candidate = c(candidate, sample(setdiff(all.DEGs, candidate), panel.size - length(candidate)))
+  candidate = c(candidate, sample(base::setdiff(all.DEGs, candidate), panel.size - length(candidate)))
   return(which(gene.list %in% candidate))
 }
+
+
+
+
+
 
 #random initialize initpop
 initialize_population_random=function(pop.size, panel.size, gene.list, gene2include.id){
