@@ -329,3 +329,69 @@ merge_column=function(count_table, cell_cluster_conversion, current_label){
   return(result)
 }
 
+
+#' Construct a weighted penalty matrix based on cell type hierarchy
+#'
+#' @description hierarchical_penalty constructs a weighted penalty matrix based on cell type hierarchy.
+#'
+#' @param weight.matrix A square matrix specifying the pairwise distance between cell types
+#' @param cell.type.hierarchy A data frame containing the cell type hierarchy information. Specifically, each row represents one cell type and each column contains the corresponding cell type annotation at a given granularity.
+#' @param reference.resolution A character specifying the level of granularity that is used as reference. It must be one of the columns in \code{cell.type.hierarchy}
+#' @param current.resolution A character specifying the current level of granularity. It must be one of the columns in \code{cell.type.hierarchy} and should be a lower level compared to \code{reference.resolution}
+#' @param penalty A numeric value specifying the penalty for misclassifications across cell types at the \code{reference.resolution} level. Default is 1.
+#'
+#' @details During genetic algorithm optimization, a weighted penalty matrix can be provided to give partial credit or extra penalty to classification between certain cell types to reflect custom preference.
+#' The matrix is a square matrix with each row and each column representing one cell type. This is the same with the confusion matrix from classification. For each value \eqn{p_ij} in the weighted penalty matrix,
+#' if \eqn{p_ij > 1}, an extra penalty is given to misclassifying cells from cell type \eqn{j} to cell type \eqn{i}. If \eqn{p_ij < 1}, a partial credit is given to misclassifying cells from cell type \eqn{j} to cell type \eqn{i}.
+#' \eqn{p_ij = 1} means no penalty or partial credit. The weighted penalty matrix is incorporated to the confusion matrix by element-wise multiplication to provide a weighted confusion matrix.
+#'
+#' Essentially, the weighted penalty matrix can be constructed arbitrarily by user’s preference. \code{hierarchical_penalty} constructs the weighted penalty matrix from cell type hierarchy.
+#' First, pairwise distance between cell types is calculated.
+#' Second, the pairwise distance matrix is normalized by the largest distance so the values range from 0 to 1 (\code{weight.matrix}).
+#' Third, the pairwise distance matrix is then adjusted based on cell type hierarchy (\code{cell.type.hierarchy}).
+#' Cell types can be organized in a hierarchical manner. Each level represents a different granularity
+#' with higher level representing broad cell types (e.g., neuron) and lower level representing detailed cell types that are further divided from broad cell types, i.e., subpopulations (e.g., excitatory neuron and inhibitory neuron).
+#' To adjust the pairwise distance matrix based on cell type hierarchy, a reference level is specified.
+#' For cell types below the reference level that are from the same cell type at the reference level, the pairwise distance (between 0 and 1) between them is kept unchanged to reflect partial credit to wrong classifications among them.
+#' For cell types below the reference level that are from different cell types at the reference level, the pairwise distance between them is changed to \code{penalty} to reflect extra penalty.
+#' Finally, the diagonal value is changed to 1 to reflect no extra credit to correct classifications. This weighted penalty matrix is used for hierarchical classification.
+#'
+#' @return A weighted penalty matrix specifying the partial credit and extra penalty for correct and incorrect classifications between pairs of cell types. This is based on cell type hierarchy information
+#' @export
+#'
+#' @examples
+#' data(norm_sc_count)
+#' data(sc_cluster)
+#' cluster_distance=cluster_dis(count_table = norm_sc_count, cell_cluster_conversion = sc_cluster,
+#'                              cluster_metric = "complete", dist_metric = "correlation",
+#'                              log.transform = FALSE, top.var.gene = 1000)
+#' raw_weight_penalty = as.matrix(cluster_distance$distance_matrix)
+#' raw_weight_penalty = raw_weight_penalty/max(raw_weight_penalty)
+#' weight_penalty = hierarchical_penalty(weight.matrix = raw_weight_penalty, cell.type.hierarchy = cell_type_hierarchy,
+#'                                       reference.resolution = "class", current.resolution = "subclass", penalty = 2)
+#' diag(weight_penalty)=1
+hierarchical_penalty=function(weight.matrix, cell.type.hierarchy, reference.resolution, current.resolution, penalty = 1){
+  if (!is.numeric(penalty)) stop("'penalty' needs to be numeric")
+
+  if (dim(weight.matrix)[1] != dim(weight.matrix)[2]) stop("'weight.matrix' needs to be a square matrix")
+
+  if (!identical(rownames(weight.matrix), colnames(weight.matrix))) stop("row name of 'weight.matrix' should be identical to its column name")
+
+  if (!(reference.resolution %in% colnames(cell.type.hierarchy) && current.resolution %in% colnames(cell.type.hierarchy))) stop("'reference.resolution' and 'current.resolution' need to be column names of cell.type.hierarchy")
+
+  cell.type.list=rownames(weight.matrix)
+  for (cell.type in cell.type.list){
+    #get the reference cell type that the current cell type belongs to
+    reference.cell.type = base::unique(cell.type.hierarchy[[reference.resolution]][which(cell.type.hierarchy[[current.resolution]] == cell.type)])
+
+    #get all the cell types that belong to the same reference cell type (including the current cell type itself)
+    same.reference.cell.types = unique(base::subset(cell.type.hierarchy, cell.type.hierarchy[[reference.resolution]] %in% reference.cell.type)[[current.resolution]])
+
+    #get all the cell types that don't belong to the same reference cell type
+    different.reference.cell.types = base::setdiff(cell.type.list, same.reference.cell.types)
+
+    #change the weight between the current cell type vs. cell types that don't belong to the same reference cell type
+    weight.matrix[cell.type, different.reference.cell.types] = penalty
+  }
+  return(weight.matrix)
+}
