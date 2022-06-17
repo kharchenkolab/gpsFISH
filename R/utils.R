@@ -410,7 +410,7 @@ hierarchical_penalty=function(weight.matrix, cell.type.hierarchy, reference.reso
 #'
 #' @examples
 #' data(sc_count)
-#' preprocess_normalize(sc_count, ncore = 2)
+#' preprocess_normalize(sc_count, n.core = 2)
 preprocess_normalize=function(count_table, n.core = 1){
   sm <- Matrix::Matrix(as.matrix(count_table), sparse = TRUE)
   r <- pagoda2::Pagoda2$new(sm, log.scale = TRUE, n.cores = n.core)
