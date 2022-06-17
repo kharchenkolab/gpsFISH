@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{initialize_population}
 \alias{initialize_population}
-\title{Initialize population for genetic algorithm based on differential expression result}
+\title{Initialize population for genetic algorithm based on differential gene expression}
 \usage{
 initialize_population(
   pop.size,
@@ -17,12 +17,12 @@ initialize_population(
 \arguments{
 \item{pop.size}{Size of the population, i.e., the number of gene panels to initialize}
 
-\item{panel.size}{Size of gene panel, i.e., the number of genes in a gene panel}
+\item{panel.size}{Size of a gene panel, i.e., the number of genes in a gene panel}
 
 \item{diff_expr_result}{A list containing the differential expression result. Each slot in the list contains a data frame corresponding to differentially expressed genes in one cell type.
-Within each data frame, each row is one differentially expressed gene. Columns contain differential expression statistics of a gene, e.g., AUC, z-score, precision, etc.}
+Within each data frame, each row is one gene. Columns contain differential expression statistics of a gene, e.g., "AUC", "z-score", "precision", etc.}
 
-\item{diff_metric}{Metric used to select significant differentially expressed genes. Needs to be one column of the data frame in \code{diff_expr_result}}
+\item{diff_metric}{A character specifying the metric used to select significant differentially expressed genes. Needs to be one of the column names of the data frame in \code{diff_expr_result}, e.g., "AUC".}
 
 \item{diff_metric_cutoff}{A numeric value representing the significance cutoff for differential expression.}
 
@@ -35,7 +35,10 @@ A matrix with each row representing one gene panel and each column representing 
 The genes are encoded by their location in \code{gene.list}
 }
 \description{
-Initialize population for genetic algorithm based on differential expression result
+initialize_population initializes a population for genetic algorithm optimization using information from differential expression analysis.
+The idea is that for each gene panel, we include significantlly differentially expressed genes of each cell type (if there is any).
+If there are more spots, we randomly select from non-differentially expressed genes.
+Detailed information of how each gene panel is initialized can be found by \code{?initialize_solution}.
 }
 \examples{
 data(sc_count)
