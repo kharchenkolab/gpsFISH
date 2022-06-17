@@ -397,3 +397,24 @@ hierarchical_penalty=function(weight.matrix, cell.type.hierarchy, reference.reso
   }
   return(weight.matrix)
 }
+
+
+#' Adjust variance of count data using Pagoda2
+#'
+#' @description preprocess_normalize takes count data as input and adjust the variance to normalize the extent to which genes with different expression magnitudes will contribute to the downstream anlaysis
+#' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name
+#' @param n.core Number of cores to use. Default is 1.
+#'
+#' @return A list containing the adjusted count matrix ("sparse.matrix" slot) and the Pagoda2 object ("pagoda.object" slot)
+#' @export
+#'
+#' @examples
+#' data(sc_count)
+#' preprocess_normalize(sc_count, ncore = 2)
+preprocess_normalize=function(count_table, n.core = 1){
+  sm <- Matrix::Matrix(as.matrix(count_table), sparse = TRUE)
+  r <- pagoda2::Pagoda2$new(sm, log.scale = TRUE, n.cores = n.core)
+  r$adjustVariance()
+  return(list(sparse.matrix=sm, pagoda.object=r))
+}
+
