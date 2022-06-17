@@ -19,7 +19,7 @@ hierarchical_penalty(
 
 \item{reference.resolution}{A character specifying the level of granularity that is used as reference. It must be one of the columns in \code{cell.type.hierarchy}}
 
-\item{current.resolution}{A character specifying the current level of granularity. It must be one of the columns in \code{cell.type.hierarchy} and should be a lower level compared to \code{reference.resolution}}
+\item{current.resolution}{A character specifying the current level of granularity. It is the level of cell type annotation that is used for gene panel selection. It must be one of the columns in \code{cell.type.hierarchy} and should be a lower level compared to \code{reference.resolution}}
 
 \item{penalty}{A numeric value specifying the penalty for misclassifications across cell types at the \code{reference.resolution} level. Default is 1.}
 }
@@ -31,14 +31,13 @@ hierarchical_penalty constructs a weighted penalty matrix based on cell type hie
 }
 \details{
 During genetic algorithm optimization, a weighted penalty matrix can be provided to give partial credit or extra penalty to classification between certain cell types to reflect custom preference.
-The matrix is a square matrix with each row and each column representing one cell type. This is the same with the confusion matrix from classification. For each value \eqn{p_ij} in the weighted penalty matrix,
+The matrix is a square matrix with each row and each column representing one cell type. This is the same with the confusion matrix from classification. For each value \eqn{p_ij} off-diagonal in the weighted penalty matrix,
 if \eqn{p_ij > 1}, an extra penalty is given to misclassifying cells from cell type \eqn{j} to cell type \eqn{i}. If \eqn{p_ij < 1}, a partial credit is given to misclassifying cells from cell type \eqn{j} to cell type \eqn{i}.
 \eqn{p_ij = 1} means no penalty or partial credit. The weighted penalty matrix is incorporated to the confusion matrix by element-wise multiplication to provide a weighted confusion matrix.
 
 Essentially, the weighted penalty matrix can be constructed arbitrarily by user’s preference. \code{hierarchical_penalty} constructs the weighted penalty matrix from cell type hierarchy.
-First, pairwise distance between cell types is calculated.
-Second, the pairwise distance matrix is normalized by the largest distance so the values range from 0 to 1 (\code{weight.matrix}).
-Third, the pairwise distance matrix is then adjusted based on cell type hierarchy (\code{cell.type.hierarchy}).
+Input is a square matrix specifying the pairwise distance between cell types (\code{weight.matrix}).
+The pairwise distance matrix is then adjusted based on cell type hierarchy (\code{cell.type.hierarchy}).
 Cell types can be organized in a hierarchical manner. Each level represents a different granularity
 with higher level representing broad cell types (e.g., neuron) and lower level representing detailed cell types that are further divided from broad cell types, i.e., subpopulations (e.g., excitatory neuron and inhibitory neuron).
 To adjust the pairwise distance matrix based on cell type hierarchy, a reference level is specified.
