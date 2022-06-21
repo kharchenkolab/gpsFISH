@@ -57,10 +57,12 @@ It should be a square matrix with cell types as both row and column name. Defaul
 \item{simulation_model}{A character specifying the type of simulation model. Default is the Bayesian model ("ZINB").}
 
 \item{relative_prop}{A list with two elements:
-\item{cluster.average}{A matrix containing the relative expression of each gene in each cell type with gene name as row name and cell type name as column name.
-The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.}
-\item{cell.level}{A matrix containing the relative expression of each gene in each cell with gene name as row name and cell name as column name.
-The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.}}
+\itemize{
+\item "cluster.average": A matrix containing the relative expression of each gene in each cell type with gene name as row name and cell type name as column name.
+The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.
+\item "cell.level": A matrix containing the relative expression of each gene in each cell with gene name as row name and cell name as column name.
+The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.
+}}
 
 \item{sample_new_levels}{A character specifying how simulation is performed for genes we have observed in the data used to train the Bayesian model.
 Specifically, during the training of the Bayesian model, we have estimations of the platform effect for genes in the training data.

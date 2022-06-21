@@ -17,19 +17,21 @@ subsample_sc(
 \arguments{
 \item{count_table}{A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.}
 
-\item{cell_cluster_conversion}{A data frame with each row representing information of one cell. First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.}
+\item{cell_cluster_conversion}{A data frame with each row representing information of one cell.
+First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+Only needed if \code{sampling_type} is "Subsampling_by_cluster".}
 
 \item{rate}{A value between 0 and 1 specifying the proportion of cells we want to keep for each cell type during subsampling. 0.8 means we keep 80\% of cells for each cell type. Default is 1.}
 
-\item{cluster_size_max}{Maximum number of cells to keep for each cell type during subsampling. Default is 1000.}
+\item{cluster_size_max}{Maximum number of cells to keep for each cell type during subsampling. Default is 1000. Only needed if \code{sampling_type} is "Subsampling_by_cluster".}
 
-\item{cluster_size_min}{Minimum number of cells to keep for each cell type during subsampling. Default is 1.}
+\item{cluster_size_min}{Minimum number of cells to keep for each cell type during subsampling. Default is 1. Only needed if \code{sampling_type} is "Subsampling_by_cluster".}
 
 \item{sampling_type}{A character specifying how the subsample is performed.
 "Subsampling_by_cluster" means subsampling cells from each cell type separately. "Subsampling" means subsampling all cells together by mixing cells from all cell types.
 Default is "Subsampling_by_cluster".}
 
-\item{nCV}{Number of cross validation to perform on the subsampled data. This is to ensure that we have at least}
+\item{nCV}{Number of cross validation to perform on the subsampled data. This is to ensure that we have enough cells for cross validation. Only needed if \code{sampling_type} is "Subsampling_by_cluster".}
 }
 \value{
 A subsampled matrix

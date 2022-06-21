@@ -607,10 +607,10 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
 #' @param simulation_parameter A simulation model returned by simulation_training_ZINB_trim.
 #' @param simulation_model A character specifying the type of simulation model. Default is the Bayesian model ("ZINB").
 #' @param relative_prop A list with two elements:
-#'   \item{cluster.average}{A matrix containing the relative expression of each gene in each cell type with gene name as row name and cell type name as column name.
-#'   The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.}
-#'   \item{cell.level}{A matrix containing the relative expression of each gene in each cell with gene name as row name and cell name as column name.
-#'   The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.}
+#'   * "cluster.average": A matrix containing the relative expression of each gene in each cell type with gene name as row name and cell type name as column name.
+#'   The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.
+#'   * "cell.level": A matrix containing the relative expression of each gene in each cell with gene name as row name and cell name as column name.
+#'   The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.
 #' @param sample_new_levels A character specifying how simulation is performed for genes we have observed in the data used to train the Bayesian model.
 #' Specifically, during the training of the Bayesian model, we have estimations of the platform effect for genes in the training data.
 #' When we simulate spatial transcriptomics data for genes we have already seen in the training data,
