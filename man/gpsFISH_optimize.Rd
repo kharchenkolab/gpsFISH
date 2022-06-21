@@ -47,7 +47,7 @@ Additional arguments can be passed to \code{OF} through \code{\dots}. See \link[
 
 \item{initpop}{A numeric matrix specifying the initial population with each row representing one gene panel and each column representing one gene in a gene panel.
 The genes are encoded by their location in the column name of \code{full_count_table}.
-If not provided, it will be randomly initialized from all the candidate genes.
+If not provided (default is NULL), it will be randomly initialized from all the candidate genes.
 The final populations from one gene panel selection can be passed as the initial population of the next selection.
 Possibly useful if using this function in an adaptive, iterative, or parallel scheme.}
 
@@ -61,13 +61,14 @@ Otherwise nothing is displayed. Default is zero (no display).}
 
 \item{gene2include.id}{A numeric vector specifying the location of genes in the column name of \code{full_count_table} that must be included in each panel of the population. Default is NULL.}
 
-\item{gene.weight}{A data frame specifying the weight for each gene. Each row is a gene. The first column contains the gene name. The second column contains the gene weight.
+\item{gene.weight}{A data frame specifying the weight for each gene. Default is NULL.
+Each row is a gene. The first column contains the gene name. The second column contains the gene weight.
 Row name of the data frame is gene name.
 A gene with higher weight will be (1) more likely to be selected during crossover, (2) less likely to be mutated if it is already in the population, (3) and more likely to be introduced into the population through mutation if it is not in the current population.}
 
 \item{earlyterm}{If \code{earlyterm} is provided, then the optimization will stop when it reaches \code{ngen} generations, or the maximum fitness improvement (fitness difference between two consecutive generations) in the past \code{earlyterm} generations are smaller or equal to \code{converge.cutoff}, whichever comes first. Default is \code{ngen}.}
 
-\item{converge.cutoff}{A numeric value specifying the cutoff of maximum fitness improvement.}
+\item{converge.cutoff}{A numeric value specifying the cutoff of maximum fitness improvement. Default is 0.}
 
 \item{...}{Additional arguments passed to \code{OF}.}
 }
