@@ -648,3 +648,59 @@ popDiv <- function(x) {
   }
   ndiff/(N*(N-1)/2)
 }
+
+
+
+
+
+#' Subsample scRNA-seq data
+#'
+#' @description subsample_sc takes scRNA-seq data as input and subsample it by selecting a subset of cells.
+#'
+#' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.
+#' @param cell_cluster_conversion A data frame with each row representing information of one cell. First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+#' @param rate A value between 0 and 1 specifying the proportion of cells we want to keep for each cell type during subsampling. 0.8 means we keep 80% of cells for each cell type. Default is 1.
+#' @param cluster_size_max Maximum number of cells to keep for each cell type during subsampling. Default is 1000.
+#' @param cluster_size_min Minimum number of cells to keep for each cell type during subsampling. Default is 1.
+#' @param sampling_type A character specifying how the subsample is performed.
+#' "Subsampling_by_cluster" means subsampling cells from each cell type separately. "Subsampling" means subsampling all cells together by mixing cells from all cell types.
+#' Default is "Subsampling_by_cluster".
+#' @param nCV Number of cross validation to perform on the subsampled data. This is to ensure that we have at least
+#'
+#' @return A subsampled matrix
+#' @export
+#'
+#' @examples
+#' data(sc_count)
+#' data(sc_cluster)
+#'
+#' #number of cells per cell type
+#' table(sc_cluster[colnames(sc_count), "class_label"])
+#'
+#' #subsample
+#' subsample_sc_count = subsample_sc(count_table = sc_count,
+#'                                   cell_cluster_conversion = sc_cluster,
+#'                                   rate = 1,
+#'                                   cluster_size_max = 50,
+#'                                   cluster_size_min = 1,
+#'                                   sampling_type = "Subsampling_by_cluster",
+#'                                   nCV = 5)
+#'
+#' #number of cells per cell type after subsample
+#' table(sc_cluster[colnames(subsample_sc_count), "class_label"])
+#'
+subsample_sc=function(count_table, cell_cluster_conversion = NULL,
+                      rate=1, cluster_size_max = 1000, cluster_size_min = 1,
+                      sampling_type = "Subsampling_by_cluster",
+                      nCV = NULL){
+  if (sampling_type=="Subsampling"){
+    result=subsampling_from_sc(count_table = count_table, rate = rate)
+    return(result)
+  }
+  if (sampling_type=="Subsampling_by_cluster"){
+    result=subsampling_by_cluster_from_sc(count_table = count_table, cell_cluster_conversion = cell_cluster_conversion, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, nCV = nCV)
+    return(result)
+  }
+}
+
+

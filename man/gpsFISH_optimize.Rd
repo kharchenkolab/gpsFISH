@@ -59,9 +59,9 @@ Otherwise nothing is displayed. Default is zero (no display).}
 
 \item{save.intermediate}{A logical value specifying whether intermediate populations are outputted to the current working directory. Default is FALSE.}
 
-\item{gene2include.id}{A numeric vector specifying the location of genes in the column name of \code{full_count_table} that must be included in each panel of the population. Default is NULL.}
+\item{gene2include.id}{Optional. A numeric vector specifying the location of genes in the column name of \code{full_count_table} that must be included in each panel of the population. Default is NULL.}
 
-\item{gene.weight}{A data frame specifying the weight for each gene. Default is NULL.
+\item{gene.weight}{Optional. A data frame specifying the weight for each gene. Default is NULL.
 Each row is a gene. The first column contains the gene name. The second column contains the gene weight.
 Row name of the data frame is gene name.
 A gene with higher weight will be (1) more likely to be selected during crossover, (2) less likely to be mutated if it is already in the population, (3) and more likely to be introduced into the population through mutation if it is not in the current population.}

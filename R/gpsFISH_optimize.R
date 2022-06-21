@@ -26,8 +26,8 @@
 #' Otherwise nothing is displayed. Default is zero (no display).
 #' @param cluster The number of cores to use, i.e. at most how many child processes will be run simultaneously. Must be at least one, and parallelization requires at least two cores.
 #' @param save.intermediate A logical value specifying whether intermediate populations are outputted to the current working directory. Default is FALSE.
-#' @param gene2include.id A numeric vector specifying the location of genes in the column name of \code{full_count_table} that must be included in each panel of the population. Default is NULL.
-#' @param gene.weight A data frame specifying the weight for each gene. Default is NULL.
+#' @param gene2include.id Optional. A numeric vector specifying the location of genes in the column name of \code{full_count_table} that must be included in each panel of the population. Default is NULL.
+#' @param gene.weight Optional. A data frame specifying the weight for each gene. Default is NULL.
 #' Each row is a gene. The first column contains the gene name. The second column contains the gene weight.
 #' Row name of the data frame is gene name.
 #' A gene with higher weight will be (1) more likely to be selected during crossover, (2) less likely to be mutated if it is already in the population, (3) and more likely to be introduced into the population through mutation if it is not in the current population.
@@ -581,4 +581,248 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
   class(out) = "gpsFISH"
   out
 }
+
+
+
+
+#' Fitness function for evaluating the fitness of each gene panel
+#'
+#' @param string A numeric vector containing the gene panel.
+#' @param full_count_table A data frame with each row representing one cell and each column representing one gene. Row name is cell name and column name is gene name.
+#' @param cell_cluster_conversion A data frame with each row representing information of one cell.
+#' First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+#' @param nCV Number of cross validation.
+#' @param rate A value between 0 and 1 specifying the proportion of cells we want to keep for each cell type during subsampling. 0.8 means we keep 80% of cells for each cell type. Default is 1.
+#' @param cluster_size_max Maximum number of cells to keep for each cell type during subsampling. Default is 1000.
+#' @param cluster_size_min Minimum number of cells to keep for each cell type during subsampling. Default is 1.
+#' @param two_step_sampling_type A character vector with two values indicating the subsampling and simulation methods to use.
+#' For the first value, there are two options. "Subsampling_by_cluster" means subsampling cells from each cell type separately. "Subsampling" means subsampling all cells together by mixing cells from all cell types.
+#' For the second value, there are two options. "Simulation" corresponds to simulation using pre-trained Bayesian model which accounts for platform effects. "No_simulation" means no simulation is performed.
+#' @param metric A character specifying the metric to use for evaluating the gene panel's classification performance.
+#' Default is "Accuracy", which is the overall accuracy of classification.
+#' The other options is "Kappa", which is the Kappa statistics.
+#' @param method A character specifying the classification method to use. Default is naive Bayes ("NaiveBayes"). The other option is random forest ("RandomForest").
+#' @param weight_penalty Optional. A weighted penalty matrix specifying the partial credit and extra penalty for correct and incorrect classifications between pairs of cell types.
+#' It should be a square matrix with cell types as both row and column name. Default is NULL.
+#' @param simulation_parameter A simulation model returned by simulation_training_ZINB_trim.
+#' @param simulation_model A character specifying the type of simulation model. Default is the Bayesian model ("ZINB").
+#' @param relative_prop A list with two elements:
+#'   \item{cluster.average}{A matrix containing the relative expression of each gene in each cell type with gene name as row name and cell type name as column name.
+#'   The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.}
+#'   \item{cell.level}{A matrix containing the relative expression of each gene in each cell with gene name as row name and cell name as column name.
+#'   The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.}
+#' @param sample_new_levels A character specifying how simulation is performed for genes we have observed in the data used to train the Bayesian model.
+#' Specifically, during the training of the Bayesian model, we have estimations of the platform effect for genes in the training data.
+#' When we simulate spatial transcriptomics data for genes we have already seen in the training data,
+#' we can use their estimated platform effect \eqn{\gamma_i} and \eqn{c_i} ("old_levels"), or we can randomly sample \eqn{\gamma_i} and \eqn{c_i} from their posterior distribution ("random").
+#' For genes not in the training data, we will randomly sample \eqn{\gamma_i} and \eqn{c_i} from their posterior distribution since we don't have their estimation.
+#' @param use_average_cluster_profiles A logical value indicating if we want to use relative expression per cell type as the relative expression input for simulating spatial transcriptomics data.
+#' If TRUE, then value in \code{relative_prop$cluster.average} is used. And for each gene, cells from the same cell type will have the same value.
+#' If FALSE, then we use the relative expression per cell as input, i.e., \code{relative_prop$cell.level}.
+#' Default is FALSE.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+fitness=function(string, full_count_table, cell_cluster_conversion,
+                 nCV, rate = 1, cluster_size_max = 1000, cluster_size_min = 1, two_step_sampling_type, metric = "Accuracy", method = "NaiveBayes", weight_penalty = NULL,
+                 simulation_parameter, simulation_model = "ZINB", relative_prop = NULL, sample_new_levels = NULL, use_average_cluster_profiles = FALSE){      #this function is faster than fitness_default_cv
+  sub_count_table = full_count_table[, string]                            #column subset of a data frame is the fastest. Then is row subset of a data table. The third is row subset of a matrix. Column subset of a matrix is the same. Row subset of a data frame is the worst.
+  sub_count_table = t(sub_count_table)
+
+  #we first do subsampling
+  subsub_count_table=subsample_sc(count_table = sub_count_table, cell_cluster_conversion = cell_cluster_conversion,
+                                  rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, sampling_type = two_step_sampling_type[1], nCV = nCV)
+
+  class_label_per_cell = as.character(cell_cluster_conversion[colnames(subsub_count_table),"class_label"])
+
+  #create CV
+  #fold_per_cell = createFolds(factor(class_label_per_cell), k = nCV, list = FALSE)
+  cvlabel = create_folds(class_label_per_cell, k = nCV)
+  cvround = paste0("Fold", seq(1:nCV))
+
+  #run classification for each cross validation
+  result = lapply(cvround, classifier_per_cv,
+                  cvlabel = cvlabel, data4cv = subsub_count_table, class_label_per_cell = class_label_per_cell,
+                  metric = metric, method = method,
+                  relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles,
+                  sampling_type = two_step_sampling_type[2], simulation_parameter = simulation_parameter, simulation_model = simulation_model,
+                  cell_cluster_conversion = cell_cluster_conversion, weight_penalty = weight_penalty)       #fit random forest for each round of cross validation
+  cfm = lapply(1:length(result), function(x) result[[x]]$confusion.matrix)                #get the confusion matrix for each cross validation
+  norm.cfm = lapply(1:length(result), function(x) result[[x]]$norm.confusion.matrix)      #get the normalized confusion matrix for each cross validation
+  stats.by.class = lapply(1:length(result), function(x) result[[x]]$statsbyclass)         #get the stats per class for each cross validation
+  prediction.prob = lapply(1:length(result), function(x) result[[x]]$pred.prob)           #get the prediction probability for each cross validation
+  AUC.by.class = lapply(1:length(result), function(x) result[[x]]$AUC.byclass)            #get the by class AUC for each cross validation
+  variable.imp = lapply(1:length(result), function(x) result[[x]]$var.imp)
+
+  fitness_value=1-mean(sapply(1:length(result), function(x) result[[x]]$fitness_per_cv))         #here we use accuracy to quantify fitness (the current GA method will minimize the fitness function so we use 1-accuracy as the final value)
+  ave_cr_cfm=Reduce("+", cfm) / length(cfm)                                                      #calculate average of all confusion matrices
+  norm_ave_cr_cfm=Reduce("+", norm.cfm) / length(norm.cfm)                                       #calculate average of all normalized confusion matrices
+  stats_by_class=Reduce("+", stats.by.class) / length(stats.by.class)                            #calculate average of all stats by class
+  pred_prob=do.call(rbind, prediction.prob)                                                      #different cross validation has different number of cells so we cannot calculate average.
+  #Therefore we combine them into one matrix. Of note: (1) we only have this information for cells after subsampling (not all cells in the input matrix)
+  #(2) the cells and their probability in the matrix are not predicted using one model. They come from different cross validations.
+  #Each cross validation has their own training data and they will go through their own spatial data simulation. So the predicted probability may not be comparable for cells predicted in different cross validations
+  AUC_by_class=Reduce("+", AUC.by.class) / length(AUC.by.class)                                  #calculate average of all by class AUC
+  var_imp=Reduce("+", variable.imp) / length(variable.imp)                                       #calculate average of all variable importance
+  return(list(fitness_value = fitness_value, confusionMatrix = ave_cr_cfm,
+              norm.confusionMatrix = norm_ave_cr_cfm, stats_by_class = stats_by_class,
+              pred_prob = pred_prob, AUC_by_class = AUC_by_class, var_imp = var_imp))
+}
+
+
+
+
+
+
+
+
+
+
+
+
+#####################################
+#classifier for one cross validation#
+#####################################
+classifier_per_cv = function(current_round, cvlabel, data4cv, class_label_per_cell,
+                             metric, method,
+                             relative_prop=NULL, sample_new_levels = NULL, use_average_cluster_profiles = NULL,
+                             sampling_type, simulation_parameter, simulation_model,
+                             cell_cluster_conversion, weight_penalty){
+  #simulate spatial data for data4cv
+  spatial_sc_count=sc2spatial(count_table = data4cv, cell_cluster_conversion = class_label_per_cell, sampling_type = sampling_type, simulation_parameter = simulation_parameter, simulation_model = simulation_model, relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)
+  cell.zero.count = which(colSums(spatial_sc_count)==0)          #we may have cells with 0 count (we cannot use cell name because there are duplicated cell names)
+  #spatial_sc_count is a matrix if we use naive_simulation. It is a data frame if we use ZINB simulation
+  #for naive simulation, the simulated spatial data is subsampled based on subsub_count, which is a subset of normalized scRNA-seq data
+  #for ZINB simulation, the simulated spatial data is based on relative_prop, which is calculated based on raw scRNA-seq data
+  #                                                  #
+  #                                                  #
+  #                      Normalization               #
+  #                                                  #
+  #                                                  #
+  spatial_sc_count = (t(t(spatial_sc_count)/colSums(spatial_sc_count)))*mean(colSums(spatial_sc_count))
+  spatial_sc_count = log10(spatial_sc_count + 1)
+
+  data2classify=data.frame(t(spatial_sc_count), check.names=T)      #check.names here needs to be true since there are special characters in the gene name and we need to fix them before feeding to random forest
+  data2classify$class_label=class_label_per_cell
+  data2classify$class_label=as.factor(data2classify$class_label)
+
+  #get training and testing data
+  #for cv preserving the cell cluster (split each cluster into k fold so that each fold contains all the cell clusters)
+  data_train = data2classify[cvlabel[[current_round]],]
+  cell_pos_testing = setdiff(unlist(cvlabel), cvlabel[[current_round]])
+  data_test = data2classify[cell_pos_testing,]
+
+  #remove the cell with zero count from training/testing data
+  if (length(cell.zero.count)>0){
+    data_train = data_train[!is.na(data_train[,1]), ]       #if a cell has 0 count, its value for all genes in spatial_sc_count will be NaN, which corresponds to all columns in data_train for a given row, so we only need to check one column
+
+    cell2keep.data_test = which(!is.na(data_test[,1]))      #cells in data_test that has > 0 count
+    data_test = data_test[cell2keep.data_test, ]
+    cell_pos_testing = cell_pos_testing[cell2keep.data_test]  #we need to update this because this is used later
+  }
+
+  if (method=="RandomForest"){
+    #fit random forest model
+    classifier_model <- ranger(
+      formula   = as.factor(class_label) ~ .,
+      data      = data_train,
+      probability = TRUE,
+      num.trees = 100,
+      importance = "none",
+      #importance = "impurity_corrected",       #we have three options to calculate feature importance. "permutation" is very slow so use impurity_corrected
+      num.threads = 1,
+      verbose   = FALSE
+    )
+    pred.prob = suppressWarnings(predict(classifier_model, data_test, num.threads = 1)$predictions)    #we will have a warning if we use importance = "impurity_corrected" but it doesn't really affect the result
+    rownames(pred.prob)=data_test$class_label                                         #rowname of pred.prob needs to be true cell type if we want to use it for AUC calculation
+    data_test$pred <- colnames(pred.prob)[apply(pred.prob,1,which.max)]
+    #data_test$pred <- predict(classifier_model, data_test)$predictions
+    #var.imp = importance(classifier_model)      #importance of each variable
+    var.imp = rep(1, dim(data4cv)[1])
+  }
+
+  # if (method=="RandomForest"){
+  #   classifier_model <- random_forest(training=as.matrix(data_train[, 1:dim(subsub_count)[1]]), labels = as.matrix(as.numeric(as.factor(data_train$class_label))),
+  #                           #print_training_accuracy=TRUE, verbose = T,
+  #                           minimum_leaf_size = 10, num_trees = 100)
+  #   classifier_model <- classifier_model$output_model
+  #   #label.convert.test = data.frame(ctname = as.character(data_test$class_label), ctnum = as.numeric(as.factor(data_test$class_label)))
+  #   classifier_test <- random_forest(input_model = classifier_model,
+  #                           #test_labels = as.matrix(label.convert.test$ctnum),
+  #                           test = as.matrix(data_test[, 1:dim(subsub_count)[1]]))
+  #   pred.prob <- classifier_test$probabilities
+  #   colnames(pred.prob) = levels(as.factor(data_train$class_label))
+  #   rownames(pred.prob)=data_test$class_label                                         #rowname of pred.prob needs to be true cell type if we want to use it for AUC calculation
+  #   data_test$pred <- colnames(pred.prob)[apply(pred.prob,1,which.max)]
+  #   var.imp = rep(1, dim(data4cv)[1])
+  # }
+
+  if (method=="LogisticRegression"){
+    #fit multinomial logistic regression model
+    classifier_model <- nnet::multinom(
+      formula   = as.factor(class_label) ~.,
+      data      = data_train,
+      trace     = FALSE,
+      MaxNWts   = 10000000)
+    data_test$pred <- predict(classifier_model, data_test)
+  }
+
+  if (method=="NaiveBayes"){
+    #using naivebayes
+    classifier_model <- multinomial_naive_bayes(
+      x = as.matrix(data_train[, 1:(dim(data_train)[2]-1)]),
+      y = data_train$class_label)
+    pred.prob = predict(classifier_model, as.matrix(data_test[, 1:(dim(data_test)[2]-1)]), type="prob")
+
+    # #fit multinomial logistic regression model
+    # classifier_model <- naiveBayes(
+    #   formula = as.factor(class_label) ~.,
+    #   data = data_train)
+    # pred.prob = predict(classifier_model, data_test, type="raw")
+
+    # #using mlpack
+    # classifier_model <- nbc(training = as.matrix(data_train[, 1:dim(subsub_count)[1]]), labels = as.matrix(as.numeric(as.factor(data_train$class_label))))
+    # classifier_test <- nbc(input_model=classifier_model$output_model, test=as.matrix(data_test[, 1:dim(subsub_count)[1]]))
+    # pred.prob <- classifier_test$probabilities
+    # colnames(pred.prob) = levels(as.factor(data_train$class_label))
+
+    rownames(pred.prob)=data_test$class_label                                         #rowname of pred.prob needs to be true cell type if we want to use it for AUC calculation
+    data_test$pred <- colnames(pred.prob)[apply(pred.prob,1,which.max)]
+    var.imp = rep(1, dim(data4cv)[1])
+  }
+
+  #get confusion matrix
+  truth = as.factor(data_test$class_label)
+  data_test$pred <- factor(data_test$pred, levels=levels(truth))      #there may be missing cell types in the prediction (no cell is predicted to this cell type)
+  cfmatrix=confusionMatrix(data_test$pred, truth)
+
+  #get by class AUC
+  #AUC.byclass=sapply(1:dim(pred.prob)[2], roc.cal, pred.prob=pred.prob)
+  AUC.byclass=rep(0, dim(pred.prob)[2])
+  names(AUC.byclass)=colnames(pred.prob)
+
+  #change rowname of pred.prob back to cell name
+  rownames(pred.prob)=paste(colnames(spatial_sc_count)[cell_pos_testing], paste0("cv", current_round), sep="~")       #we have already finished AUC calculation, so we change the name back to cell name. Add cross validation round information to the row names
+  #we need to use colnames(spatial_sc_count) so that duplicated cells from sampling with replacement will share the same name
+
+  #confusion matrix
+  confusion.matrix=cfmatrix$table                                #row: Prediction, col: Reference
+  norm.confusion.matrix=t(t(confusion.matrix)/colSums(confusion.matrix))     #normalize by the total number of cells in the reference
+  #fitness value
+  if (is.null(weight_penalty)){             #if we don't have a weighted penalty based on cell type hierarchy, it is just a flat classification and we calculate the accuracy as usual
+    fitness_per_cv=as.numeric(cfmatrix$overall[metric])
+  }else{                                    #if we have a weighted penalty based on cell type hierarchy, we will calculate a weighted accuracy based on the penalty matrix
+    fitness_per_cv=weighted_fitness(confusion_matrix = confusion.matrix, metric = metric, weight_penalty = weight_penalty)$weighted.metric
+  }
+  #other stats
+  statsbyclass=cfmatrix$byClass
+  return(list(fitness_per_cv = fitness_per_cv, confusion.matrix = confusion.matrix,
+              norm.confusion.matrix = norm.confusion.matrix, statsbyclass = statsbyclass,
+              pred.prob = pred.prob, AUC.byclass = AUC.byclass, var.imp = var.imp))
+}
+
+
+
 
