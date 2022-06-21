@@ -667,7 +667,7 @@ popDiv <- function(x) {
 #' @param sampling_type A character specifying how the subsample is performed.
 #' "Subsampling_by_cluster" means subsampling cells from each cell type separately. "Subsampling" means subsampling all cells together by mixing cells from all cell types.
 #' Default is "Subsampling_by_cluster".
-#' @param nCV Number of cross validation to perform on the subsampled data. This is to ensure that we have enough cells for cross validation. Only needed if \code{sampling_type} is "Subsampling_by_cluster".
+#' @param nCV Number of cross validation to perform on the subsampled data. This is to ensure that we have enough cells for cross validation. Default is 1. Only needed if \code{sampling_type} is "Subsampling_by_cluster".
 #'
 #' @return A subsampled matrix
 #' @export
@@ -694,7 +694,7 @@ popDiv <- function(x) {
 subsample_sc=function(count_table, cell_cluster_conversion = NULL,
                       rate = 1, cluster_size_max = 1000, cluster_size_min = 1,
                       sampling_type = "Subsampling_by_cluster",
-                      nCV = NULL){
+                      nCV = 1){
   if (sampling_type=="Subsampling"){
     result = subsampling_all(count_table = count_table, rate = rate)
     return(result)
@@ -720,6 +720,8 @@ subsample_sc=function(count_table, cell_cluster_conversion = NULL,
 #' subsample_sc_count = subsampling_all(sc_count, 0.5)
 #' dim(subsample_sc_count)
 subsampling_all=function(count_table, rate = 1){        #subsampling from all cells
+  if (rate > 1 || rate <0) stop("'rate' must be between 0 and 1")
+
   num.cells = base::round(dim(count_table)[2]*rate)
   selected.cells = base::sample(seq(1:dim(count_table)[2]), num.cells, replace = FALSE)
   simulated_count_table = count_table[,selected.cells]
@@ -727,15 +729,51 @@ subsampling_all=function(count_table, rate = 1){        #subsampling from all ce
 }
 
 
-subsampling_by_cluster=function(count_table, cell_cluster_conversion, rate, cluster_size_max, cluster_size_min, nCV){      #subsampling by cluster (this perserves the same number of cell clusters)
-  #unique_cluster_label=unique(as.character(cell_cluster_conversion[rownames(count_table),"class_label"]))
-  unique_cluster_label=unique(cell_cluster_conversion$class_label)              #This works when the cells in cell_cluster_conversion are the same set of cells in count_table
-  selected.cells=unlist(lapply(unique_cluster_label, subsample, cell_cluster_conversion = cell_cluster_conversion, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, nCV = nCV))
-  simulated_count_table=count_table[, selected.cells]
+
+#' Subsample scRNA-seq data by cell type
+#'
+#' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.
+#' @param cell_cluster_conversion A data frame with each row representing information of one cell.
+#' First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+#' @param rate A value between 0 and 1 specifying the proportion of cells we want to keep for each cell type during subsampling. 0.8 means we keep 80% of cells for each cell type. Default is 1.
+#' @param cluster_size_max Maximum number of cells to keep for each cell type during subsampling. Default is 1000.
+#' @param cluster_size_min Minimum number of cells to keep for each cell type during subsampling. Default is 1.
+#' @param nCV Number of cross validation to perform on the subsampled data. This is to ensure that we have enough cells for cross validation. Default is 1.
+#'
+#' @return A subsampled matrix
+#' @export
+#'
+subsampling_by_cluster=function(count_table, cell_cluster_conversion, rate = 1, cluster_size_max = 1000, cluster_size_min = 1, nCV = 1){      #subsampling by cluster (this perserves the same number of cell clusters)
+  if (is.null(rownames(count_table))) stop("'count_table' should have gene name as row name")
+  if (is.null(colnames(count_table))) stop("'count_table' should have cell name as column name")
+
+  if (!identical(colnames(cell_cluster_conversion), c("cell_name", "class_label"))) stop("'cell_cluster_conversion' should have column name as 'cell_name' and 'class_label'")
+
+  if (length(setdiff(colnames(count_table), rownames(cell_cluster_conversion)))>0) stop("There are cells in 'count_table' that are not in 'cell_cluster_conversion'")
+
+  if (rate > 1 || rate <0) stop("'rate' should between 0 and 1")
+
+  unique_cluster_label = unique(cell_cluster_conversion$class_label)              #This works when the cells in cell_cluster_conversion are the same set of cells in count_table
+  selected.cells = unlist(lapply(unique_cluster_label, subsample, cell_cluster_conversion = cell_cluster_conversion, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, nCV = nCV))
+  simulated_count_table = count_table[, selected.cells]
   return(simulated_count_table)
 }
 
-subsample=function(cell_cluster_conversion, class_label, rate, cluster_size_max, cluster_size_min, nCV){
+
+#' Subsample cells from one cell type
+#'
+#' @param cell_cluster_conversion A data frame with each row representing information of one cell.
+#' First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+#' @param class_label A character specifying the cell type
+#' @param rate A value between 0 and 1 specifying the proportion of cells we want to keep for each cell type during subsampling. 0.8 means we keep 80% of cells for each cell type. Default is 1.
+#' @param cluster_size_max Maximum number of cells to keep for each cell type during subsampling. Default is 1000.
+#' @param cluster_size_min Minimum number of cells to keep for each cell type during subsampling. Default is 1.
+#' @param nCV Number of cross validation to perform on the subsampled data. This is to ensure that we have enough cells for cross validation. Default is 1.
+#'
+#' @return A subsampled matrix
+#' @export
+#'
+subsample=function(cell_cluster_conversion, class_label, rate = 1, cluster_size_max = 1000, cluster_size_min = 1, nCV = 1){
   if (cluster_size_max<=cluster_size_min){
     stop("cluster_size_max should be greater than cluster_size_min")
   }
@@ -765,26 +803,26 @@ subsample=function(cell_cluster_conversion, class_label, rate, cluster_size_max,
     #if the number of cells after subsampling is smaller than cluster_size_min, we select cluster_size_min cells instead of n cells
     if (n<=cluster_size_min){
       if (cluster_size_min > n.all.cell){         #if cluster_size_min is larger than the total number of available cells in the current cluster
-        selected_cell_list=c(original_cell_list, original_cell_list[sample(seq(1:n.all.cell), cluster_size_min - n.all.cell, replace = TRUE)])     #we sample with replacement (select all available cells first, for the remaining part, sample with replacement)
+        selected_cell_list=c(original_cell_list, original_cell_list[base::sample(seq(1:n.all.cell), cluster_size_min - n.all.cell, replace = TRUE)])     #we sample with replacement (select all available cells first, for the remaining part, sample with replacement)
       }
       if (cluster_size_min <= n.all.cell){        #if cluster_size_min is not larger than the total number of available cells in the current cluster
-        selected_cell_list=original_cell_list[sample(seq(1:n.all.cell), cluster_size_min, replace = FALSE)]    #we sample without replacement
+        selected_cell_list=original_cell_list[base::sample(seq(1:n.all.cell), cluster_size_min, replace = FALSE)]    #we sample without replacement
       }
     }
     #if the number of cells after subsampling is larger than cluster_size_min && smaller than cluster_size_max, we select n cells
     if (n>cluster_size_min && n<=cluster_size_max){
-      selected_cell_list=original_cell_list[sample(seq(1:n.all.cell), n, replace = FALSE)]    #n is always <= n.all.cell, so we sample without replacement
+      selected_cell_list=original_cell_list[base::sample(seq(1:n.all.cell), n, replace = FALSE)]    #n is always <= n.all.cell, so we sample without replacement
     }
     #if the number of cells after subsampling is larger than cluster_size_max, we select cluster_size_max cells instead of n cells
     if (n>cluster_size_max){
-      selected_cell_list=original_cell_list[sample(seq(1:n.all.cell), cluster_size_max, replace = FALSE)]    #since n<= n.all.cell, and in this case cluster_size_max < n, so we have cluster_size_max < n.all.cell, so we sample without replacement
+      selected_cell_list=original_cell_list[base::sample(seq(1:n.all.cell), cluster_size_max, replace = FALSE)]    #since n<= n.all.cell, and in this case cluster_size_max < n, so we have cluster_size_max < n.all.cell, so we sample without replacement
     }
   }else{                  #if the number of cells after subsamping is lower than the number of cross validations, it means it is also smaller than cluster_size_min. So we select cluster_size_min cells instead of n cells
     if (cluster_size_min > n.all.cell){
-      selected_cell_list=c(original_cell_list, original_cell_list[sample(seq(1:n.all.cell), cluster_size_min - n.all.cell, replace = TRUE)])    #we sample with replacement
+      selected_cell_list=c(original_cell_list, original_cell_list[base::sample(seq(1:n.all.cell), cluster_size_min - n.all.cell, replace = TRUE)])    #we sample with replacement
     }
     if (cluster_size_min <= n.all.cell){
-      selected_cell_list=original_cell_list[sample(seq(1:n.all.cell), cluster_size_min, replace = FALSE)]    #we sample without replacement
+      selected_cell_list=original_cell_list[base::sample(seq(1:n.all.cell), cluster_size_min, replace = FALSE)]    #we sample without replacement
     }
   }
   return(selected_cell_list)

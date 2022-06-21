@@ -11,7 +11,7 @@ subsample_sc(
   cluster_size_max = 1000,
   cluster_size_min = 1,
   sampling_type = "Subsampling_by_cluster",
-  nCV = NULL
+  nCV = 1
 )
 }
 \arguments{
@@ -31,7 +31,7 @@ Only needed if \code{sampling_type} is "Subsampling_by_cluster".}
 "Subsampling_by_cluster" means subsampling cells from each cell type separately. "Subsampling" means subsampling all cells together by mixing cells from all cell types.
 Default is "Subsampling_by_cluster".}
 
-\item{nCV}{Number of cross validation to perform on the subsampled data. This is to ensure that we have enough cells for cross validation. Only needed if \code{sampling_type} is "Subsampling_by_cluster".}
+\item{nCV}{Number of cross validation to perform on the subsampled data. This is to ensure that we have enough cells for cross validation. Default is 1. Only needed if \code{sampling_type} is "Subsampling_by_cluster".}
 }
 \value{
 A subsampled matrix
