@@ -625,3 +625,26 @@ initialize_population_random=function(pop.size, panel.size, gene.list, gene2incl
   }
   return(initpop)
 }
+
+
+#' Calculate diversity of a population
+#'
+#' @param x A numeric matrix with each row representing one gene panel and each column represent one gene in a gene panel
+#'
+#' @return A numeric value representing the diversity
+#' @export
+#'
+#' @examples
+#' pop = matrix(sample(1:1000000, 10000), 100, 100)
+#' popDiv(pop)
+popDiv <- function(x) {
+  N <- nrow(x)
+  ndiff <- 0
+  for (i in 1:(N-1)) {                                   #for each solution
+    more <- sapply((i+1):N, function(j) {                #calculate the similarity between this solution and all other solutions
+      length(unique(c(x[i,], x[j,]))) - ncol(x)          #calculate similarity. If two solutions are identical, length(unique(c(x[i,], x[j,]))) = ncol(x)
+    })
+    ndiff <- ndiff+sum(more)
+  }
+  ndiff/(N*(N-1)/2)
+}

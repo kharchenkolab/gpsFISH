@@ -71,17 +71,17 @@
 gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor(popsize/10),
                              ngen = 50, tourneysize = max(ceiling(popsize/10), 2), mutprob = 0.01,
                              mutfrac = NULL, initpop = NULL, verbose = 0, cluster = NULL, save.intermediate = F,
-                             gene2include.id = NULL,                    #we need the location of each gene instead of gene name
-                             gene.weight = NULL,                        #a data frame. Each row is one gene and its weight. The weight of all genes sum up to 1. Genes with higher weight are more likely to be included in the panel
+                             gene2include.id = NULL,
+                             gene.weight = NULL,
                              earlyterm = ngen,
                              converge.cutoff = 0,
-                             ...)                                       #parameters specified when running the kofnGA_modified function but not listed above will go into "...". And these will be used as the parameters for the OF fitness function.
-  #If we specify any of them here (for example, we put weight_penalty=NULL here), they will not go into "..." and the OF function will not be able to use them
-  #This also means that if we have a parameter we don't want to use as part of "...", we should specify it here explicitly with a default value (like verbose = 0). Otherwise, the GA function outside the OF fitness function will not find it because it is considered as part of "..." and goes into the OF fitness function.
-  #To sum up, "..." is a set of parameters. They will be used as parameters of the OF fitness function. Everything not for that purpose should be specified here explicitly and only these explicitly specified parameters can be used in the GA function outside the OF fitness function.
+                             ...)
 {
+  ################
+  #Argument check#
+  ################
   if (!is.null(mutfrac)) {
-    if (missing(mutprob)) {
+    if (base::missing(mutprob)) {
       stopifnot(mutfrac >= 0, mutfrac <= 1)
       mutprob <- 1 - (1 - mutfrac)^(1/k)
     }
@@ -95,6 +95,10 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
               1, tourneysize%%1 == 0, tourneysize >= 2, mutprob >=
               0, mutprob <= 1, all(dim(initpop) == c(popsize, k)),
             verbose%%1 == 0)
+
+  ###############
+  #Create object#
+  ###############
   indices <- 1:n
   if (keepbest > 0) {
     elitespots <- 1:keepbest
@@ -111,32 +115,22 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
   Tourneys1 <- matrix(0, nrow = popsize, ncol = tourneysize)
   Tourneys2 <- matrix(0, nrow = popsize, ncol = tourneysize)
 
-  ###################################
-  #calculate diversity of population#
-  ###################################
+  #diversity of population#
   diversity <- vector(mode = "numeric", length = ngen + 1)            #diversity of the population for each generation
 
-  ##########################################
-  #calculate confusion matrix of population#
-  ##########################################
+  #confusion matrix of population#
   ave_confusionMatrix = norm_ave_confusionMatrix <- vector(mode = "list", length = ngen + 1)     #average over all (normalized) confusion matrix of all chromosomes in a population for each generation
   best_confusionMatrix = norm_best_confusionMatrix <- vector(mode = "list", length = ngen + 1)     #(normalized) confusion matrix of the best chromosome in a population for each generation
 
-  ###################################################
-  #calculate statistics by class from the classifier#
-  ###################################################
+  #statistics by class from the classifier#
   stats_byclass <- vector(mode = "list", length = ngen + 1)                    #average over all classification statistics by class of all chromosomes in a population for each generation
   best_stats_byclass <- vector(mode = "list", length = ngen + 1)               #classification statistics by class of the best chromosome in a population for each generation
 
-  #########################################
   #prediction probability and by class AUC#
-  #########################################
   best_pred_prob <- vector(mode = "list", length = ngen + 1)                    #prediction probability of the best chromosome in a population for each generation
   best_AUC_by_class <- vector(mode = "list", length = ngen + 1)                 #classification AUC by class of the best chromosome in a population for each generation
 
-  ##############################################
   #calculate feature importance from classifier#
-  ##############################################
   best_feature_imp <- vector(mode = "list", length = ngen + 1)                 #feature importance of the best chromosome in a population for each generation
 
   ###################################
@@ -151,15 +145,14 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
   ####################
   #initial population#
   ####################
-  ####################################################################################################################################################################################################
   if (is.null(initpop)){                             #randomly generate initial population if it is not provided
     if (!is.null(gene2include.id)){                  #if we have gene we must include
       pop1 <- t(replicate(popsize, gene2include.id))
       if (length(gene2include.id)<k){
-        if (length(setdiff(indices, gene2include.id))==1){
-          initpop.candidate <- setdiff(indices, gene2include.id)
+        if (length(base::setdiff(indices, gene2include.id))==1){
+          initpop.candidate <- base::setdiff(indices, gene2include.id)
         }else{
-          initpop.candidate <- sample(setdiff(indices, gene2include.id), (k-length(gene2include.id)))
+          initpop.candidate <- sample(base::setdiff(indices, gene2include.id), (k-length(gene2include.id)))
         }
         pop2 <- t(replicate(popsize, initpop.candidate))
         pop <- cbind(pop1, pop2)
@@ -173,7 +166,6 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
   }else{
     pop <- initpop
   }
-  ####################################################################################################################################################################################################
 
   ###################################
   #calculate diversity of population#
