@@ -683,8 +683,8 @@ popDiv <- function(x) {
 #' subsample_sc_count = subsample_sc(count_table = sc_count,
 #'                                   cell_cluster_conversion = sc_cluster,
 #'                                   rate = 1,
-#'                                   cluster_size_max = 50,
-#'                                   cluster_size_min = 1,
+#'                                   cluster_size_max = 30,
+#'                                   cluster_size_min = 5,
 #'                                   sampling_type = "Subsampling_by_cluster",
 #'                                   nCV = 5)
 #'
