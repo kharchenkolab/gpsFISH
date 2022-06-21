@@ -132,76 +132,91 @@ simulation_ZINB=function(count_table, cell_cluster_conversion, relative_prop, si
 
 
 
+#' Simulating spatial transcriptomics data from scRNA-seq data using Bayesian modelling
+#'
+#' @param sc_prop A matrix containing the relative expression for each gene in each cell.
+#' @param simulation_parameter A simulation model returned by simulation_training_ZINB_trim.
+#' @param sample_new_levels A character specifying how simulation is performed for genes we have observed in the data used to train the Bayesian model.
+#' Specifically, during the training of the Bayesian model, we have estimations of the platform effect for genes in the training data.
+#' When we simulate spatial transcriptomics data for genes we have already seen in the training data,
+#' we can use their estimated platform effect \eqn{\gamma_i} and \eqn{c_i} ("old_levels"), or we can randomly sample \eqn{\gamma_i} and \eqn{c_i} from their posterior distribution ("random").
+#' For genes not in the training data, we will randomly sample \eqn{\gamma_i} and \eqn{c_i} from their posterior distribution since we don't have their estimation.
+#' @param gene_list A character vector of gene names.
+#' @param cell_list A character vector of cell names.
+#' @param ct_list A character vector of cell type names.
+#' @param num_gene Number of genes.
+#' @param num_cell Number of cells.
+#' @param num_ct Number of cell types.
+#' @param class_label A data frame with each row representing information of one cell.
+#' First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+#'
+#' @return A list with elements:
+#'   \item{simu_count_matrix}{A matrix containing the simulated spatial transcriptomics data.}
+#'   \item{alpha.global}{Randomly sampled \eqn{\alpha} from its posterior distribution.}
+#'   \item{beta.global}{Randomly sampled \eqn{\beta} from its posterior distribution.}
+#'   \item{zi.global}{Randomly sampled \eqn{\pi} from its posterior distribution.}
+#'   \item{mu_gamma}{Randomly sampled \eqn{\mu_\gamma} from its posterior distribution.}
+#'   \item{sigma_gamma}{Randomly sampled \eqn{\sigma_\gamma} from its posterior distribution.}
+#'   \item{mu_c}{Randomly sampled \eqn{\mu_c} from its posterior distribution.}
+#'   \item{sigma_c}{Randomly sampled \eqn{\signa_c} from its posterior distribution.}
+#'   \item{gamma_i_gene}{Simulated \eqn{\gamma_i} for each gene.}
+#'   \item{c_i_gene}{Simulated \eqn{c_i} for each gene.}
+#'   \item{new.cell.size}{Simulated cell depth, i.e., total number of molecules per cell.}
+#' @export
+#'
 ZINB_predict=function(sc_prop, simulation_parameter, sample_new_levels,
                       gene_list, cell_list, ct_list, num_gene, num_cell, num_ct, class_label){          #get estimated.random.intercept is the slowest step (profiling doesn't show this though)
-  # fit.model = simulation_parameter$distortion_model
   posterior = simulation_parameter$posterior
   lib.size = simulation_parameter$lib.size
   distortion.pattern = simulation_parameter$distortion_pattern
 
   #get posterior samples of parameters needed
-  # posterior.alpha = rstan::extract(fit.model, pars="alpha")$alpha
-  # posterior.beta = rstan::extract(fit.model, pars="beta")$beta
-  # posterior.zi = rstan::extract(fit.model, pars="zi")$zi
-  # posterior.mu_gamma = rstan::extract(fit.model, pars="mu_gamma")$mu_gamma
-  # posterior.sigma_gamma = rstan::extract(fit.model, pars="sigma_gamma")$sigma_gamma
-  # posterior.xi_c = rstan::extract(fit.model, pars="xi_c")$xi_c
-  # posterior.omega_c = rstan::extract(fit.model, pars="omega_c")$omega_c
-  # posterior.kappa_c = rstan::extract(fit.model, pars="kappa_c")$kappa_c
   posterior.alpha = posterior$posterior.alpha
   posterior.beta = posterior$posterior.beta
   posterior.zi = posterior$posterior.zi
   posterior.mu_gamma = posterior$posterior.mu_gamma
   posterior.sigma_gamma = posterior$posterior.sigma_gamma
-  # posterior.xi_c = posterior$posterior.xi_c
-  # posterior.omega_c = posterior$posterior.omega_c
-  # posterior.kappa_c = posterior$posterior.kappa_c
   posterior.mu_c = posterior$posterior.mu_c
   posterior.sigma_c = posterior$posterior.sigma_c
 
   #alpha, sigma, theta and pie are the same for all gene and all cells so we select one value for each
-  alpha.global = sample(posterior.alpha, 1)
-  beta.global = sample(posterior.beta, 1)
-  zi.global = sample(posterior.zi, 1)
-  mu_gamma = sample(posterior.mu_gamma, 1)
-  sigma_gamma = sample(posterior.sigma_gamma, 1)
-  # xi_c = sample(posterior.xi_c, 1)
-  # omega_c = sample(posterior.omega_c, 1)
-  # kappa_c = sample(posterior.kappa_c, 1)
-  mu_c = sample(posterior.mu_c, 1)
-  sigma_c = sample(posterior.sigma_c, 1)
+  alpha.global = base::sample(posterior.alpha, 1)
+  beta.global = base::sample(posterior.beta, 1)
+  zi.global = base::sample(posterior.zi, 1)
+  mu_gamma = base::sample(posterior.mu_gamma, 1)
+  sigma_gamma = base::sample(posterior.sigma_gamma, 1)
+  mu_c = base::sample(posterior.mu_c, 1)
+  sigma_c = base::sample(posterior.sigma_c, 1)
 
   #generate gamma_i and c_i for each data point
   if (sample_new_levels == "random"){
     gamma_i_gene = exp(rnorm(n = num_gene, mean = mu_gamma, sd = sigma_gamma))
-    # c_i_gene = rsn(n = num_gene, xi = xi_c, omega = omega_c, alpha = kappa_c)
     c_i_gene = rnorm(n = num_gene, mean = mu_c, sd = sigma_c)
-    names(gamma_i_gene)=names(c_i_gene)=gene_list
+    names(gamma_i_gene) = names(c_i_gene) = gene_list
   }
 
   if (sample_new_levels == "old_levels"){
     estimated_gamma_i = simulation_parameter$gamma_i_full[,"mean"]
     estimated_c_i = simulation_parameter$c_i_full[,"mean"]
 
-    intercept.genes = intersect(gene_list, names(estimated_gamma_i))    #get the genes that appear in training dataset
+    intercept.genes = base::intersect(gene_list, names(estimated_gamma_i))    #get the genes that appear in training dataset
 
     gamma_i_gene = exp(rnorm(n = num_gene, mean = mu_gamma, sd = sigma_gamma))
-    # c_i_gene = rsn(n = num_gene, xi = xi_c, omega = omega_c, alpha = kappa_c)
     c_i_gene = rnorm(n = num_gene, mean = mu_c, sd = sigma_c)
-    names(gamma_i_gene)=names(c_i_gene)=gene_list
+    names(gamma_i_gene) = names(c_i_gene) = gene_list
 
     gamma_i_gene[intercept.genes] = estimated_gamma_i[intercept.genes]      #replace randomly generated alpha_i by estimated alpha_i for those genes that show up in training dataset
     c_i_gene[intercept.genes] = estimated_c_i[intercept.genes]      #replace randomly generated alpha_i by estimated alpha_i for those genes that show up in training dataset
   }
 
   #calculate lambda
-  lambda = inv.logit(rep.col(gamma_i_gene, dim(sc_prop)[2]) * sqrt(sc_prop) + rep.col(c_i_gene, dim(sc_prop)[2]))          #for model 22.6
+  lambda = boot::inv.logit(rep.col(gamma_i_gene, dim(sc_prop)[2]) * sqrt(sc_prop) + rep.col(c_i_gene, dim(sc_prop)[2]))          #for model 22.6
 
   #get theta for each gene and each cell
   shape = exp(beta.global + lambda)
 
   #random sample new cell size for each new cell from cell size distribution
-  new.cell.size = sample(log(lib.size), num_cell, replace = T)                  #we do log transform here to save time
+  new.cell.size = base::sample(log(lib.size), num_cell, replace = T)                  #we do log transform here to save time
 
   #calculate miu for each gene and each cell
   miu = exp(alpha.global + log(lambda) + rep.row(new.cell.size, dim(sc_prop)[1]))
@@ -223,14 +238,10 @@ ZINB_predict=function(sc_prop, simulation_parameter, sample_new_levels,
               zi.global = zi.global,
               mu_gamma = mu_gamma,
               sigma_gamma = sigma_gamma,
-              # xi_c = xi_c,
-              # omega_c = omega_c,
-              # kappa_c = kappa_c,
               mu_c = mu_c,
               sigma_c = sigma_c,
               gamma_i_gene = gamma_i_gene,
               c_i_gene = c_i_gene,
-              alpha.global = alpha.global,
               new.cell.size = new.cell.size))
 }
 

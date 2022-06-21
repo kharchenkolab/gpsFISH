@@ -829,3 +829,24 @@ subsample=function(cell_cluster_conversion, class_label, rate = 1, cluster_size_
   }
   return(selected_cell_list)
 }
+
+
+rep.row<-function(x,n){
+  matrix(rep(x,each=n),nrow=n)
+}
+rep.col<-function(x,n){
+  matrix(rep(x,each=n), ncol=n, byrow=TRUE)
+}
+zinb_generator=function(n, size, pie, miu){      #miu and size must have length = n (each point should have their own miu and size)
+  # counts=rep(NA, length=n)
+  # #select counts to be zero based on binomial distribution (first component of ZINB)
+  # counts[rbinom(n=n, size=1, prob=pie)==1]=0
+
+  counts=1-rbinom(n=n, size=1, prob=pie)
+  #for the rest, randomly generate them from a negative binomial distribution (second component of ZINB)
+  # bool=is.na(counts)
+  bool = counts==1
+  n.nb=sum(bool)
+  counts[which(bool)]=rnbinom(n=n.nb, mu = miu[which(bool)], size = size[which(bool)])
+  return(counts)
+}
