@@ -20,12 +20,12 @@ relative_freq=function(count_matrix, gene_list, cluster_label, cell_cluster_conv
   if (is.null(rownames(count_matrix))) stop("'count_matrix' should have gene name as row name")
   if (is.null(colnames(count_matrix))) stop("'count_matrix' should have cell name as column name")
 
-  if (length(setdiff(gene_list, rownames(count_matrix)))>0) stop("There are genes in 'gene_list' that are not in 'count_matrix'")
+  if (length(base::setdiff(gene_list, rownames(count_matrix)))>0) stop("There are genes in 'gene_list' that are not in 'count_matrix'")
 
   if (!identical(colnames(cell_cluster_conversion), c("cell_name", "class_label"))) stop("'cell_cluster_conversion' should have column name as 'cell_name' and 'class_label'")
 
   if (length(cluster_label)>1) stop("length of 'cluster_label' should be 1")
-  if (length(setdiff(cluster_label, unique(cell_cluster_conversion$class_label)))>0) stop("'cluster_label' is not a cell type in 'cell_cluster_conversion'")
+  if (length(base::setdiff(cluster_label, unique(cell_cluster_conversion$class_label)))>0) stop("'cluster_label' is not a cell type in 'cell_cluster_conversion'")
 
   cells_in_cluster=colnames(count_matrix)[which(as.character(cell_cluster_conversion[colnames(count_matrix),"class_label"]) %in% cluster_label)]
   total_count=sum(count_matrix[,cells_in_cluster])
@@ -56,12 +56,12 @@ average_count=function(count_matrix, gene_list, cluster_label, cell_cluster_conv
   if (is.null(rownames(count_matrix))) stop("'count_matrix' should have gene name as row name")
   if (is.null(colnames(count_matrix))) stop("'count_matrix' should have cell name as column name")
 
-  if (length(setdiff(gene_list, rownames(count_matrix)))>0) stop("There are genes in 'gene_list' that are not in 'count_matrix'")
+  if (length(base::setdiff(gene_list, rownames(count_matrix)))>0) stop("There are genes in 'gene_list' that are not in 'count_matrix'")
 
   if (!identical(colnames(cell_cluster_conversion), c("cell_name", "class_label"))) stop("'cell_cluster_conversion' should have column name as 'cell_name' and 'class_label'")
 
   if (length(cluster_label)>1) stop("length of 'cluster_label' should be 1")
-  if (length(setdiff(cluster_label, unique(cell_cluster_conversion$class_label)))>0) stop("'cluster_label' is not a cell type in 'cell_cluster_conversion'")
+  if (length(base::setdiff(cluster_label, unique(cell_cluster_conversion$class_label)))>0) stop("'cluster_label' is not a cell type in 'cell_cluster_conversion'")
 
   cells_in_cluster=colnames(count_matrix)[which(as.character(cell_cluster_conversion[colnames(count_matrix),"class_label"]) %in% cluster_label)]
   ave_count=rowSums(as.matrix(count_matrix[gene_list,cells_in_cluster]))/length(cells_in_cluster)
@@ -153,7 +153,7 @@ densityscatter=function(x, y, xlab = NULL, ylab = NULL, main = NULL, add.diagona
 #' data_transformation(x, trans_type = "log", base=10)
 data_transformation=function(input_data ,trans_type, base=10){
   if (!is.numeric(input_data)) stop("'input_data' should be a numeric vector")
-  if (length(setdiff(trans_type, c("log","square_root","logit","none")))>0) stop("'trans_type' should be one of 'log', 'logit', 'square_root', or 'none'")
+  if (length(base::setdiff(trans_type, c("log","square_root","logit","none")))>0) stop("'trans_type' should be one of 'log', 'logit', 'square_root', or 'none'")
 
   if (trans_type=="none"){
     return(input_data)
@@ -506,7 +506,7 @@ diff_gene_cluster=function(pagoda_object, cell_cluster_conversion, n.core = 1, z
 initialize_population = function(pop.size, panel.size, diff_expr_result, diff_metric, diff_metric_cutoff, gene.list, gene2include=NULL){
   if (!(diff_metric %in% colnames(diff_expr_result[[1]]))) stop(paste("'diff_metric' must be one of:", paste(colnames(diff_expr_result[[1]]), collapse = ", ")))
 
-  if (length(setdiff(gene2include, gene.list))>0) stop("genes in 'gene2include' must also be in 'gene.list'")
+  if (length(base::setdiff(gene2include, gene.list))>0) stop("genes in 'gene2include' must also be in 'gene.list'")
 
   clusters = names(diff_expr_result)
 
@@ -551,9 +551,9 @@ initialize_population = function(pop.size, panel.size, diff_expr_result, diff_me
 initialize_solution = function(sol.num, panel.size, diff_expr_result, diff_metric, diff_metric_cutoff, cluster.list, gene.list, gene2include=NULL){
   if (!(diff_metric %in% colnames(diff_expr_result[[1]]))) stop(paste("'diff_metric' must be one of:", paste(colnames(diff_expr_result[[1]]), collapse = ", ")))
 
-  if (length(setdiff(gene2include, gene.list))>0) stop("genes in 'gene2include' must also be in 'gene.list'")
+  if (length(base::setdiff(gene2include, gene.list))>0) stop("genes in 'gene2include' must also be in 'gene.list'")
 
-  if (length(setdiff(cluster.list, names(diff_expr_result)))>0) stop("cell types in 'cluster.list' must also be in names(diff_expr_result)")
+  if (length(base::setdiff(cluster.list, names(diff_expr_result)))>0) stop("cell types in 'cluster.list' must also be in names(diff_expr_result)")
 
   candidate=c()
   gene2include.per.ct = floor(panel.size/length(cluster.list))    #calculate average number of DE genes we can include given the number of cell types and panel size
@@ -732,7 +732,6 @@ subsampling_all=function(count_table, rate = 1){        #subsampling from all ce
 }
 
 
-
 #' Subsample scRNA-seq data by cell type
 #'
 #' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.
@@ -752,7 +751,7 @@ subsampling_by_cluster=function(count_table, cell_cluster_conversion, rate = 1, 
 
   if (!identical(colnames(cell_cluster_conversion), c("cell_name", "class_label"))) stop("'cell_cluster_conversion' should have column name as 'cell_name' and 'class_label'")
 
-  if (length(setdiff(colnames(count_table), rownames(cell_cluster_conversion)))>0) stop("There are cells in 'count_table' that are not in 'cell_cluster_conversion'")
+  if (length(base::setdiff(colnames(count_table), rownames(cell_cluster_conversion)))>0) stop("There are cells in 'count_table' that are not in 'cell_cluster_conversion'")
 
   if (rate > 1 || rate <0) stop("'rate' should between 0 and 1")
 

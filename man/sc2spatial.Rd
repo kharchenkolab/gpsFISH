@@ -2,29 +2,81 @@
 % Please edit documentation in R/sc2spatial.R
 \name{sc2spatial}
 \alias{sc2spatial}
-\title{Title}
+\title{Simulation spatial transcriptomics data from scRNA-seq data}
 \usage{
 sc2spatial(
   count_table,
   cell_cluster_conversion = NULL,
   relative_prop = NULL,
   sample_new_levels = NULL,
-  use_average_cluster_profiles = NULL,
-  rate = 1,
-  cluster_size_max = 1e+24,
-  cluster_size_min = 0,
-  sampling_type,
-  nCV = NULL,
+  use_average_cluster_profiles = FALSE,
+  simulation_type,
   simulation_parameter = NULL,
-  simulation_model = NULL
+  simulation_model = "ZINB"
 )
 }
 \arguments{
-\item{simulation_model}{}
+\item{count_table}{A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.}
+
+\item{cell_cluster_conversion}{A data frame with each row representing information of one cell.
+First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.}
+
+\item{relative_prop}{A list with two elements:
+\itemize{
+\item "cluster.average": A matrix containing the relative expression of each gene in each cell type with gene name as row name and cell type name as column name.
+The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.
+\item "cell.level": A matrix containing the relative expression of each gene in each cell with gene name as row name and cell name as column name.
+The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.
+}}
+
+\item{sample_new_levels}{A character specifying how simulation is performed for genes we have observed in the data used to train the Bayesian model.
+Specifically, during the training of the Bayesian model, we have estimations of the platform effect for genes in the training data.
+When we simulate spatial transcriptomics data for genes we have already seen in the training data,
+we can use their estimated platform effect \eqn{\gamma_i} and \eqn{c_i} ("old_levels"), or we can randomly sample \eqn{\gamma_i} and \eqn{c_i} from their posterior distribution ("random").
+For genes not in the training data, we will randomly sample \eqn{\gamma_i} and \eqn{c_i} from their posterior distribution since we don't have their estimation.}
+
+\item{use_average_cluster_profiles}{A logical value indicating if we want to use relative expression per cell type as the relative expression input for simulating spatial transcriptomics data.
+If TRUE, then value in \code{relative_prop$cluster.average} is used. And for each gene, cells from the same cell type will have the same value.
+If FALSE, then we use the relative expression per cell as input, i.e., \code{relative_prop$cell.level}.
+Default is FALSE.}
+
+\item{simulation_type}{A character specifying whether simulation is performed. There are two options. "No_simulation" means no simulation. "Simulation" means we do simulation.}
+
+\item{simulation_parameter}{A simulation model returned by simulation_training_ZINB_trim.}
+
+\item{simulation_model}{A character specifying the type of simulation model. Default is the Bayesian model ("ZINB").}
 }
 \value{
-
+A matrix containing the simulated spatial transcriptomics data. Rows and columns are the same with \code{count_table}.
 }
 \description{
-Title
+Simulation spatial transcriptomics data from scRNA-seq data
+}
+\examples{
+data(sc_count)
+data(sc_cluster)
+data(simulation_params)
+
+#calculate relative proportion
+unique_cluster_label=as.character(unique(sc_cluster$class_label))
+#cluster-wise relative proportion
+relative_prop = list()
+relative_prop[["cluster.average"]] = sapply(unique_cluster_label,
+                                            gene_list=rownames(sc_count),
+                                            relative_freq,
+                                            count_matrix=sc_count,
+                                            cell_cluster_conversion=sc_cluster)
+#individual cell level relative proportion
+relative_prop[["cell.level"]] = t(t(sc_count)/colSums(sc_count))
+
+#simulation spatial transcriptomics data
+genes2simulate = sample(rownames(sc_count), 100)
+simulate_sc_count = sc2spatial(count_table = sc_count,
+                               cell_cluster_conversion = sc_clkuster,
+                               relative_prop = relative_prop,
+                               sample_new_levels = "old_levels",
+                               use_average_cluster_profiles = FALSE,
+                               simulation_type = "Simulation",
+                               simulation_parameter = simulation_params,
+                               simulation_model = "ZINB")
 }

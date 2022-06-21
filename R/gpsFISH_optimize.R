@@ -67,7 +67,6 @@
 #'
 #' @export
 #'
-#' @examples
 gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor(popsize/10),
                              ngen = 50, tourneysize = max(ceiling(popsize/10), 2), mutprob = 0.01,
                              mutfrac = NULL, initpop = NULL, verbose = 0, cluster = NULL, save.intermediate = F,
@@ -624,7 +623,6 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
 #' @return
 #' @export
 #'
-#' @examples
 fitness=function(string, full_count_table, cell_cluster_conversion,
                  nCV, rate = 1, cluster_size_max = 1000, cluster_size_min = 1, two_step_sampling_type, metric = "Accuracy", method = "NaiveBayes", weight_penalty = NULL,
                  simulation_parameter, simulation_model = "ZINB", relative_prop = NULL, sample_new_levels = NULL, use_average_cluster_profiles = FALSE){      #this function is faster than fitness_default_cv
@@ -632,14 +630,14 @@ fitness=function(string, full_count_table, cell_cluster_conversion,
   sub_count_table = t(sub_count_table)
 
   #we first do subsampling
-  subsub_count_table=subsample_sc(count_table = sub_count_table, cell_cluster_conversion = cell_cluster_conversion,
-                                  rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, sampling_type = two_step_sampling_type[1], nCV = nCV)
+  subsub_count_table = subsample_sc(count_table = sub_count_table, cell_cluster_conversion = cell_cluster_conversion,
+                                    rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, sampling_type = two_step_sampling_type[1], nCV = nCV)
 
   class_label_per_cell = as.character(cell_cluster_conversion[colnames(subsub_count_table),"class_label"])
 
   #create CV
   #fold_per_cell = createFolds(factor(class_label_per_cell), k = nCV, list = FALSE)
-  cvlabel = create_folds(class_label_per_cell, k = nCV)
+  cvlabel = splitTools::create_folds(class_label_per_cell, k = nCV)
   cvround = paste0("Fold", seq(1:nCV))
 
   #run classification for each cross validation
@@ -647,7 +645,7 @@ fitness=function(string, full_count_table, cell_cluster_conversion,
                   cvlabel = cvlabel, data4cv = subsub_count_table, class_label_per_cell = class_label_per_cell,
                   metric = metric, method = method,
                   relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles,
-                  sampling_type = two_step_sampling_type[2], simulation_parameter = simulation_parameter, simulation_model = simulation_model,
+                  simulation_type = two_step_sampling_type[2], simulation_parameter = simulation_parameter, simulation_model = simulation_model,
                   cell_cluster_conversion = cell_cluster_conversion, weight_penalty = weight_penalty)       #fit random forest for each round of cross validation
   cfm = lapply(1:length(result), function(x) result[[x]]$confusion.matrix)                #get the confusion matrix for each cross validation
   norm.cfm = lapply(1:length(result), function(x) result[[x]]$norm.confusion.matrix)      #get the normalized confusion matrix for each cross validation
@@ -688,10 +686,10 @@ fitness=function(string, full_count_table, cell_cluster_conversion,
 classifier_per_cv = function(current_round, cvlabel, data4cv, class_label_per_cell,
                              metric, method,
                              relative_prop=NULL, sample_new_levels = NULL, use_average_cluster_profiles = NULL,
-                             sampling_type, simulation_parameter, simulation_model,
+                             simulation_type, simulation_parameter, simulation_model,
                              cell_cluster_conversion, weight_penalty){
   #simulate spatial data for data4cv
-  spatial_sc_count=sc2spatial(count_table = data4cv, cell_cluster_conversion = class_label_per_cell, sampling_type = sampling_type, simulation_parameter = simulation_parameter, simulation_model = simulation_model, relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)
+  spatial_sc_count=sc2spatial(count_table = data4cv, cell_cluster_conversion = class_label_per_cell, simulation_type = simulation_type, simulation_parameter = simulation_parameter, simulation_model = simulation_model, relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)
   cell.zero.count = which(colSums(spatial_sc_count)==0)          #we may have cells with 0 count (we cannot use cell name because there are duplicated cell names)
   #spatial_sc_count is a matrix if we use naive_simulation. It is a data frame if we use ZINB simulation
   #for naive simulation, the simulated spatial data is subsampled based on subsub_count, which is a subset of normalized scRNA-seq data
