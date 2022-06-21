@@ -650,9 +650,6 @@ popDiv <- function(x) {
 }
 
 
-
-
-
 #' Subsample scRNA-seq data
 #'
 #' @description subsample_sc takes scRNA-seq data as input and subsample it by selecting a subset of cells.
@@ -679,7 +676,7 @@ popDiv <- function(x) {
 #' #number of cells per cell type
 #' table(sc_cluster[colnames(sc_count), "class_label"])
 #'
-#' #subsample
+#' #subsample by cell type
 #' subsample_sc_count = subsample_sc(count_table = sc_count,
 #'                                   cell_cluster_conversion = sc_cluster,
 #'                                   rate = 1,
@@ -691,6 +688,12 @@ popDiv <- function(x) {
 #' #number of cells per cell type after subsample
 #' table(sc_cluster[colnames(subsample_sc_count), "class_label"])
 #'
+#' #subsample cells from all cell types together
+#' dim(sc_count)
+#' subsample_sc_count = subsample_sc(count_table = sc_count,
+#'                                   rate = 0.5,
+#'                                   sampling_type = "Subsampling")
+#' dim(subsample_sc_count)
 subsample_sc=function(count_table, cell_cluster_conversion = NULL,
                       rate = 1, cluster_size_max = 1000, cluster_size_min = 1,
                       sampling_type = "Subsampling_by_cluster",

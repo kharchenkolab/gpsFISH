@@ -46,7 +46,7 @@ data(sc_cluster)
 #number of cells per cell type
 table(sc_cluster[colnames(sc_count), "class_label"])
 
-#subsample
+#subsample by cell type
 subsample_sc_count = subsample_sc(count_table = sc_count,
                                   cell_cluster_conversion = sc_cluster,
                                   rate = 1,
@@ -58,4 +58,10 @@ subsample_sc_count = subsample_sc(count_table = sc_count,
 #number of cells per cell type after subsample
 table(sc_cluster[colnames(subsample_sc_count), "class_label"])
 
+#subsample cells from all cell types together
+dim(sc_count)
+subsample_sc_count = subsample_sc(count_table = sc_count,
+                                  rate = 0.5,
+                                  sampling_type = "Subsampling")
+dim(subsample_sc_count)
 }
