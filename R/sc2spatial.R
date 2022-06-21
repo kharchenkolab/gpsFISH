@@ -223,7 +223,7 @@ ZINB_predict=function(sc_prop, simulation_parameter, sample_new_levels,
 
   #make predictions
   simu.count = suppressWarnings(zinb_generator(n=num_gene*num_cell,
-                                               miu=miu,
+                                               mu=mu,
                                                size=shape,     #1/dispersion, it is the same with the shape parameter in zinb model fitting
                                                pie=zi.global))      #zero inflation
 

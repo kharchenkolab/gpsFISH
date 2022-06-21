@@ -831,22 +831,56 @@ subsample=function(cell_cluster_conversion, class_label, rate = 1, cluster_size_
 }
 
 
-rep.row<-function(x,n){
+#' Replicate a vector row-wise to generate a matrix
+#'
+#' @param x A numeric vector.
+#' @param n Number of times to repeat \code{x}.
+#'
+#' @return A numeric matrix.
+#' @export
+#'
+#' @examples
+#' x = c(1:10)
+#' rep.row(x, 3)
+rep.row=function(x,n){
   matrix(rep(x,each=n),nrow=n)
 }
-rep.col<-function(x,n){
+
+
+#' Replicate a vector column-wise to generate a matrix
+#'
+#' @param x A numeric vector.
+#' @param n Number of times to repeat \code{x}.
+#'
+#' @return A numeric matrix.
+#' @export
+#'
+#' @examples
+#' x = c(1:10)
+#' rep.col(x, 3)
+rep.col=function(x,n){
   matrix(rep(x,each=n), ncol=n, byrow=TRUE)
 }
-zinb_generator=function(n, size, pie, miu){      #miu and size must have length = n (each point should have their own miu and size)
-  # counts=rep(NA, length=n)
-  # #select counts to be zero based on binomial distribution (first component of ZINB)
-  # counts[rbinom(n=n, size=1, prob=pie)==1]=0
 
-  counts=1-rbinom(n=n, size=1, prob=pie)
+
+#' Generate random values from a zero-inflated negative binomial distribution.
+#'
+#' @param n Number of random values to return.
+#' @param size The dispersion paramater used in ‘dnbinom’.
+#' @param pie The zero-inflation parameter.
+#' @param mu Alternative parametrization of negative binomial distribution via mean. The mean parameter used in ‘dnbinom’.
+#'
+#' @return A numeric vector containing the randomly generated values.
+#' @export
+#'
+#' @examples
+#' zinb_generator(30, size = rep(2, 30), pie = 0.1, mu = rep(5, 30))
+zinb_generator=function(n, size, pie, mu){      #mu and size must have length = n (each point should have their own mu and size)
+  counts=1-stats::rbinom(n=n, size=1, prob=pie)
   #for the rest, randomly generate them from a negative binomial distribution (second component of ZINB)
   # bool=is.na(counts)
   bool = counts==1
   n.nb=sum(bool)
-  counts[which(bool)]=rnbinom(n=n.nb, mu = miu[which(bool)], size = size[which(bool)])
+  counts[which(bool)]=rnbinom(n=n.nb, mu = mu[which(bool)], size = size[which(bool)])
   return(counts)
 }

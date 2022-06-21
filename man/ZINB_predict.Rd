@@ -50,7 +50,7 @@ A list with elements:
 \item{beta.global}{Randomly sampled \eqn{\beta} from its posterior distribution.}
 \item{zi.global}{Randomly sampled \eqn{\pi} from its posterior distribution.}
 \item{mu_gamma}{Randomly sampled \eqn{\mu_\gamma} from its posterior distribution.}
-\item{sigma_gamma}{Randomly sampled \eqn{\sigma_{\gamma}} from its posterior distribution.}
+\item{sigma_gamma}{Randomly sampled \eqn{\sigma_\gamma} from its posterior distribution.}
 \item{mu_c}{Randomly sampled \eqn{\mu_c} from its posterior distribution.}
 \item{sigma_c}{Randomly sampled \eqn{\signa_c} from its posterior distribution.}
 \item{gamma_i_gene}{Simulated \eqn{\gamma_i} for each gene.}
