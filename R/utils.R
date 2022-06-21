@@ -706,10 +706,23 @@ subsample_sc=function(count_table, cell_cluster_conversion = NULL,
 }
 
 
-subsampling_all=function(count_table, rate){        #subsampling from all cells
-  num.cells=round(dim(count_table)[2]*rate)
-  selected.cells=sample(seq(1:dim(count_table)[2]), num.cells, replace = FALSE)
-  simulated_count_table=count_table[,selected.cells]
+#' Subsample scRNA-seq data by mixing cells from all cell types
+#'
+#' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.
+#' @param rate A value between 0 and 1 specifying the proportion of cells we want to keep for each cell type during subsampling. 0.8 means we keep 80% of cells for each cell type. Default is 1.
+#'
+#' @return A subsampled matrix
+#' @export
+#'
+#' @examples
+#' data(sc_count)
+#' dim(sc_count)
+#' subsample_sc_count = subsampling_all(sc_count, 0.5)
+#' dim(subsample_sc_count)
+subsampling_all=function(count_table, rate = 1){        #subsampling from all cells
+  num.cells = base::round(dim(count_table)[2]*rate)
+  selected.cells = base::sample(seq(1:dim(count_table)[2]), num.cells, replace = FALSE)
+  simulated_count_table = count_table[,selected.cells]
   return(simulated_count_table)
 }
 
