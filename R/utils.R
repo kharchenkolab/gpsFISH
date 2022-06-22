@@ -841,8 +841,8 @@ subsample=function(cell_cluster_conversion, class_label, rate = 1, cluster_size_
 #'
 #' @examples
 #' x = c(1:10)
-#' rep.row(x, 3)
-rep.row=function(x,n){
+#' rep_row(x, 3)
+rep_row=function(x,n){
   matrix(rep(x,each=n),nrow=n)
 }
 
@@ -857,8 +857,8 @@ rep.row=function(x,n){
 #'
 #' @examples
 #' x = c(1:10)
-#' rep.col(x, 3)
-rep.col=function(x,n){
+#' rep_col(x, 3)
+rep_col=function(x,n){
   matrix(rep(x,each=n), ncol=n, byrow=TRUE)
 }
 

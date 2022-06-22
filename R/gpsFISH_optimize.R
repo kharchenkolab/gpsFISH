@@ -361,7 +361,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
     }
 
     ###Mutation###
-    chosen = matrix(as.logical(rbinom(popsize * k, 1, mutprob)),           #randonly pick genes in each solution to mutate based on the mutation probability
+    chosen = matrix(as.logical(stats::rbinom(popsize * k, 1, mutprob)),           #randonly pick genes in each solution to mutate based on the mutation probability
                      nrow = popsize)
     nchosen = apply(chosen, 1, sum)                                        #total number of genes to mutate for each solution
 
@@ -552,7 +552,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
 
   alltimebest = which(old$obj == min(old$obj, na.rm = TRUE))      #among all the generations, which one have the best fitness (we may have situations where the best solution of multiple generations have the same fitness value)
   #alltimebest = which(old$obj == min(old$obj[1:(gen+1)], na.rm = TRUE))
-  alltimebest = tail(alltimebest, 1)                              #we choose the last generate as the best when there are ties
+  alltimebest = utils::tail(alltimebest, 1)                              #we choose the last generate as the best when there are ties
   out$bestgeneration = alltimebest
   out$bestsol = out$old$best[alltimebest, ]                       #the best solution from the best generation (usually the last generation)
   out$bestobj = out$old$obj[alltimebest]                          #fitness value of the best solution from the best generation

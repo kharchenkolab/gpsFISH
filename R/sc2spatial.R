@@ -181,8 +181,8 @@ ZINB_predict=function(sc_prop, simulation_parameter, sample_new_levels,
 
   #generate gamma_i and c_i for each data point
   if (sample_new_levels == "random"){
-    gamma_i_gene = exp(rnorm(n = num_gene, mean = mu_gamma, sd = sigma_gamma))
-    c_i_gene = rnorm(n = num_gene, mean = mu_c, sd = sigma_c)
+    gamma_i_gene = exp(stats::rnorm(n = num_gene, mean = mu_gamma, sd = sigma_gamma))
+    c_i_gene = stats::rnorm(n = num_gene, mean = mu_c, sd = sigma_c)
     names(gamma_i_gene) = names(c_i_gene) = gene_list
   }
 
@@ -192,8 +192,8 @@ ZINB_predict=function(sc_prop, simulation_parameter, sample_new_levels,
 
     intercept.genes = base::intersect(gene_list, names(estimated_gamma_i))    #get the genes that appear in training dataset
 
-    gamma_i_gene = exp(rnorm(n = num_gene, mean = mu_gamma, sd = sigma_gamma))
-    c_i_gene = rnorm(n = num_gene, mean = mu_c, sd = sigma_c)
+    gamma_i_gene = exp(stats::rnorm(n = num_gene, mean = mu_gamma, sd = sigma_gamma))
+    c_i_gene = stats::rnorm(n = num_gene, mean = mu_c, sd = sigma_c)
     names(gamma_i_gene) = names(c_i_gene) = gene_list
 
     gamma_i_gene[intercept.genes] = estimated_gamma_i[intercept.genes]      #replace randomly generated alpha_i by estimated alpha_i for those genes that show up in training dataset
@@ -210,7 +210,7 @@ ZINB_predict=function(sc_prop, simulation_parameter, sample_new_levels,
   new.cell.size = base::sample(log(lib.size), num_cell, replace = T)                  #we do log transform here to save time
 
   #calculate mu for each gene and each cell
-  mu = exp(alpha.global + log(lambda) + rep.row(new.cell.size, dim(sc_prop)[1]))
+  mu = exp(alpha.global + log(lambda) + rep_row(new.cell.size, dim(sc_prop)[1]))
 
   #make predictions
   simu.count = suppressWarnings(zinb_generator(n=num_gene*num_cell,
