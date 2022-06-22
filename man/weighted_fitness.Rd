@@ -10,8 +10,7 @@ weighted_fitness(confusion_matrix, metric = "Accuracy", weight_penalty)
 \item{confusion_matrix}{Confusion matrix}
 
 \item{metric}{A character specifying the metric to use for evaluating the gene panel's classification performance.
-Default is "Accuracy", which is the overall accuracy of classification.
-The other options is "Kappa", which is the Kappa statistics.}
+Default is "Accuracy", which is the overall accuracy of classification.}
 
 \item{weight_penalty}{A weighted penalty matrix specifying the partial credit and extra penalty for correct and incorrect classifications between pairs of cell types.
 It should be a square matrix with cell types as both row and column name.}
