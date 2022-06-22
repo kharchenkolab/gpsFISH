@@ -884,7 +884,7 @@ zinb_generator=function(n, size, pie, mu){
   return(counts)
 }
 
-#' Calculate weighted accuracy based on confusion matrix and weighted penalty matrix
+#' Calculate weighted fitness value based on confusion matrix and weighted penalty matrix
 #'
 #' @param confusion_matrix Confusion matrix
 #' @param metric A character specifying the metric to use for evaluating the gene panel's classification performance.

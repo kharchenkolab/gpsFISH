@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{weighted_fitness}
 \alias{weighted_fitness}
-\title{Calculate weighted accuracy based on confusion matrix and weighted penalty matrix}
+\title{Calculate weighted fitness value based on confusion matrix and weighted penalty matrix}
 \usage{
 weighted_fitness(confusion_matrix, metric = "Accuracy", weight_penalty)
 }
@@ -21,5 +21,5 @@ A list with elements:
 \item{weighted.metric}{Weighted fitness value.}
 }
 \description{
-Calculate weighted accuracy based on confusion matrix and weighted penalty matrix
+Calculate weighted fitness value based on confusion matrix and weighted penalty matrix
 }
