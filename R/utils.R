@@ -883,3 +883,28 @@ zinb_generator=function(n, size, pie, mu){
   counts[which(bool)]=stats::rnbinom(n=n.nb, mu = mu[which(bool)], size = size[which(bool)])
   return(counts)
 }
+
+#' Calculate weighted accuracy based on confusion matrix and weighted penalty matrix
+#'
+#' @param confusion_matrix Confusion matrix
+#' @param metric A character specifying the metric to use for evaluating the gene panel's classification performance.
+#' Default is "Accuracy", which is the overall accuracy of classification.
+#' The other options is "Kappa", which is the Kappa statistics.
+#' @param weight_penalty A weighted penalty matrix specifying the partial credit and extra penalty for correct and incorrect classifications between pairs of cell types.
+#' It should be a square matrix with cell types as both row and column name.
+#'
+#' @return A list with elements:
+#'   \item{weighted.confusion.matrix}{Weighted confusion matrix.}
+#'   \item{weighted.metric}{Weighted fitness value.}
+#' @export
+#'
+weighted_fitness=function(confusion_matrix, metric = "Accuracy", weight_penalty){
+  reorder.weight_penalty = weight_penalty[rownames(confusion_matrix), colnames(confusion_matrix)]
+  weighted.confusion.matrix = confusion_matrix*reorder.weight_penalty
+  if (metric=="Accuracy"){
+    weighted.metric = sum(diag(weighted.confusion.matrix))/sum(weighted.confusion.matrix)
+  }else{
+    weighted.metric=NULL
+  }
+  return(list(weighted.confusion.matrix=weighted.confusion.matrix, weighted.metric=weighted.metric))
+}
