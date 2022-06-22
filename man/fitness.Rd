@@ -76,7 +76,13 @@ If FALSE, then we use the relative expression per cell as input, i.e., \code{rel
 Default is FALSE.}
 }
 \value{
-
+A list with elements:
+\item{fitness_value}{Average fitness value of the current gene panel over cross validations.}
+\item{confusionMatrix}{Average confusion matrix of the current gene panel over cross validations.}
+\item{norm.confusionMatrix}{Average normalized confusion matrix of the current gene panel over cross validations.}
+\item{stats_by_class}{Average classification statistics of the current gene panel over cross validations.}
+\item{pred_prob}{Average predicted probability of each cell based on the current gene panel over cross validations.}
+\item{AUC_by_class}{Average AUC per cell type of the current gene panel over cross validations.}
 }
 \description{
 Fitness function for evaluating the fitness of each gene panel

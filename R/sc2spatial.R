@@ -201,7 +201,7 @@ ZINB_predict=function(sc_prop, simulation_parameter, sample_new_levels,
   }
 
   #calculate lambda
-  lambda = boot::inv.logit(rep.col(gamma_i_gene, dim(sc_prop)[2]) * sqrt(sc_prop) + rep.col(c_i_gene, dim(sc_prop)[2]))          #for model 22.6
+  lambda = boot::inv.logit(rep_col(gamma_i_gene, dim(sc_prop)[2]) * sqrt(sc_prop) + rep_col(c_i_gene, dim(sc_prop)[2]))          #for model 22.6
 
   #get theta for each gene and each cell
   shape = exp(beta.global + lambda)

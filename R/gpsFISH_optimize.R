@@ -620,7 +620,13 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
 #' If FALSE, then we use the relative expression per cell as input, i.e., \code{relative_prop$cell.level}.
 #' Default is FALSE.
 #'
-#' @return
+#' @return A list with elements:
+#'   \item{fitness_value}{Average fitness value of the current gene panel over cross validations.}
+#'   \item{confusionMatrix}{Average confusion matrix of the current gene panel over cross validations.}
+#'   \item{norm.confusionMatrix}{Average normalized confusion matrix of the current gene panel over cross validations.}
+#'   \item{stats_by_class}{Average classification statistics of the current gene panel over cross validations.}
+#'   \item{pred_prob}{Average predicted probability of each cell based on the current gene panel over cross validations.}
+#'   \item{AUC_by_class}{Average AUC per cell type of the current gene panel over cross validations.}
 #' @export
 #'
 fitness=function(string, full_count_table, cell_cluster_conversion,
