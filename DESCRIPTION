@@ -34,7 +34,10 @@ Imports:
     viridis (>= 0.6.1),
     pagoda2 (>= 1.0.4),
     Matrix (>= 1.4.0),
-    parallel (>= 4.1.2)
+    parallel (>= 4.1.2),
+    ranger (>= 0.13.1),
+    caret (>= 6.0.88),
+    naivebayes (>= 0.9.7)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
