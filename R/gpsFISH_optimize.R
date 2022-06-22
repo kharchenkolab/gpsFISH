@@ -626,6 +626,23 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
 fitness=function(string, full_count_table, cell_cluster_conversion,
                  nCV, rate = 1, cluster_size_max = 1000, cluster_size_min = 1, two_step_sampling_type, metric = "Accuracy", method = "NaiveBayes", weight_penalty = NULL,
                  simulation_parameter, simulation_model = "ZINB", relative_prop = NULL, sample_new_levels = NULL, use_average_cluster_profiles = FALSE){      #this function is faster than fitness_default_cv
+  if (is.null(rownames(full_count_table))) stop("'full_count_table' should have gene name as column name")
+  if (is.null(colnames(full_count_table))) stop("'full_count_table' should have cell name as row name")
+
+  if (!identical(colnames(cell_cluster_conversion), c("cell_name", "class_label"))) stop("'cell_cluster_conversion' should have column name as 'cell_name' and 'class_label'")
+
+  if (!identical(names(relative_prop), c("cluster.average", "cell.level"))) stop("'relative_prop' should have column name as 'cluster.average' and 'cell.level'")
+
+  if (!identical(rownames(full_count_table), rownames(cell_cluster_conversion))) stop("'full_count_table' should have the same row name with 'cell_cluster_conversion'")
+
+  if (length(base::setdiff(metric, c("Accuracy", "Kappa")))>0) stop("'metric' should be one of 'Accuracy' or 'Kappa'")
+
+  if (length(base::setdiff(method, c("NaiveBayes", "RandomForest")))>0) stop("'method' should be one of 'NaiveBayes' or 'RandomForest'")
+
+  if (length(base::setdiff(sample_new_levels, c("old_levels", "random")))>0) stop("'sample_new_levels' should be one of 'old_levels' or 'random'")
+
+  if (rate > 1 || rate <0) stop("'rate' must be between 0 and 1")
+
   sub_count_table = full_count_table[, string]                            #column subset of a data frame is the fastest. Then is row subset of a data table. The third is row subset of a matrix. Column subset of a matrix is the same. Row subset of a data frame is the worst.
   sub_count_table = t(sub_count_table)
 
@@ -763,25 +780,13 @@ classifier_per_cv = function(current_round, cvlabel, data4cv, class_label_per_ce
 
   if (method=="NaiveBayes"){
     #using naivebayes
-    classifier_model <- multinomial_naive_bayes(
+    classifier_model = naivebayes::multinomial_naive_bayes(
       x = as.matrix(data_train[, 1:(dim(data_train)[2]-1)]),
       y = data_train$class_label)
-    pred.prob = predict(classifier_model, as.matrix(data_test[, 1:(dim(data_test)[2]-1)]), type="prob")
+    pred.prob = stats::predict(classifier_model, as.matrix(data_test[, 1:(dim(data_test)[2]-1)]), type="prob")
 
-    # #fit multinomial logistic regression model
-    # classifier_model <- naiveBayes(
-    #   formula = as.factor(class_label) ~.,
-    #   data = data_train)
-    # pred.prob = predict(classifier_model, data_test, type="raw")
-
-    # #using mlpack
-    # classifier_model <- nbc(training = as.matrix(data_train[, 1:dim(subsub_count)[1]]), labels = as.matrix(as.numeric(as.factor(data_train$class_label))))
-    # classifier_test <- nbc(input_model=classifier_model$output_model, test=as.matrix(data_test[, 1:dim(subsub_count)[1]]))
-    # pred.prob <- classifier_test$probabilities
-    # colnames(pred.prob) = levels(as.factor(data_train$class_label))
-
-    rownames(pred.prob)=data_test$class_label                                         #rowname of pred.prob needs to be true cell type if we want to use it for AUC calculation
-    data_test$pred <- colnames(pred.prob)[apply(pred.prob,1,which.max)]
+    rownames(pred.prob) = data_test$class_label                                         #rowname of pred.prob needs to be true cell type if we want to use it for AUC calculation
+    data_test$pred = colnames(pred.prob)[apply(pred.prob,1,which.max)]
     var.imp = rep(1, dim(data4cv)[1])
   }
 
