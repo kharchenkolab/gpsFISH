@@ -18,8 +18,7 @@ sc2spatial(
 \arguments{
 \item{count_table}{A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.}
 
-\item{cell_cluster_conversion}{A data frame with each row representing information of one cell.
-First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.}
+\item{cell_cluster_conversion}{A character vector containing the cell type of each cell.}
 
 \item{relative_prop}{A list with two elements:
 \itemize{
@@ -71,8 +70,9 @@ relative_prop[["cell.level"]] = t(t(sc_count)/colSums(sc_count))
 
 #simulation spatial transcriptomics data
 genes2simulate = sample(rownames(sc_count), 100)
+class_label_per_cell = as.character(sc_cluster[colnames(sc_count),"class_label"])
 simulate_sc_count = sc2spatial(count_table = sc_count[genes2simulate,],
-                               cell_cluster_conversion = sc_cluster,
+                               cell_cluster_conversion = class_label_per_cell,
                                relative_prop = relative_prop,
                                sample_new_levels = "old_levels",
                                use_average_cluster_profiles = FALSE,

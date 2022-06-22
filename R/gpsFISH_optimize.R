@@ -689,7 +689,7 @@ classifier_per_cv = function(current_round, cvlabel, data4cv, class_label_per_ce
                              simulation_type, simulation_parameter, simulation_model,
                              cell_cluster_conversion, weight_penalty){
   #simulate spatial data for data4cv
-  spatial_sc_count=sc2spatial(count_table = data4cv, cell_cluster_conversion = class_label_per_cell, simulation_type = simulation_type, simulation_parameter = simulation_parameter, simulation_model = simulation_model, relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)
+  spatial_sc_count = sc2spatial(count_table = data4cv, cell_cluster_conversion = class_label_per_cell, simulation_type = simulation_type, simulation_parameter = simulation_parameter, simulation_model = simulation_model, relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)
   cell.zero.count = which(colSums(spatial_sc_count)==0)          #we may have cells with 0 count (we cannot use cell name because there are duplicated cell names)
   #spatial_sc_count is a matrix if we use naive_simulation. It is a data frame if we use ZINB simulation
   #for naive simulation, the simulated spatial data is subsampled based on subsub_count, which is a subset of normalized scRNA-seq data

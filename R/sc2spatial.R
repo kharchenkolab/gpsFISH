@@ -1,8 +1,7 @@
 #' Simulation spatial transcriptomics data from scRNA-seq data
 #'
 #' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.
-#' @param cell_cluster_conversion A data frame with each row representing information of one cell.
-#' First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+#' @param cell_cluster_conversion A character vector containing the cell type of each cell.
 #' @param relative_prop A list with two elements:
 #'   * "cluster.average": A matrix containing the relative expression of each gene in each cell type with gene name as row name and cell type name as column name.
 #'   The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.
@@ -43,8 +42,9 @@
 #'
 #' #simulation spatial transcriptomics data
 #' genes2simulate = sample(rownames(sc_count), 100)
+#' class_label_per_cell = as.character(sc_cluster[colnames(sc_count),"class_label"])
 #' simulate_sc_count = sc2spatial(count_table = sc_count[genes2simulate,],
-#'                                cell_cluster_conversion = sc_cluster,
+#'                                cell_cluster_conversion = class_label_per_cell,
 #'                                relative_prop = relative_prop,
 #'                                sample_new_levels = "old_levels",
 #'                                use_average_cluster_profiles = FALSE,
@@ -67,9 +67,7 @@ sc2spatial=function(count_table,
     if (is.null(rownames(count_table))) stop("'count_table' should have gene name as row name")
     if (is.null(colnames(count_table))) stop("'count_table' should have cell name as column name")
 
-    if (!identical(colnames(cell_cluster_conversion), c("cell_name", "class_label"))) stop("'cell_cluster_conversion' should have column name as 'cell_name' and 'class_label'")
-
-    if (length(base::setdiff(colnames(count_table), rownames(cell_cluster_conversion)))>0) stop("There are cells in 'count_table' that are not in 'cell_cluster_conversion'")
+    if (dim(count_table)[2] != length(cell_cluster_conversion)) stop("Length of 'cell_cluster_conversion' should equal to the number of columns in 'count_table'")
 
     # if (simulation_model=="Naive_simulation_with_probe_failure" || simulation_model=="Naive_simulation_without_probe_failure"){
     #   result=simulation_naive(count_table = count_table, simulation_parameter = simulation_parameter, relative_prop = relative_prop)
@@ -86,8 +84,7 @@ sc2spatial=function(count_table,
 #' Simulating spatial transcriptomics data from scRNA-seq data using Bayesian modelling
 #'
 #' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.
-#' @param cell_cluster_conversion A data frame with each row representing information of one cell.
-#' First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+#' @param cell_cluster_conversion A character vector containing the cell type of each cell.
 #' @param relative_prop A list with two elements:
 #'   * "cluster.average": A matrix containing the relative expression of each gene in each cell type with gene name as row name and cell type name as column name.
 #'   The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.
@@ -110,10 +107,8 @@ sc2spatial=function(count_table,
 simulation_ZINB=function(count_table, cell_cluster_conversion, relative_prop, simulation_parameter, sample_new_levels, use_average_cluster_profiles = FALSE){
   gene_list=rownames(count_table)
   cell_list=colnames(count_table)
-  ct_list=base::unique(cell_cluster_conversion)
   num_gene=length(gene_list)
   num_cell=length(cell_list)
-  num_ct=length(ct_list)
 
   #get relative proportion
   if (use_average_cluster_profiles){                                         #for the same gene, all cells in the same cell type will have the same sc.prop
@@ -124,7 +119,7 @@ simulation_ZINB=function(count_table, cell_cluster_conversion, relative_prop, si
   }
 
   prediction = ZINB_predict(sc_prop = sc_prop, simulation_parameter = simulation_parameter, sample_new_levels = sample_new_levels,
-                            gene_list = gene_list, cell_list = cell_list, ct_list = ct_list, num_gene = num_gene, num_cell = num_cell, num_ct = num_ct, class_label = cell_cluster_conversion)
+                            gene_list = gene_list, cell_list = cell_list, num_gene = num_gene, num_cell = num_cell)
 
   return(prediction$simu_count_matrix)
 }
@@ -143,12 +138,8 @@ simulation_ZINB=function(count_table, cell_cluster_conversion, relative_prop, si
 #' For genes not in the training data, we will randomly sample \eqn{\gamma_i} and \eqn{c_i} from their posterior distribution since we don't have their estimation.
 #' @param gene_list A character vector of gene names.
 #' @param cell_list A character vector of cell names.
-#' @param ct_list A character vector of cell type names.
 #' @param num_gene Number of genes.
 #' @param num_cell Number of cells.
-#' @param num_ct Number of cell types.
-#' @param class_label A data frame with each row representing information of one cell.
-#' First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
 #'
 #' @return A list with elements:
 #'   \item{simu_count_matrix}{A matrix containing the simulated spatial transcriptomics data.}
@@ -165,7 +156,7 @@ simulation_ZINB=function(count_table, cell_cluster_conversion, relative_prop, si
 #' @export
 #'
 ZINB_predict=function(sc_prop, simulation_parameter, sample_new_levels,
-                      gene_list, cell_list, ct_list, num_gene, num_cell, num_ct, class_label){          #get estimated.random.intercept is the slowest step (profiling doesn't show this though)
+                      gene_list, cell_list, num_gene, num_cell){          #get estimated.random.intercept is the slowest step (profiling doesn't show this though)
   posterior = simulation_parameter$posterior
   lib.size = simulation_parameter$lib.size
   distortion.pattern = simulation_parameter$distortion_pattern

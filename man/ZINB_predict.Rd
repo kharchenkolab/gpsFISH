@@ -10,11 +10,8 @@ ZINB_predict(
   sample_new_levels,
   gene_list,
   cell_list,
-  ct_list,
   num_gene,
-  num_cell,
-  num_ct,
-  class_label
+  num_cell
 )
 }
 \arguments{
@@ -32,16 +29,9 @@ For genes not in the training data, we will randomly sample \eqn{\gamma_i} and \
 
 \item{cell_list}{A character vector of cell names.}
 
-\item{ct_list}{A character vector of cell type names.}
-
 \item{num_gene}{Number of genes.}
 
 \item{num_cell}{Number of cells.}
-
-\item{num_ct}{Number of cell types.}
-
-\item{class_label}{A data frame with each row representing information of one cell.
-First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.}
 }
 \value{
 A list with elements:

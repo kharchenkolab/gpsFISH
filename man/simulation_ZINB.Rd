@@ -16,8 +16,7 @@ simulation_ZINB(
 \arguments{
 \item{count_table}{A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.}
 
-\item{cell_cluster_conversion}{A data frame with each row representing information of one cell.
-First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.}
+\item{cell_cluster_conversion}{A character vector containing the cell type of each cell.}
 
 \item{relative_prop}{A list with two elements:
 \itemize{
