@@ -875,12 +875,11 @@ rep.col=function(x,n){
 #'
 #' @examples
 #' zinb_generator(30, size = rep(2, 30), pie = 0.1, mu = rep(5, 30))
-zinb_generator=function(n, size, pie, mu){      #mu and size must have length = n (each point should have their own mu and size)
+zinb_generator=function(n, size, pie, mu){
   counts=1-stats::rbinom(n=n, size=1, prob=pie)
   #for the rest, randomly generate them from a negative binomial distribution (second component of ZINB)
-  # bool=is.na(counts)
   bool = counts==1
   n.nb=sum(bool)
-  counts[which(bool)]=rnbinom(n=n.nb, mu = mu[which(bool)], size = size[which(bool)])
+  counts[which(bool)]=stats::rnbinom(n=n.nb, mu = mu[which(bool)], size = size[which(bool)])
   return(counts)
 }

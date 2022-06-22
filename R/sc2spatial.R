@@ -43,8 +43,8 @@
 #'
 #' #simulation spatial transcriptomics data
 #' genes2simulate = sample(rownames(sc_count), 100)
-#' simulate_sc_count = sc2spatial(count_table = sc_count,
-#'                                cell_cluster_conversion = sc_clkuster,
+#' simulate_sc_count = sc2spatial(count_table = sc_count[genes2simulate,],
+#'                                cell_cluster_conversion = sc_cluster,
 #'                                relative_prop = relative_prop,
 #'                                sample_new_levels = "old_levels",
 #'                                use_average_cluster_profiles = FALSE,
@@ -218,8 +218,8 @@ ZINB_predict=function(sc_prop, simulation_parameter, sample_new_levels,
   #random sample new cell size for each new cell from cell size distribution
   new.cell.size = base::sample(log(lib.size), num_cell, replace = T)                  #we do log transform here to save time
 
-  #calculate miu for each gene and each cell
-  miu = exp(alpha.global + log(lambda) + rep.row(new.cell.size, dim(sc_prop)[1]))
+  #calculate mu for each gene and each cell
+  mu = exp(alpha.global + log(lambda) + rep.row(new.cell.size, dim(sc_prop)[1]))
 
   #make predictions
   simu.count = suppressWarnings(zinb_generator(n=num_gene*num_cell,
