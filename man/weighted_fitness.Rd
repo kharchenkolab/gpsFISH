@@ -2,29 +2,23 @@
 % Please edit documentation in R/utils.R
 \name{weighted_fitness}
 \alias{weighted_fitness}
-\title{Calculate weighted fitness value based on confusion matrix and weighted penalty matrix}
+\title{Calculate weighted confusion matrix and accuracy}
 \usage{
-weighted_fitness(confusion_matrix, weight_penalty)
-
-weighted_fitness(confusion_matrix, weight_penalty)
+weighted_fitness(confusion_matrix, metric = "Accuracy", weight_penalty)
 }
 \arguments{
-\item{confusion_matrix}{Confusion matrix returned by \code{gpsFISH_optimize}.}
-
-\item{weight_penalty}{A weighted penalty matrix specifying the partial credit and extra penalty for correct and incorrect classifications between pairs of cell types.
-It should be a square matrix with cell types as both row and column name.}
+\item{confusion_matrix}{Confusion matrix}
 
 \item{metric}{A character specifying the metric to use for evaluating the gene panel's classification performance.
 Default is "Accuracy", which is the overall accuracy of classification.}
+
+\item{weight_penalty}{A weighted penalty matrix specifying the partial credit and extra penalty for correct and incorrect classifications between pairs of cell types.
+It should be a square matrix with cell types as both row and column name.}
 }
 \value{
 A list with elements:
 \item{weighted.confusion.matrix}{Weighted confusion matrix.}
 \item{weighted.metric}{Weighted fitness value.}
-
-A list with elements:
-\item{weighted.confusion.matrix}{A weighted confusion matrix.}
-\item{weighted.accuracy}{Weighted accuracy.}
 }
 \description{
 weighted_fitness calculates weighted confusion matrix and accuracy based on confusion matrix and weighted penalty matrix

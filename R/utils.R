@@ -884,8 +884,8 @@ zinb_generator=function(n, size, pie, mu){
   return(counts)
 }
 
-#' Calculate weighted fitness value based on confusion matrix and weighted penalty matrix
-#'
+#' Calculate weighted confusion matrix and accuracy
+#' @description weighted_fitness calculates weighted confusion matrix and accuracy based on confusion matrix and weighted penalty matrix
 #' @param confusion_matrix Confusion matrix
 #' @param metric A character specifying the metric to use for evaluating the gene panel's classification performance.
 #' Default is "Accuracy", which is the overall accuracy of classification.
@@ -1042,32 +1042,3 @@ plot_norm_confusion_matrix_with_dendrogram=function(confusion.matrix, cluster.di
   return(p)
 }
 
-
-#' Calculate weighted confusion matrix and accuracy
-#'
-#' @description weighted_fitness calculates weighted confusion matrix and accuracy based on confusion matrix and weighted penalty matrix
-#'
-#' @param confusion_matrix Confusion matrix returned by \code{gpsFISH_optimize}.
-#' @param weight_penalty A weighted penalty matrix specifying the partial credit and extra penalty for correct and incorrect classifications between pairs of cell types.
-#' It should be a square matrix with cell types as both row and column name.
-#'
-#' @return A list with elements:
-#' \item{weighted.confusion.matrix}{A weighted confusion matrix.}
-#' \item{weighted.accuracy}{Weighted accuracy.}
-#' @export
-#'
-weighted_fitness=function(confusion_matrix,  weight_penalty){
-  if (dim(confusion_matrix)[1] != dim(confusion_matrix)[2]) stop("'confusion_matrix' should be a square matrix")
-  if (dim(weight_penalty)[1] != dim(weight_penalty)[2]) stop("'weight_penalty' should be a square matrix")
-  if (!identical(rownames(confusion_matrix), colnames(confusion_matrix))) stop("'confusion_matrix' should have the same row and column name")
-  if (!identical(rownames(weight_penalty), colnames(weight_penalty))) stop("'weight_penalty' should have the same row and column name")
-  if (!identical(sort(rownames(confusion_matrix)), sort(rownames(weight_penalty)))) stop("'confusion_matrix' and 'weight_penalty' should have the same cell types")
-
-  reorder.weight_penalty = weight_penalty[rownames(confusion_matrix), colnames(confusion_matrix)]
-  weighted.confusion.matrix = confusion_matrix*reorder.weight_penalty
-
-  weighted.accuracy = sum(diag(weighted.confusion.matrix))/sum(weighted.confusion.matrix)
-
-  return(list(weighted.confusion.matrix = weighted.confusion.matrix,
-              weighted.accuracy = weighted.accuracy))
-}
