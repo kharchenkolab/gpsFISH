@@ -540,7 +540,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
       }
     }
 
-    if (verbose > 0){
+    if (save.intermediate){
       saveRDS(pop, paste0("pop",gen,".rds"))
     }
 
