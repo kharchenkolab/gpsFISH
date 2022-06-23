@@ -27,7 +27,5 @@ A list with elements:
 \item{weighted.accuracy}{Weighted accuracy.}
 }
 \description{
-Calculate weighted fitness value based on confusion matrix and weighted penalty matrix
-
-Calculate weighted confusion matrix and accuracy
+weighted_fitness calculates weighted confusion matrix and accuracy based on confusion matrix and weighted penalty matrix
 }
