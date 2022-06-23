@@ -210,6 +210,42 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
                   best.pos=best.pos))
     }
   }
+  ##############
+  #for test run#
+  ##############
+  # getfitness <- function(P, full_count_table, cell_cluster_conversion, nCV, rate, cluster_size_max, cluster_size_min, two_step_sampling_type, metric, method, simulation_parameter, simulation_model, weight_penalty, relative_prop, sample_new_levels, use_average_cluster_profiles) {         ###modified
+  #  f <- vector(mode = "numeric", length = popsize)
+  #  cfm <- vector(mode = "list", length = popsize)
+  #  norm_cfm <- vector(mode = "list", length = popsize)
+  #  stats_by_class <- vector(mode = "list", length = popsize)
+  #  pred_prob <- vector(mode = "list", length = popsize)
+  #  AUC_by_class <- vector(mode = "list", length = popsize)
+  #  variable_importance <- vector(mode = "list", length = popsize)      #variable importance for each chromosome
+  #  for (i in 1:popsize){
+  #    fitness_result <- OF(P[i, ], full_count_table = full_count_table, cell_cluster_conversion = cell_cluster_conversion, nCV = nCV, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, two_step_sampling_type = two_step_sampling_type, metric = metric, method = method, simulation_parameter = simulation_parameter, simulation_model = simulation_model, weight_penalty = weight_penalty, relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)   ###modified
+  #    f[i] <- fitness_result$fitness_value
+  #    cfm[[i]] <- fitness_result$confusionMatrix
+  #    norm_cfm[[i]] <- fitness_result$norm.confusionMatrix
+  #    stats_by_class[[i]] <- fitness_result$stats_by_class
+  #    pred_prob[[i]] <- fitness_result$pred_prob
+  #    AUC_by_class[[i]] <- fitness_result$AUC_by_class
+  #    variable_importance[[i]] <- fitness_result$var_imp
+  #  }
+  #  best.pos=which(f==min(f))[1]
+  #  ave_cfm=Reduce("+", cfm) / length(cfm)
+  #  best_cfm=cfm[[best.pos]]
+  #  norm_ave_cfm=Reduce("+", norm_cfm) / length(norm_cfm)
+  #  best_norm_ave_cfm=norm_cfm[[best.pos]]
+  #  ave_stats_by_class=Reduce("+", stats_by_class) / length(stats_by_class)
+  #  best_stats_by_class=stats_by_class[[best.pos]]
+  #  best_predprob=pred_prob[[best.pos]]
+  #  best_AUCbyclass=AUC_by_class[[best.pos]]
+  #  best_featureimp=variable_importance[[best.pos]]
+  #  return(list(f=f, ave_cfm=ave_cfm, best_cfm=best_cfm, norm_ave_cfm=norm_ave_cfm, best_norm_ave_cfm=best_norm_ave_cfm,
+  #              ave_stats_by_class=ave_stats_by_class, best_stats_by_class=best_stats_by_class,
+  #              best_predprob=best_predprob, best_AUCbyclass=best_AUCbyclass, best_featureimp=best_featureimp,
+  #              best.pos=best.pos))
+  # }
   ###generate fitness function for multi-thread case###
   if (useparallel) {
     list(...)
@@ -261,6 +297,10 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
   if (!useparallel){
     #single thread
     pop.fitness = getfitness(pop)
+    ##############
+    #for test run#
+    ##############
+    #pop.fitness = getfitness(pop, full_count_table = full_count_table, cell_cluster_conversion = sc_cluster, nCV = nCV, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, two_step_sampling_type=two_step_sampling_type, metric=metric, method = method, simulation_parameter=simulation_parameter, simulation_model=simulation_model, weight_penalty=weight_penalty, relative_prop=relative_prop, sample_new_levels=sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)    ###modified
 
     fitness.old = pop.fitness$f
 
@@ -367,7 +407,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
 
     for (i in 1:popsize) {                                                  #for each solution
       if (nchosen[i] > 0) {                                                 #if we have at least one gene to mutate
-        candidates = data.table::indices[-offspring[i, ]]                               #genes not in the current solution/chromosome
+        candidates = indices[-offspring[i, ]]                               #genes not in the current solution/chromosome
         if (is.null(gene.weight)){
           if (length(candidates)==1){
             toadd = candidates
