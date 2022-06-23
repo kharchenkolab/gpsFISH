@@ -46,5 +46,6 @@ RoxygenNote: 7.1.1
 Suggests: 
     rmarkdown,
     knitr,
-    pheatmap (>= 1.0.12)
+    pheatmap (>= 1.0.12),
+    reshape2 (>= 1.4.4)
 VignetteBuilder: knitr
