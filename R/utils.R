@@ -945,6 +945,104 @@ plot_norm_confusion_matrix=function(confusion.matrix){
 }
 
 
+#' Plot confusion matrix with cell type cluster dendrogram
+#'
+#' @param confusion.matrix A normalized confusion matrix returned by \code{gpsFISH_optimize}.
+#' @param cluster.distance Object returned by \code{cluster_distance}.
+#'
+#' @return ggplot2 object
+#' @export
+#'
+plot_norm_confusion_matrix_with_dendrogram=function(confusion.matrix, cluster.distance){
+  dend = cluster.distance$dendrogram
+  dend_data = ggdendro::dendro_data(dend)
+
+  #obtain confusion matrix
+  mat = confusion.matrix
+  IDconversion = cbind(rownames(mat), colnames(mat))
+  rownames(IDconversion) = IDconversion[,1]
+  #re-order the confusion matrix based on the order of dendrogram
+  mat = mat[as.character(dend_data$labels$label), IDconversion[as.character(dend_data$labels$label),2]]
+  colnames(mat) = rownames(mat)
+  sample_names = rownames(mat)
+
+  # Setup the data, so that the layout is inverted (this is more
+  # "clear" than simply using coord_flip())
+  segment_data = with(
+    ggdendro::segment(dend_data),
+    data.frame(x = y, y = x, xend = yend, yend = xend))
+  # Use the dendrogram label data to position the gene labels
+  gene_pos_table <- with(
+    dend_data$labels,
+    data.frame(y_center = x, gene = as.character(label), height = 1))
+  #The gene_pos_table contains information about the variable of each row in the final plot
+
+  # Table to position the samples
+  sample_pos_table = data.frame(sample = sample_names) %>%
+    dplyr::mutate(x_center = (1:dplyr::n()),
+                 width = 1)
+  #The sample_pos_table contains information about the variable of each column in the final plot
+
+  # Neglecting the gap parameters
+  heatmap_data <- mat %>%
+    reshape2::melt(value.name = "expr", varnames = c("gene", "sample")) %>%
+    dplyr::left_join(gene_pos_table) %>%
+    dplyr::left_join(sample_pos_table)
+  #the heatmap_data here contains all the information of the final plot (each row represent one cell in the plot with its value, its location on the 2D space)
+  heatmap_data$expr = round(heatmap_data$expr, digit=2)*100
+
+  # Limits for the vertical axes
+  gene_axis_limits <- with(
+    gene_pos_table,
+    c(min(y_center - 0.5 * height), max(y_center + 0.5 * height))
+  ) +
+    0.1 * c(-1, 1) # extra spacing: 0.1
+
+  # Heatmap plot
+  plt_hmap = ggplot2::ggplot(heatmap_data,
+                             ggplot2::aes(x = x_center, y = y_center, fill = expr,
+                             height = height, width = width)) +
+    ggplot2::geom_tile() +
+    ggplot2::geom_text(ggplot2::aes(label=expr), color="black", size = 3) +  # printing values
+    ggplot2::scale_fill_distiller(palette="Greens", direction=1) +
+    #scale_fill_gradient2("expr", high = "darkred", low = "darkblue") +
+    ggplot2::scale_x_continuous(breaks = sample_pos_table$x_center,
+                                labels = IDconversion[sample_pos_table$sample,2],
+                                expand = c(0, 0)) +
+    # For the y axis, alternatively set the labels as: gene_position_table$gene
+    ggplot2::scale_y_continuous(breaks = gene_pos_table[, "y_center"],
+                                labels = rep("", nrow(gene_pos_table)),
+                                limits = gene_axis_limits,
+                                expand = c(0, 0)) +
+    ggplot2::labs(x = "Cell type", y = "") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(size = ggplot2::rel(1.5), hjust = 1, angle = 45),   #size of cell type labels for the heatmap
+                   axis.title.x = ggplot2::element_text(face="bold", size=20),                    #size of the x axis labs ("Cell type")
+                   # margin: top, right, bottom, and left
+                   plot.margin = ggplot2::unit(c(1, 0.2, 0.2, -0.7), "cm"),
+                   panel.grid.minor = ggplot2::element_blank(),
+                   legend.position = "none")
+
+  # Dendrogram plot
+  plt_dendr = ggplot2::ggplot(segment_data) +
+    ggplot2::geom_segment(ggplot2::aes(x = x, y = y, xend = xend, yend = yend)) +
+    ggplot2::scale_x_reverse() +
+    ggplot2::scale_y_continuous(breaks = gene_pos_table$y_center,
+                                labels = gene_pos_table$gene,
+                                limits = gene_axis_limits,
+                                expand = c(0, 0)) +
+    ggplot2::labs(x = "Distance", y = "", colour = "", size = "") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(panel.grid.minor = ggplot2::element_blank(),
+                   axis.text.x = ggplot2::element_text(size = rel(1.5)),                          #size of the distance number (0.9, 0.6, etc)
+                   axis.text.y = ggplot2::element_text(size = rel(1.5)),                          #size of cell type label in the dendrogram
+                   axis.title.x = ggplot2::element_text(face="bold", size=20))                    #size of x axis labs ("Distance")
+
+  p = cowplot::plot_grid(plt_dendr, plt_hmap, align = 'h', rel_widths = c(1, 1))
+  return(p)
+}
+
+
 #' Calculate weighted confusion matrix and accuracy
 #'
 #' @description weighted_fitness calculates weighted confusion matrix and accuracy based on confusion matrix and weighted penalty matrix
