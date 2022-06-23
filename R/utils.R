@@ -927,9 +927,11 @@ plot_confusion_matrix=function(confusion.matrix){
 }
 
 
+
 #' Calculate weighted confusion matrix and accuracy
 #'
 #' @description weighted_fitness calculates weighted confusion matrix and accuracy based on confusion matrix and weighted penalty matrix
+#'
 #' @param confusion_matrix Confusion matrix returned by \code{gpsFISH_optimize}.
 #' @param weight_penalty A weighted penalty matrix specifying the partial credit and extra penalty for correct and incorrect classifications between pairs of cell types.
 #' It should be a square matrix with cell types as both row and column name.
@@ -937,7 +939,6 @@ plot_confusion_matrix=function(confusion.matrix){
 #' @return A list with elements:
 #' \item{weighted.confusion.matrix}{A weighted confusion matrix.}
 #' \item{weighted.accuracy}{Weighted accuracy.}
-#'
 #' @export
 #'
 weighted_fitness=function(confusion_matrix,  weight_penalty){
