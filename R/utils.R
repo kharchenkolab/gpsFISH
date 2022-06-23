@@ -945,7 +945,7 @@ plot_norm_confusion_matrix=function(confusion.matrix){
 }
 
 
-#' Plot confusion matrix with cell type cluster dendrogram
+#' Plot normalized confusion matrix with cell type cluster dendrogram
 #'
 #' @param confusion.matrix A normalized confusion matrix returned by \code{gpsFISH_optimize}.
 #' @param cluster.distance Object returned by \code{cluster_distance}.

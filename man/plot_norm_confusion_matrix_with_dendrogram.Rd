@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{plot_norm_confusion_matrix_with_dendrogram}
 \alias{plot_norm_confusion_matrix_with_dendrogram}
-\title{Plot confusion matrix with cell type cluster dendrogram}
+\title{Plot normalized confusion matrix with cell type cluster dendrogram}
 \usage{
 plot_norm_confusion_matrix_with_dendrogram(confusion.matrix, cluster.distance)
 }
@@ -15,5 +15,5 @@ plot_norm_confusion_matrix_with_dendrogram(confusion.matrix, cluster.distance)
 ggplot2 object
 }
 \description{
-Plot confusion matrix with cell type cluster dendrogram
+Plot normalized confusion matrix with cell type cluster dendrogram
 }
