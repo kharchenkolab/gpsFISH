@@ -939,7 +939,7 @@ plot_norm_confusion_matrix=function(confusion.matrix){
   p = ggplot2::ggplot(d2p, ggplot2::aes(x=Reference, y=Prediction, fill=value)) + ggplot2::geom_tile() + ggplot2::theme_bw() + ggplot2::coord_equal() +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90)) +
     ggplot2::scale_fill_distiller(palette="Greens", direction=1) +
-    ggplot2::guides(fill=F) + # removing legend for `fill`
+    ggplot2::guides(fill="none") + # removing legend for `fill`
     ggplot2::geom_text(ggplot2::aes(label=round(value, digit=2)*100), color="black", size = 3) # printing values
   return(p)
 }
