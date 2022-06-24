@@ -1,0 +1,486 @@
+---
+title: "gene_panel_selection"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{gene_panel_selection}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+- [Load the data](#load-the-data)
+- [Prepare input](#prepare-input)
+  * [Relative expression](#relative-expression)
+  * [Filter genes](#filter-genes)
+  * [Construct weighted penalty matrix based on cell type hierarchy](#construct-weighted-penalty-matrix-based-on-cell-type-hierarchy)
+  * [Generate gene weight](#generate-gene-weight)
+  * [Initialize population for gene panel selection](#initialize-population-for-gene-panel-selection)
+- [Gene panel selection](#gene-panel-selection)
+- [Inspect gene panel selection result](#inspect-model-fitting-result)
+  * [Get the genes in the gene panel](#get-the-genes-in-the-gene-panel)
+  * [Average expression per cell type for selected genes](#average-expression-per-cell-type-for-selected-genes)
+  * [Get the final population](#get-the-final-population)
+  * [Fitness change during optimization](#fitness-change-during-optimization)
+  * [Check classification statistics](#check-classification-statistics)
+  * [Clustering based on selected gene panel](#clustering-based-on-selected-gene-panel)
+- [Session Info](#session-info)
+
+In this tutorial, we will demonstrate how to perform gene panel selection for 
+hm-smFISH-based spatially resolved transcriptomics data using scRNA-seq data. 
+
+First, let’s load libraries:
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(gpsFISH)
+library(data.table)    #this is for function rbindlist() and as.data.table()
+library(pagoda2)      #for getting differentially expressed genes and dimension reduction
+library(parallel)      #this is for function makeCluster() and clusterEvalQ()
+library(ranger)       # a faster implementation of randomForest
+library(caret)        # an aggregator package for performing many machine learning models
+library(pROC)         #this is for function roc()
+library(naivebayes)    #this is for naive bayes classifier
+library(splitTools)   #this is for createFolds
+library(boot)         #this is for inv.logit in simulating spatial data
+
+#optional packages for generating plots
+library(pheatmap)     #this is for the heatmap after gene panel selection (optional)
+library(ggplot2)      #this is for the confusion matrix plot after gene panel selection (optional)
+library(reshape2)     #this is for the confusion matrix plot after gene panel selection (optional)
+library(Seurat)       #this is for the seurat UMAP plot (optional)
+# #packages below are for plotting the normalized confusion matrix with hierarchical tree
+library(ggdendro)     #this is for function dendro_data() in plot_norm_confusion_matrix_with_dendrogram() when making plot of normalized confusion matrix with dendrogram (optional)
+library(dplyr)        #for the recode_factor function
+library(cowplot)     #this is for function plot_grid() in plot_norm_confusion_matrix_with_dendrogram() when making plot of normalized 
+```
+
+## Load the data
+
+Next we will load the example datasets needed for gene panel selection: 
+
+```{r}
+data(sc_count)      #raw count expression matrix
+data(norm_sc_count) #normalized expression matrix
+data(sc_cluster)    #cell type annotation
+rownames(sc_count) = toupper(rownames(sc_count))
+rownames(norm_sc_count) = toupper(rownames(norm_sc_count))
+
+data(simulation_params) #pre-trained simulation model
+
+#Optional information for additional features. Gene panel selection can be performed without them.
+data(probe_count)   #probe count per gene
+rownames(probe_count)=make.unique(as.character(probe_count$gene_name))
+
+gene2include.symbol = toupper(c("Gad1", "Gad2", "Slc32a1", 
+                                "Crhbp", "Cnr1", "Vip"))   #curated marker genes must be included
+
+data(cell_type_hierarchy)    #cell type hierarchy
+```
+
+## Prepare input
+
+Here, we prepare input for gene panel selection based on the loaded datasets. 
+
+### Relative expression
+First, we calculate relative expression for each gene. 
+This is the key input for simlating spatial transcriptomics data.
+To make relative expression consistent across datasets, 
+we calculate it based on all genes in the transcriptome before gene filters.
+
+```{r}
+unique_cluster_label=as.character(unique(sc_cluster$class_label))      #unique cell type labels
+
+#cluster-wise relative expression
+relative_prop = list()
+relative_prop[["cluster.average"]] = sapply(unique_cluster_label, gene_list=rownames(sc_count), relative_freq,
+                                          count_matrix=sc_count,             
+                                          cell_cluster_conversion=sc_cluster)
+#individual cell level relative expression
+relative_prop[["cell.level"]] = t(t(sc_count)/colSums(sc_count))
+```
+
+### Filter genes
+Then, we filter out genes with low expression. 
+Specifically, we filter out lowly expressed genes based on their average expression in the highest expressed cell type. 
+This way, if a gene in only highly expressed in a rare cell type, we will keep it instead of removing it
+
+```{r, include = TRUE, fig.height=5, fig.width=5, fig.align='center'}
+ave_count_ik_all_gene = sapply(unique_cluster_label, gene_list = rownames(sc_count), average_count,
+                               count_matrix = sc_count,               
+                               cell_cluster_conversion = sc_cluster)
+maxexpr = apply(ave_count_ik_all_gene, 1, max)     #average expression in the highest expressed cell type for each gene
+
+#check the distribution of maxexpr
+hist(log10(maxexpr), col="gray", xlab="log10(max cluster average expression)")
+
+#filter by expression
+gene2keep = rownames(sc_count)[which(maxexpr>=1)]
+```
+
+We also filter out unannotated genes and lncRNA
+```{r}
+#remove genes with . in their gene symbol
+gene2remove1 = grep("\\.", gene2keep)
+#remove lncRNAs (genes with -AS in their gene symbol)
+gene2remove2 = grep("-AS", gene2keep)
+if (length(union(gene2remove1, gene2remove2))>0){
+  gene2keep = gene2keep[-union(gene2remove1, gene2remove2)]
+}
+```
+
+If we have information about the number of probes we can design to target each gene,
+it is suggested to filter out genes with small number of probes. 
+Here we filter out genes with fewer than 5 probes.
+
+```{r}
+genes.pass.probe.filter = rownames(subset(probe_count, probe_count>=5))
+gene2keep = intersect(gene2keep, genes.pass.probe.filter)
+```
+
+Some of the curated marker genes may be filtered out in this process. 
+Given the biological question, you may want to put them back although 
+they didn't meet the criterion. 
+
+```{r, include = TRUE}
+gene2keep = union(gene2keep, gene2include.symbol)
+cat(length(gene2keep), "genes pass the filters and will be used for gene panel selection")
+```
+
+Subset the data based on filtered genes:
+```{r}
+sc_count = sc_count[gene2keep, ]
+norm_sc_count = norm_sc_count[gene2keep, ]
+relative_prop$cluster.average = relative_prop$cluster.average[gene2keep, ]
+relative_prop$cell.level = relative_prop$cell.level[gene2keep, ]
+
+gene2include.id = which(rownames(norm_sc_count) %in% gene2include.symbol)   #in the gene panel selection, genes will be encoded by their position in the gene list. Therefore, we need to get the position of curated marker genes here.
+gene2include.symbol = rownames(norm_sc_count)[gene2include.id]
+```
+
+### Construct weighted penalty matrix based on cell type hierarchy
+Our algorithm provides an option to specify partial credit or extra penalty to classification between certain cell types. 
+This is optional.
+In order to do so, a weighted penalty matrix needs to be specified.
+In general, it can be constructed arbitrarily based on users need. 
+Here in this example, we construct the weighted penalty matrix based on cell type hierarchy.
+
+First, we calculate distance between cell types:
+
+```{r, include = TRUE, fig.height=5, fig.width=5, fig.align='center'}
+cluster_distance=cluster_dis(count_table = norm_sc_count,                       
+                            cell_cluster_conversion = sc_cluster,
+                            cluster_metric = "complete",
+                            dist_metric = "correlation",
+                            log.transform = F,                                 
+                            top.var.gene = 1000)
+
+#Dendrogram of clusters
+plot(cluster_distance$hierarchy, hang = -1)      
+```
+
+
+Then we can construct a weighted penalty matrix based on the cell type distance.
+In this example, we construct the weighted penalty matrix in a way that 
+misclassifications between cell types with similar expression profile will receive partial credit.
+Misclassifications between cell types that are more different (belong to different broad cell types)
+will receive extra penalty. 
+
+```{r}
+raw_weight_penalty = as.matrix(cluster_distance$distance_matrix)
+raw_weight_penalty = raw_weight_penalty/max(raw_weight_penalty)     #normalize the value to make sure it is between 0 and 1
+```
+
+We can use this matrix as the weight matrix if we don't have cell type hierarchy. 
+However, if we have cell type hierarchy, i.e., cell type annotation at different levels of granularity, 
+we can specify a level as reference and adjust the raw weighted penalty matrix.
+Consequently, for two cell types that don't belong to the same cell type at the reference level, 
+misclassifications between them will receive extra penalty.
+On the contrary, for two cell types that belong to the same cell type at the reference level,
+misclassifications between them will receive partial credit proportional to their distance based on expression. 
+Since we have the cell type hierarchy information, we can adjust the raw weighted penalty matrix:
+
+```{r}
+weight_penalty = hierarchical_penalty(weight.matrix = raw_weight_penalty, cell.type.hierarchy = cell_type_hierarchy,
+                                      reference.resolution = "class", current.resolution = "subclass", penalty = 2)
+
+#change the diagonal value to 1. This is to make sure that correct predictions will stay unchanged
+diag(weight_penalty)=1
+weight_penalty
+```
+
+### Generate gene weight
+Another option we provide is gene weight. In the default mode, all the genes are treated equally.
+However, in certain cases, genes with certain features are preferred.
+For example, genes with more probes could potentially lead to more robust signal and higher sensitivity.
+Therefore, in this example, we generate gene weight based on the number of probes that can 
+be designed to target each gene. 
+
+```{r, include = TRUE, fig.height=5, fig.width=5, fig.align='center'}
+gene.weight = probe_count[, c("gene_name", "probe_count")]
+colnames(gene.weight) = c("gene", "weight")
+
+#one gene could show up as multiple rows
+#In this case, we choose the highest probe count as its weight
+gene.weight = data.table::as.data.table(gene.weight)
+gene.weight = gene.weight[gene.weight[, .I[which.max(weight)], by=gene]$V1]     #keep only the first entry that has the max AUC value for each gene
+gene.weight = as.data.frame(gene.weight)
+rownames(gene.weight) = gene.weight$gene
+
+#Distribution of probe count
+hist(gene.weight$weight, xlab = "number of probe count per gene", main = "")
+
+#we censor the probe count at 15 to avoid bias towards genes with extremely high probe count
+gene.weight[gene.weight$weight>15, "weight"] = 15
+
+#convert it to the gene weight format: 
+#A data frame. Each row is one gene and its weight. The weight of all genes sum up to 1. Genes with higher weight are more likely to be included in the panel)
+gene.list=rownames(norm_sc_count)
+weight.list=rep(NA, length(gene.list))
+names(weight.list)=gene.list
+overlap.gene=intersect(gene.list, gene.weight$gene)
+weight.list[overlap.gene]=gene.weight[overlap.gene, "weight"]
+#assign a small value to genes with no probe count
+weight.list[is.na(weight.list)]=0.01
+weight.list=weight.list/sum(weight.list)
+
+gene.weight=data.frame(gene=gene.list, weight=weight.list)
+
+#Distribution of final gene weight
+hist(gene.weight$weight, xlab = "gene weight", main = "histogram of gene weight")
+```
+
+### Initialize population for gene panel selection
+An initial population is needed for gene panel selection using the genetic algorithm.
+If not provided, the algorithm will initialize the population randomly.
+However, to make the optimization more efficient, we can include differentially expressed genes (DEGs)
+between cell types into the initial population.
+Here, we initialize some panels using DEGs and some panels using randomly selected genes to maintain diversity.
+
+```{r}
+#Calculate DEGs for each cell type
+adjust_variance=preprocess_normalize(sc_count, n.core=2)
+diff_expr=suppressMessages(diff_gene_cluster(pagoda_object = adjust_variance$pagoda.object, cell_cluster_conversion = sc_cluster, n.core = 1))     
+diff_expr_result = diff_expr$diff_result
+
+#statistics for the population
+pop_size = 100          #population size: number of gene panels in a population
+panel_size = 100        #panel size: number of genes in a gene panel
+num.random.panel = 99   #number of panels that we initialize randomly
+num.DE.panel = pop_size-num.random.panel    #number of panels initialized using DEGs
+
+#initialize panels with DEGs
+set.seed(3)
+initpop.DE=initialize_population(pop.size = num.DE.panel, panel.size = panel_size,
+                                 diff_expr_result = diff_expr_result, diff_metric = "AUC", diff_metric_cutoff = 0.7,
+                                 gene.list = rownames(norm_sc_count), gene2include = gene2include.symbol)
+#initialize panels with randomly selected genes
+set.seed(3)
+initpop.random=initialize_population_random(pop.size = num.random.panel, panel.size = panel_size,
+                                            gene.list = rownames(norm_sc_count), gene2include.id = gene2include.id)
+initpop = rbind(initpop.DE, initpop.random)
+```
+
+## Gene panel selection
+
+After having all the information, we can perform gene panel selection.
+In this example, we use 4 cores (specified by the `cluster` parameter) for parallel computing. 
+You can adjust it based on the settings of your system.
+Of note, depending on the availability of the cores, sometimes some of the cores might fail and you will receive an error. 
+Most of the time, if you re-run the optimization, the problem will be gone. 
+However, if you encounter this problem multiple times, it is suggested to reduce the number of cores.
+In addition, to reduce the size of the example data, we keep only 50 cells per cell type. 
+To reduce running time, we also reduce the number of iterations and the population size. 
+Therefore, the optimization here is just for demonstration purpose. 
+In real optimizations, it is suggested to use more iterations, larger population size,
+and keep more cells for each cell type (at least 50 cells for each cross validation). 
+
+```{r, include = TRUE}
+GA = gpsFISH_optimize(earlyterm = 3,
+                      converge.cutoff = 0.01,
+                      n = dim(norm_sc_count)[1],
+                      k = panel_size,
+                      ngen = 3,
+                      popsize = pop_size,
+                      verbose = 1,
+                      cluster = 4,
+                      initpop = initpop,
+                      method = "NaiveBayes",
+                      metric = "Accuracy",
+                      nCV = 5,
+                      rate = 1,
+                      cluster_size_max = 50,
+                      cluster_size_min = 30,
+                      two_step_sampling_type = c("Subsampling_by_cluster", "Simulation"),
+                      simulation_model = "ZINB",
+                      sample_new_levels = "old_levels",
+                      use_average_cluster_profiles = FALSE,
+                      save.intermediate = FALSE,
+                      full_count_table = as.data.frame(t(norm_sc_count)),
+                      cell_cluster_conversion = sc_cluster,       #this needs to contain the same set of cells as full_count_table and the order must be the same
+                      relative_prop = relative_prop,
+                      simulation_parameter = simulation_params,
+                      gene2include.id = gene2include.id,
+                      gene.weight = gene.weight,
+                      weight_penalty = weight_penalty
+)
+```
+
+
+
+## Inspect gene panel selection result
+
+### Get the genes in the gene panel
+```{r, include = TRUE}
+marker_panel = rownames(norm_sc_count)[GA$bestsol]
+marker_panel
+```
+
+### Average expression per cell type for selected genes 
+```{r, include = TRUE, fig.height=5, fig.width=5, fig.align='center'}
+ave_expr = ave_count_ik_all_gene[marker_panel,]
+pheatmap::pheatmap(ave_expr, scale="row",
+                   show_rownames = F,
+                   angle = 90)
+```
+
+### Plot confusion matrix
+```{r, include = TRUE, fig.height=5, fig.width=5, fig.align='center'}
+#raw confusion matrix
+cm=GA$best_confusionMatrix[[GA$bestgeneration]]
+plot_confusion_matrix(confusion.matrix=cm)
+
+#weighted confusion matrix
+if (!is.null(weight_penalty)){
+  weighted.cm=weighted_fitness(cm, weight_penalty = weight_penalty)$weighted.confusion.matrix
+  plot_confusion_matrix(confusion.matrix=weighted.cm)
+}
+
+#normalized confusion matrix
+norm.cm=GA$norm_best_confusionMatrix[[GA$bestgeneration]]
+num.cell.by.class=round(colSums(cm))     #add number of cells of each cluster to the column name
+colnames(norm.cm)=paste(colnames(norm.cm), paste("(", num.cell.by.class, ")",sep=""), sep=" ")
+plot_norm_confusion_matrix(confusion.matrix=norm.cm)
+
+#normalized weighted confusion matrix
+if (!is.null(weight_penalty)){
+  norm.weighted.cm=t(t(weighted.cm)/colSums(weighted.cm))
+  num.cell.by.class=round(colSums(cm))
+  colnames(norm.weighted.cm)=paste(colnames(norm.weighted.cm), paste("(", num.cell.by.class, ")",sep=""), sep=" ")
+  plot_norm_confusion_matrix(confusion.matrix=norm.weighted.cm)
+}
+```
+
+```{r, include = TRUE, fig.height=7, fig.width=9, fig.align='center'}
+#(weighted) normalized confusion matrix with dendrogram of cell types
+plot_norm_confusion_matrix_with_dendrogram(confusion.matrix = norm.cm, cluster.distance = cluster_distance)
+if (!is.null(weight_penalty)){
+  plot_norm_confusion_matrix_with_dendrogram(confusion.matrix = norm.weighted.cm, cluster.distance = cluster_distance)
+}
+```
+
+### Get the final population
+```{r, include = TRUE}
+final_population = GA$pop
+```
+
+If the algorithm ends too early before convergence, this can be used as initial population for a new optimization.
+
+
+### Fitness change during optimization
+We can visualize the change of fitness during optimization to inspect convergence.
+Here we use 1-fitness, i.e., accuracy for plot.
+```{r, include = TRUE}
+plot(x=seq(1:length(GA$old$obj)), y=(1-GA$old$obj), xlab="Iteration", ylab="Accuracy", type="l")
+```
+
+
+### Check classification statistics
+```{r, include = TRUE, fig.height=9, fig.width=7, fig.align='center'}
+statsbyclass=GA$best_stats_byclass[[GA$bestgeneration]]
+#statistics we can check:
+colnames(statsbyclass)
+metric = "Specificity"      #we take specificity as an example
+data2plot=data.frame(cluster=rownames(statsbyclass), value=statsbyclass[,metric])
+
+breaklist=seq(0,1,by=0.2)
+p = ggplot(data=data2plot, aes(x=cluster, y=value)) +
+    geom_bar(stat="identity",fill="steelblue")+
+    geom_text(aes(label=round(value, digit=2)), vjust=-0.3, hjust = -0.2, size=4, angle = 60)+
+    labs(y = metric, x="") +
+    scale_y_continuous(limits=c(0,1),breaks=breaklist) +
+    theme(
+      # axis
+      axis.title.x = element_text(face="bold", size=16, margin = margin(t = 10, r = 0, b = 0, l = 0)),
+      axis.title.y = element_text(face="bold", size=16, margin = margin(t = 0, r = 10, b = 0, l = 0), angle=90),
+      axis.text = element_text(size = rel(1.1)),
+      axis.text.x = element_text(hjust = 1, vjust = 1, size=14, angle=60),
+      axis.text.y = element_text(vjust = 0.5, hjust = 0, size=14),
+      axis.line = element_line(colour = "black"),
+
+      #background
+      panel.background = element_blank(),
+      panel.grid.major = element_line(colour = "#EFEDED",linetype = "dashed"),
+      panel.grid.minor = element_line(colour = "#EFEDED",linetype = "dashed"))
+print(p)
+
+
+#Check AUC per cell type
+aucbyclass=get_AUC_from_combined_pp(GA$best_pred_prob[[GA$bestgeneration]], cell_cluster_conversion = sc_cluster)      
+metric="AUC"
+data2plot=data.frame(cluster=names(aucbyclass), value=aucbyclass)
+
+breaklist=seq(0,1,by=0.1)
+p<-ggplot(data=data2plot, aes(x=cluster, y=value)) +
+  geom_bar(stat="identity",fill="steelblue")+
+  geom_text(aes(label=round(value, digit=3)), vjust=-0.3, size=5, hjust = 0, angle = 60)+
+  labs(y = metric, x="") +
+  scale_y_continuous(limits=c(0,1),breaks=breaklist) +
+  #coord_cartesian(ylim=c(round(min(data2plot$value), digit=1),1)) +            #only plot a range of the y axis
+  theme(
+    # axis
+    axis.title.x = element_text(face="bold", size=20, margin = margin(t = 10, r = 0, b = 0, l = 0)),
+    axis.title.y = element_text(face="bold", size=20, margin = margin(t = 0, r = 10, b = 0, l = 0), angle=90),
+    axis.text = element_text(size = rel(1.1)),
+    axis.text.x = element_text(hjust = 1, vjust = 1, size=18, angle=60),
+    axis.text.y = element_text(vjust = 0.5, hjust = 0, size=18),
+    axis.line = element_line(colour = "black"),
+
+    #background
+    panel.background = element_blank(),
+    panel.grid.major = element_line(colour = "#EFEDED",linetype = "dashed"),
+    panel.grid.minor = element_line(colour = "#EFEDED",linetype = "dashed"))
+print(p)
+```
+
+### Clustering based on selected gene panel
+Finally, we can perform clustering using selected gene panels to visualize its ability
+of separating cells from different cell types.
+```{r, include = TRUE, fig.height=5, fig.width=5, fig.align='center'}
+#~~~~~~~Seurat clustering on the marker genes~~~~~~~#
+sub_count_table = norm_sc_count[marker_panel, ]
+#this is to subsample the cells (same parameter with gpsFISH_optimize)
+subsub_count_table = subsample_sc(count_table = sub_count_table, cell_cluster_conversion = sc_cluster, rate = 1, cluster_size_max = 50, cluster_size_min = 30, sampling_type = "Subsampling_by_cluster", nCV = 5)
+Seurat_clustering(count_table = subsub_count_table, cell_cluster_conversion = sc_cluster)
+
+# simu.count.marker.expr=sc2spatial(count_table = subsub_count_table,
+#                                   cell_cluster_conversion = as.character(sc_cluster[colnames(subsub_count_table),"class_label"]),           
+#                                   relative_prop = relative_prop,
+#                                   sample_new_levels = "old_levels",
+#                                   use_average_cluster_profiles = FALSE,
+#                                   simulation_type = "Simulation",
+#                                   simulation_parameter = simulation_params,
+#                                   simulation_model = "ZINB")
+# Seurat_clustering(count_table = simu.count.marker.expr, cell_cluster_conversion = sc_cluster)
+```
+
+## Session Info
+```{r, include = TRUE}
+sessionInfo()
+```
+
+
