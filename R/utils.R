@@ -306,9 +306,9 @@ cluster_dis=function(count_table, cell_cluster_conversion, dist_metric = "correl
     dist_matrix=stats::dist(data2compute, method=dist_metric)
   }
   #hierarchical cluster
-  hc <- stats::hclust(dist_matrix, method = cluster_metric)
+  hc = stats::hclust(dist_matrix, method = cluster_metric)
   # Create dendrogram
-  dend <- stats::as.dendrogram (hc)
+  dend = stats::as.dendrogram (hc)
   return(list(distance_matrix=dist_matrix, hierarchy=hc, dendrogram=dend))       #dist_matrix here is a matrix with cell type names as row and column names
 }
 
@@ -414,8 +414,8 @@ hierarchical_penalty=function(weight.matrix, cell.type.hierarchy, reference.reso
 #' data(sc_count)
 #' preprocess_normalize(sc_count, n.core = 2)
 preprocess_normalize=function(count_table, n.core = 1){
-  sm <- Matrix::Matrix(as.matrix(count_table), sparse = TRUE)
-  r <- pagoda2::Pagoda2$new(sm, log.scale = TRUE, n.cores = n.core)
+  sm = Matrix::Matrix(as.matrix(count_table), sparse = TRUE)
+  r = pagoda2::Pagoda2$new(sm, log.scale = TRUE, n.cores = n.core)
   r$adjustVariance()
   return(list(sparse.matrix=sm, pagoda.object=r))
 }
@@ -450,7 +450,7 @@ preprocess_normalize=function(count_table, n.core = 1){
 diff_gene_cluster=function(pagoda_object, cell_cluster_conversion, n.core = 1, z.threshold = 3){
   if (class(pagoda_object)[1] != "Pagoda2") stop("'pagoda_object' needs to be a pagoda2 object")
 
-  r <- pagoda_object
+  r = pagoda_object
 
   group=as.character(cell_cluster_conversion[rownames(r$counts),"class_label"])
   group=as.factor((group))
@@ -612,16 +612,16 @@ initialize_population_random=function(pop.size, panel.size, gene.list, gene2incl
 
   indices = 1:length(gene.list)
   if (!is.null(gene2include.id)){                  #if we have gene we must include
-    pop1 <- t(replicate(pop.size, gene2include.id))
+    pop1 = t(replicate(pop.size, gene2include.id))
     if (length(gene2include.id)<panel.size){
-      pop2 <- t(replicate(pop.size, sample(base::setdiff(indices, gene2include.id), (panel.size-length(gene2include.id)))))
-      initpop <- cbind(pop1, pop2)
+      pop2 = t(replicate(pop.size, sample(base::setdiff(indices, gene2include.id), (panel.size-length(gene2include.id)))))
+      initpop = cbind(pop1, pop2)
     }
     if (length(gene2include.id)==panel.size){
-      initpop <- pop1
+      initpop = pop1
     }
   }else{
-    initpop <- t(replicate(pop.size, sample(indices, panel.size)))
+    initpop = t(replicate(pop.size, sample(indices, panel.size)))
   }
   return(initpop)
 }
@@ -637,14 +637,14 @@ initialize_population_random=function(pop.size, panel.size, gene.list, gene2incl
 #' @examples
 #' pop = matrix(sample(1:1000000, 10000), 100, 100)
 #' popDiv(pop)
-popDiv <- function(x) {
-  N <- nrow(x)
-  ndiff <- 0
+popDiv = function(x) {
+  N = nrow(x)
+  ndiff = 0
   for (i in 1:(N-1)) {                                   #for each solution
-    more <- sapply((i+1):N, function(j) {                #calculate the similarity between this solution and all other solutions
+    more = sapply((i+1):N, function(j) {                #calculate the similarity between this solution and all other solutions
       length(unique(c(x[i,], x[j,]))) - ncol(x)          #calculate similarity. If two solutions are identical, length(unique(c(x[i,], x[j,]))) = ncol(x)
     })
-    ndiff <- ndiff+sum(more)
+    ndiff = ndiff+sum(more)
   }
   ndiff/(N*(N-1)/2)
 }
@@ -972,7 +972,7 @@ plot_norm_confusion_matrix_with_dendrogram=function(confusion.matrix, cluster.di
     ggdendro::segment(dend_data),
     data.frame(x = y, y = x, xend = yend, yend = xend))
   # Use the dendrogram label data to position the gene labels
-  gene_pos_table <- with(
+  gene_pos_table = with(
     dend_data$labels,
     data.frame(y_center = x, gene = as.character(label), height = 1))
   #The gene_pos_table contains information about the variable of each row in the final plot
@@ -984,7 +984,7 @@ plot_norm_confusion_matrix_with_dendrogram=function(confusion.matrix, cluster.di
   #The sample_pos_table contains information about the variable of each column in the final plot
 
   # Neglecting the gap parameters
-  heatmap_data <- mat %>%
+  heatmap_data = mat %>%
     reshape2::melt(value.name = "expr", varnames = c("gene", "sample")) %>%
     dplyr::left_join(gene_pos_table) %>%
     dplyr::left_join(sample_pos_table)
@@ -992,7 +992,7 @@ plot_norm_confusion_matrix_with_dendrogram=function(confusion.matrix, cluster.di
   heatmap_data$expr = round(heatmap_data$expr, digit=2)*100
 
   # Limits for the vertical axes
-  gene_axis_limits <- with(
+  gene_axis_limits = with(
     gene_pos_table,
     c(min(y_center - 0.5 * height), max(y_center + 0.5 * height))
   ) +
@@ -1092,3 +1092,36 @@ roc_cal=function(x, pred.prob){
   return(auc)
 }
 
+
+#' UMAP plot using Seurat
+#'
+#' @param count_table Expression matrix with each row representing a gene and each column representing a cell.
+#' @param cell_cluster_conversion A data frame with each row representing information of one cell.
+#' First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+#'
+#' @return ggplot2 object
+#' @export
+#'
+Seurat_clustering=function(count_table, cell_cluster_conversion){
+  data = Seurat::CreateSeuratObject(counts = count_table, project = "gene_panel_selection", assay = "RNA")
+
+  cell.label = as.character(cell_cluster_conversion[colnames(count_table), "class_label"])     #cell type of cells
+  data@meta.data$new.ident = cell.label        #add this information to the meta data
+
+  preprocess.sctransform = try(Seurat::SCTransform(data, assay = "RNA", verbose = FALSE))
+  if (class(preprocess.sctransform)=="try-error"){          #if SCTransform doesn't work (when we have very few genes, it won't work), we use old way to preprocess the data
+    data = Seurat::NormalizeData(data, normalization.method = "LogNormalize", scale.factor = 10000)
+    data = Seurat::FindVariableFeatures(data, selection.method = "vst", nfeatures = dim(count_table)[1])
+    all.gene = rownames(data)
+    data = Seurat::ScaleData(data, features = all.gene)
+  }else{
+    data = preprocess.sctransform
+  }
+  data = Seurat::RunPCA(data, verbose = FALSE)
+  data = Seurat::FindNeighbors(data, dims = 1:min(30, dim(Embeddings(data))[2]), verbose = FALSE)     #we use either the first 30 PCs or all the PCs when there are fewer than 30 PCs
+  data = Seurat::FindClusters(data, resolution = 1, verbose = FALSE)
+  data = Seurat::RunUMAP(data, dims = 1:min(30, dim(Embeddings(data))[2]), verbose = FALSE)         #manual preprocessing shows that 10 is enough. Also based on UMAP given different dims, 10 looks the best. Higher values will generate more spread out patterns
+
+  p = Seurat::DimPlot(data, reduction = "umap", group.by="new.ident", label=TRUE) + Seurat::NoLegend()
+  return(p)
+}
