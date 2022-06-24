@@ -918,11 +918,12 @@ weighted_fitness=function(confusion_matrix, metric = "Accuracy", weight_penalty)
 #'
 plot_confusion_matrix=function(confusion.matrix){
   d2p = reshape2::melt(confusion.matrix)
-  p = ggplot2::ggplot(d2p, ggplot2::aes(x=d2p$Reference, y=d2p$Prediction, fill=d2p$value)) + ggplot2::geom_tile() + ggplot2::theme_bw() + ggplot2::coord_equal() +
+  Reference = Prediction = value = NULL
+  p = ggplot2::ggplot(d2p, ggplot2::aes(x = Reference, y = Prediction, fill = value)) + ggplot2::geom_tile() + ggplot2::theme_bw() + ggplot2::coord_equal() +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90)) +
       ggplot2::scale_fill_distiller(palette="Greens", direction=1) +
       ggplot2::guides(fill="none") + # removing legend for `fill`
-      ggplot2::geom_text(ggplot2::aes(label=base::round(d2p$value)), color="black", size = 3) # printing values
+      ggplot2::geom_text(ggplot2::aes(label=base::round(value)), color="black", size = 3) # printing values
   return(p)
 }
 
@@ -936,11 +937,12 @@ plot_confusion_matrix=function(confusion.matrix){
 #'
 plot_norm_confusion_matrix=function(confusion.matrix){
   d2p = reshape2::melt(confusion.matrix)
-  p = ggplot2::ggplot(d2p, ggplot2::aes(x=d2p$Reference, y=d2p$Prediction, fill=d2p$value)) + ggplot2::geom_tile() + ggplot2::theme_bw() + ggplot2::coord_equal() +
+  Reference = Prediction = value = NULL
+  p = ggplot2::ggplot(d2p, ggplot2::aes(x = Reference, y = Prediction, fill = value)) + ggplot2::geom_tile() + ggplot2::theme_bw() + ggplot2::coord_equal() +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90)) +
     ggplot2::scale_fill_distiller(palette="Greens", direction=1) +
     ggplot2::guides(fill="none") + # removing legend for `fill`
-    ggplot2::geom_text(ggplot2::aes(label=base::round(d2p$value, digits=2)*100), color="black", size = 3) # printing values
+    ggplot2::geom_text(ggplot2::aes(label=base::round(value, digits=2)*100), color="black", size = 3) # printing values
   return(p)
 }
 
@@ -951,10 +953,10 @@ plot_norm_confusion_matrix=function(confusion.matrix){
 #' @param cluster.distance Object returned by \code{cluster_distance}.
 #'
 #' @return ggplot2 object
-#' @importFrom dplyr %>%
 #' @export
 #'
 plot_norm_confusion_matrix_with_dendrogram=function(confusion.matrix, cluster.distance){
+  `%>%` = dplyr::`%>%`
   dend = cluster.distance$dendrogram
   dend_data = ggdendro::dendro_data(dend)
 
@@ -1001,10 +1003,10 @@ plot_norm_confusion_matrix_with_dendrogram=function(confusion.matrix, cluster.di
 
   # Heatmap plot
   plt_hmap = ggplot2::ggplot(heatmap_data,
-                             ggplot2::aes(x = x_center, y = y_center, fill = expr,
-                             height = height, width = width)) +
+                             ggplot2::aes(x = heatmap_data$x_center, y = heatmap_data$y_center, fill = heatmap_data$expr,
+                             height = heatmap_data$height, width = heatmap_data$width)) +
     ggplot2::geom_tile() +
-    ggplot2::geom_text(ggplot2::aes(label=expr), color="black", size = 3) +  # printing values
+    ggplot2::geom_text(ggplot2::aes(label=heatmap_data$expr), color="black", size = 3) +  # printing values
     ggplot2::scale_fill_distiller(palette="Greens", direction=1) +
     #scale_fill_gradient2("expr", high = "darkred", low = "darkblue") +
     ggplot2::scale_x_continuous(breaks = sample_pos_table$x_center,
@@ -1035,8 +1037,8 @@ plot_norm_confusion_matrix_with_dendrogram=function(confusion.matrix, cluster.di
     ggplot2::labs(x = "Distance", y = "", colour = "", size = "") +
     ggplot2::theme_bw() +
     ggplot2::theme(panel.grid.minor = ggplot2::element_blank(),
-                   axis.text.x = ggplot2::element_text(size = rel(1.5)),                          #size of the distance number (0.9, 0.6, etc)
-                   axis.text.y = ggplot2::element_text(size = rel(1.5)),                          #size of cell type label in the dendrogram
+                   axis.text.x = ggplot2::element_text(size = ggplot2::rel(1.5)),                          #size of the distance number (0.9, 0.6, etc)
+                   axis.text.y = ggplot2::element_text(size = ggplot2::rel(1.5)),                          #size of cell type label in the dendrogram
                    axis.title.x = ggplot2::element_text(face="bold", size=20))                    #size of x axis labs ("Distance")
 
   p = cowplot::plot_grid(plt_dendr, plt_hmap, align = 'h', rel_widths = c(1, 1))
