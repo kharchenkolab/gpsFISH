@@ -51,5 +51,6 @@ Suggests:
     reshape2 (>= 1.4.4),
     cowplot (>= 1.1.1),
     dplyr (>= 1.0.7),
-    ggdendro (>= 0.1.22)
+    ggdendro (>= 0.1.22),
+    Seurat (>= 4.0.3)
 VignetteBuilder: knitr
