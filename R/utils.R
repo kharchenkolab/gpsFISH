@@ -957,6 +957,8 @@ plot_norm_confusion_matrix=function(confusion.matrix){
 #'
 plot_norm_confusion_matrix_with_dendrogram=function(confusion.matrix, cluster.distance){
   `%>%` = dplyr::`%>%`
+  x_center = y_center = expr = height = width = x = y = xend = yend = NULL
+
   dend = cluster.distance$dendrogram
   dend_data = ggdendro::dendro_data(dend)
 
@@ -1003,10 +1005,10 @@ plot_norm_confusion_matrix_with_dendrogram=function(confusion.matrix, cluster.di
 
   # Heatmap plot
   plt_hmap = ggplot2::ggplot(heatmap_data,
-                             ggplot2::aes(x = heatmap_data$x_center, y = heatmap_data$y_center, fill = heatmap_data$expr,
-                             height = heatmap_data$height, width = heatmap_data$width)) +
+                             ggplot2::aes(x = x_center, y = y_center, fill = expr,
+                             height = height, width = width)) +
     ggplot2::geom_tile() +
-    ggplot2::geom_text(ggplot2::aes(label=heatmap_data$expr), color="black", size = 3) +  # printing values
+    ggplot2::geom_text(ggplot2::aes(label = expr), color="black", size = 3) +  # printing values
     ggplot2::scale_fill_distiller(palette="Greens", direction=1) +
     #scale_fill_gradient2("expr", high = "darkred", low = "darkblue") +
     ggplot2::scale_x_continuous(breaks = sample_pos_table$x_center,
