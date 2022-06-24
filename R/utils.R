@@ -1073,20 +1073,22 @@ get_AUC_from_combined_pp=function(combined.pred.prob, cell_cluster_conversion){
   return(ave.AUC.by.class)
 }
 
-################################################################
-#calculate by class AUC from multi-class prediction probability#
-################################################################
+#' Calculate AUC for one cell type from the predicted probability of each cell to each cell type.
+#'
+#' @param x A numeric value indicating the column of \code{pred.prob}, i.e., the cell type to calculate AUC.
+#' @param pred.prob A matrix containing the predicted probability of each cell to each cell type with cell type name as column name.
+#' Each row is one cell and each column is one cell type.
+#'
+#' @return AUC of the current cell type.
+#' @export
+#'
 roc_cal=function(x, pred.prob){
-  currentcluster=colnames(pred.prob)[x]
-  newlabel=rownames(pred.prob)
+  currentcluster = colnames(pred.prob)[x]
+  newlabel = rownames(pred.prob)
 
-  binary.newlabel=rep(0, length(newlabel))
-  binary.newlabel[newlabel==currentcluster]=1 #1 for case and 0 for control
-  #newlabel[newlabel!=currentcluster]=0        #control
-  #newlabel[newlabel==currentcluster]=1        #cases
-  auc=as.numeric(roc(binary.newlabel, pred.prob[,currentcluster], quiet=TRUE)$auc)
-  #auc=performance(prediction(pred.prob[,currentcluster], binary.newlabel),"auc")@y.values[[1]]
-  #auc=as.numeric(roc(newlabel, pred.prob[,currentcluster], quiet=TRUE)$auc)
+  binary.newlabel = base::rep(0, length(newlabel))
+  binary.newlabel[newlabel==currentcluster] = 1 #1 for case and 0 for control
+  auc = as.numeric(pROC::roc(binary.newlabel, pred.prob[,currentcluster], quiet=TRUE)$auc)
   return(auc)
 }
 
