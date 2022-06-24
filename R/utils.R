@@ -918,12 +918,11 @@ weighted_fitness=function(confusion_matrix, metric = "Accuracy", weight_penalty)
 #'
 plot_confusion_matrix=function(confusion.matrix){
   d2p = reshape2::melt(confusion.matrix)
-  colnames(d2p) = c("Prediction", "Reference", "value")
-  p = ggplot2::ggplot(d2p, ggplot2::aes(x=Reference, y=Prediction, fill=value)) + ggplot2::geom_tile() + ggplot2::theme_bw() + ggplot2::coord_equal() +
+  p = ggplot2::ggplot(d2p, ggplot2::aes(x=d2p$Reference, y=d2p$Prediction, fill=d2p$value)) + ggplot2::geom_tile() + ggplot2::theme_bw() + ggplot2::coord_equal() +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90)) +
       ggplot2::scale_fill_distiller(palette="Greens", direction=1) +
       ggplot2::guides(fill="none") + # removing legend for `fill`
-      ggplot2::geom_text(ggplot2::aes(label=base::round(value)), color="black", size = 3) # printing values
+      ggplot2::geom_text(ggplot2::aes(label=base::round(d2p$value)), color="black", size = 3) # printing values
   return(p)
 }
 
@@ -937,11 +936,11 @@ plot_confusion_matrix=function(confusion.matrix){
 #'
 plot_norm_confusion_matrix=function(confusion.matrix){
   d2p = reshape2::melt(confusion.matrix)
-  p = ggplot2::ggplot(d2p, ggplot2::aes(x=Reference, y=Prediction, fill=value)) + ggplot2::geom_tile() + ggplot2::theme_bw() + ggplot2::coord_equal() +
+  p = ggplot2::ggplot(d2p, ggplot2::aes(x=d2p$Reference, y=d2p$Prediction, fill=d2p$value)) + ggplot2::geom_tile() + ggplot2::theme_bw() + ggplot2::coord_equal() +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90)) +
     ggplot2::scale_fill_distiller(palette="Greens", direction=1) +
     ggplot2::guides(fill="none") + # removing legend for `fill`
-    ggplot2::geom_text(ggplot2::aes(label=base::round(value, digits=2)*100), color="black", size = 3) # printing values
+    ggplot2::geom_text(ggplot2::aes(label=base::round(d2p$value, digits=2)*100), color="black", size = 3) # printing values
   return(p)
 }
 
@@ -952,6 +951,7 @@ plot_norm_confusion_matrix=function(confusion.matrix){
 #' @param cluster.distance Object returned by \code{cluster_distance}.
 #'
 #' @return ggplot2 object
+#' @importFrom dplyr %>%
 #' @export
 #'
 plot_norm_confusion_matrix_with_dendrogram=function(confusion.matrix, cluster.distance){
