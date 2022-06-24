@@ -918,8 +918,9 @@ weighted_fitness=function(confusion_matrix, metric = "Accuracy", weight_penalty)
 #'
 plot_confusion_matrix=function(confusion.matrix){
   d2p = reshape2::melt(confusion.matrix)
+  colnames(d2p) = c("Prediction", "Reference", "value")
   p = ggplot2::ggplot(d2p, ggplot2::aes(x=Reference, y=Prediction, fill=value)) + ggplot2::geom_tile() + ggplot2::theme_bw() + ggplot2::coord_equal() +
-      ggplot2::theme(axis.text.x = element_text(angle = 90)) +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90)) +
       ggplot2::scale_fill_distiller(palette="Greens", direction=1) +
       ggplot2::guides(fill="none") + # removing legend for `fill`
       ggplot2::geom_text(ggplot2::aes(label=base::round(value)), color="black", size = 3) # printing values
@@ -940,7 +941,7 @@ plot_norm_confusion_matrix=function(confusion.matrix){
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90)) +
     ggplot2::scale_fill_distiller(palette="Greens", direction=1) +
     ggplot2::guides(fill="none") + # removing legend for `fill`
-    ggplot2::geom_text(ggplot2::aes(label=round(value, digit=2)*100), color="black", size = 3) # printing values
+    ggplot2::geom_text(ggplot2::aes(label=base::round(value, digits=2)*100), color="black", size = 3) # printing values
   return(p)
 }
 
@@ -989,7 +990,7 @@ plot_norm_confusion_matrix_with_dendrogram=function(confusion.matrix, cluster.di
     dplyr::left_join(gene_pos_table) %>%
     dplyr::left_join(sample_pos_table)
   #the heatmap_data here contains all the information of the final plot (each row represent one cell in the plot with its value, its location on the 2D space)
-  heatmap_data$expr = round(heatmap_data$expr, digit=2)*100
+  heatmap_data$expr = base::round(heatmap_data$expr, digits=2)*100
 
   # Limits for the vertical axes
   gene_axis_limits = with(
@@ -1118,9 +1119,9 @@ Seurat_clustering=function(count_table, cell_cluster_conversion){
     data = preprocess.sctransform
   }
   data = Seurat::RunPCA(data, verbose = FALSE)
-  data = Seurat::FindNeighbors(data, dims = 1:min(30, dim(Embeddings(data))[2]), verbose = FALSE)     #we use either the first 30 PCs or all the PCs when there are fewer than 30 PCs
+  data = Seurat::FindNeighbors(data, dims = 1:min(30, dim(Seurat::Embeddings(data))[2]), verbose = FALSE)     #we use either the first 30 PCs or all the PCs when there are fewer than 30 PCs
   data = Seurat::FindClusters(data, resolution = 1, verbose = FALSE)
-  data = Seurat::RunUMAP(data, dims = 1:min(30, dim(Embeddings(data))[2]), verbose = FALSE)         #manual preprocessing shows that 10 is enough. Also based on UMAP given different dims, 10 looks the best. Higher values will generate more spread out patterns
+  data = Seurat::RunUMAP(data, dims = 1:min(30, dim(Seurat::Embeddings(data))[2]), verbose = FALSE)         #manual preprocessing shows that 10 is enough. Also based on UMAP given different dims, 10 looks the best. Higher values will generate more spread out patterns
 
   p = Seurat::DimPlot(data, reduction = "umap", group.by="new.ident", label=TRUE) + Seurat::NoLegend()
   return(p)
