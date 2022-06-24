@@ -1042,3 +1042,51 @@ plot_norm_confusion_matrix_with_dendrogram=function(confusion.matrix, cluster.di
   return(p)
 }
 
+
+
+#' Calculate AUC per cell type
+#'
+#' @description get_AUC_from_combined_pp calculates AUC for each cell type given the predicted probability of each cell to each cell type.
+#'
+#' @param combined.pred.prob A matrix containing the predicted probability of each cell to each cell type with cell type name as column name.
+#' Each row is one cell and each column is one cell type.
+#' @param cell_cluster_conversion A data frame with each row representing information of one cell.
+#' First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+#'
+#' @return A numeric vector containing the AUC for each cell type.
+#' @export
+#'
+get_AUC_from_combined_pp=function(combined.pred.prob, cell_cluster_conversion){
+  if (!identical(colnames(cell_cluster_conversion), c("cell_name", "class_label"))) stop("'cell_cluster_conversion' should have column name as 'cell_name' and 'class_label'")
+
+  AUC.by.class.all.cv = list()
+  cv.group = sapply(rownames(combined.pred.prob), function(x) base::strsplit(x, split="~cv")[[1]][2])
+  num.cv = length(base::unique(cv.group))
+  for (i in 1:num.cv){
+    pred.prob.per.cv = combined.pred.prob[which(cv.group==paste0("Fold", as.character(i))), ]
+    rownames(pred.prob.per.cv) = cell_cluster_conversion[sapply(rownames(pred.prob.per.cv), function(x) base::strsplit(x, split="~cv")[[1]][1]), "class_label"]
+    AUC.by.class.per.cv = sapply(1:dim(pred.prob.per.cv)[2], roc_cal, pred.prob = pred.prob.per.cv)
+    AUC.by.class.all.cv[[i]] = AUC.by.class.per.cv
+  }
+  ave.AUC.by.class = Reduce("+", AUC.by.class.all.cv) / length(AUC.by.class.all.cv)
+  names(ave.AUC.by.class) = colnames(combined.pred.prob)
+  return(ave.AUC.by.class)
+}
+
+################################################################
+#calculate by class AUC from multi-class prediction probability#
+################################################################
+roc_cal=function(x, pred.prob){
+  currentcluster=colnames(pred.prob)[x]
+  newlabel=rownames(pred.prob)
+
+  binary.newlabel=rep(0, length(newlabel))
+  binary.newlabel[newlabel==currentcluster]=1 #1 for case and 0 for control
+  #newlabel[newlabel!=currentcluster]=0        #control
+  #newlabel[newlabel==currentcluster]=1        #cases
+  auc=as.numeric(roc(binary.newlabel, pred.prob[,currentcluster], quiet=TRUE)$auc)
+  #auc=performance(prediction(pred.prob[,currentcluster], binary.newlabel),"auc")@y.values[[1]]
+  #auc=as.numeric(roc(newlabel, pred.prob[,currentcluster], quiet=TRUE)$auc)
+  return(auc)
+}
+
