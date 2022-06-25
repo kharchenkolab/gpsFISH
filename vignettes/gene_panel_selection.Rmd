@@ -288,7 +288,7 @@ initpop = rbind(initpop.DE, initpop.random)
 ## Gene panel selection
 
 After having all the information, we can perform gene panel selection.
-In this example, we use 4 cores (specified by the `cluster` parameter) for parallel computing. 
+In this example, we use 2 cores (specified by the `cluster` parameter) for parallel computing. 
 You can adjust it based on the settings of your system.
 Of note, depending on the availability of the cores, sometimes some of the cores might fail and you will receive an error. 
 Most of the time, if you re-run the optimization, the problem will be gone. 
@@ -307,7 +307,7 @@ GA = gpsFISH_optimize(earlyterm = 3,
                       ngen = 3,
                       popsize = pop_size,
                       verbose = 1,
-                      cluster = 4,
+                      cluster = 2,
                       initpop = initpop,
                       method = "NaiveBayes",
                       metric = "Accuracy",
