@@ -25,7 +25,7 @@ vignette: >
 - [Session Info](#session-info)
 
 In this tutorial, we will demonstrate how to perform gene panel selection for 
-hm-smFISH-based spatially resolved transcriptomics data using scRNA-seq data. 
+hm-smFISH-based spatially resolved transcriptomics using scRNA-seq data. 
 
 First, let’s load libraries:
 
@@ -63,22 +63,22 @@ library(cowplot)
 Next we will load the example datasets needed for gene panel selection: 
 
 ```{r}
-data(sc_count)      #raw count expression matrix
-data(norm_sc_count) #normalized expression matrix
-data(sc_cluster)    #cell type annotation
+data(sc_count)            #raw count expression matrix
+data(norm_sc_count)       #normalized expression matrix
+data(sc_cluster)          #cell type annotation
 rownames(sc_count) = toupper(rownames(sc_count))
 rownames(norm_sc_count) = toupper(rownames(norm_sc_count))
 
-data(simulation_params) #pre-trained simulation model
+data(simulation_params)   #pre-trained simulation model
 
 #Optional information for additional features. Gene panel selection can be performed without them.
-data(probe_count)   #probe count per gene
+data(probe_count)         #probe count per gene
 rownames(probe_count)=make.unique(as.character(probe_count$gene_name))
 
-gene2include.symbol = toupper(c("Gad1", "Gad2", "Slc32a1", 
-                                "Crhbp", "Cnr1", "Vip"))   #curated marker genes must be included
+gene2include.symbol = toupper(c("Gad1", "Gad2", "Slc32a1", #curated marker genes must be included during gene panel selection
+                                "Crhbp", "Cnr1", "Vip"))   
 
-data(cell_type_hierarchy)    #cell type hierarchy
+data(cell_type_hierarchy) #cell type hierarchy
 ```
 
 ## Prepare input
@@ -87,7 +87,7 @@ Here, we prepare input for gene panel selection based on the loaded datasets.
 
 ### Relative expression
 First, we calculate relative expression for each gene. 
-This is the key input for simlating spatial transcriptomics data.
+This is the key input for simulating spatial transcriptomics measurement from scRNA-seq data.
 To make relative expression consistent across datasets, 
 we calculate it based on all genes in the transcriptome before gene filters.
 
@@ -106,7 +106,7 @@ relative_prop[["cell.level"]] = t(t(sc_count)/colSums(sc_count))
 ### Filter genes
 Then, we filter out genes with low expression. 
 Specifically, we filter out lowly expressed genes based on their average expression in the highest expressed cell type. 
-This way, if a gene in only highly expressed in a rare cell type, we will keep it instead of removing it
+This way, if a gene in only highly expressed in a rare cell type, we will keep it instead of removing it.
 
 ```{r, include = TRUE, fig.height=5, fig.width=5, fig.align='center'}
 ave_count_ik_all_gene = sapply(unique_cluster_label, gene_list = rownames(sc_count), average_count,
@@ -115,13 +115,13 @@ ave_count_ik_all_gene = sapply(unique_cluster_label, gene_list = rownames(sc_cou
 maxexpr = apply(ave_count_ik_all_gene, 1, max)     #average expression in the highest expressed cell type for each gene
 
 #check the distribution of maxexpr
-hist(log10(maxexpr), col="gray", xlab="log10(max cluster average expression)")
+hist(log10(maxexpr), col="gray", xlab="log10(max cluster average expression)", main = "")
 
-#filter by expression
+#keep genes with maxexpr >= 1
 gene2keep = rownames(sc_count)[which(maxexpr>=1)]
 ```
 
-We also filter out unannotated genes and lncRNA
+We also filter out unannotated genes and lncRNA.
 ```{r}
 #remove genes with . in their gene symbol
 gene2remove1 = grep("\\.", gene2keep)
@@ -150,7 +150,7 @@ gene2keep = union(gene2keep, gene2include.symbol)
 cat(length(gene2keep), "genes pass the filters and will be used for gene panel selection")
 ```
 
-Subset the data based on filtered genes:
+Subset the datasets based on genes passing all the filters:
 ```{r}
 sc_count = sc_count[gene2keep, ]
 norm_sc_count = norm_sc_count[gene2keep, ]
@@ -162,8 +162,10 @@ gene2include.symbol = rownames(norm_sc_count)[gene2include.id]
 ```
 
 ### Construct weighted penalty matrix based on cell type hierarchy
-Our algorithm provides an option to specify partial credit or extra penalty to classification between certain cell types. 
-This is optional.
+In the default mode, all the correct classifications and misclassifications are treated equally.
+However, there can be situations where certain types of misclassifications are more tolerable than others. 
+To accound for this custom preference,
+our algorithm provides an option to specify partial credit or extra penalty to classifications between certain cell types. 
 In order to do so, a weighted penalty matrix needs to be specified.
 In general, it can be constructed arbitrarily based on users need. 
 Here in this example, we construct the weighted penalty matrix based on cell type hierarchy.
@@ -183,24 +185,21 @@ plot(cluster_distance$hierarchy, hang = -1)
 ```
 
 
-Then we can construct a weighted penalty matrix based on the cell type distance.
-In this example, we construct the weighted penalty matrix in a way that 
-misclassifications between cell types with similar expression profile will receive partial credit.
-Misclassifications between cell types that are more different (belong to different broad cell types)
-will receive extra penalty. 
+Then we can construct a raw weighted penalty matrix based on the cell type distance.
 
 ```{r}
 raw_weight_penalty = as.matrix(cluster_distance$distance_matrix)
 raw_weight_penalty = raw_weight_penalty/max(raw_weight_penalty)     #normalize the value to make sure it is between 0 and 1
 ```
 
-We can use this matrix as the weight matrix if we don't have cell type hierarchy. 
+We can use this matrix as the weighted penalty matrix if we don't have cell type hierarchy. 
 However, if we have cell type hierarchy, i.e., cell type annotation at different levels of granularity, 
-we can specify a level as reference and adjust the raw weighted penalty matrix.
-Consequently, for two cell types that don't belong to the same cell type at the reference level, 
+we can specify a level as reference and adjust the raw weighted penalty matrix accordingly.
+Specifically, for two cell types that don't belong to the same cell type at the reference level, 
 misclassifications between them will receive extra penalty.
 On the contrary, for two cell types that belong to the same cell type at the reference level,
-misclassifications between them will receive partial credit proportional to their distance based on expression. 
+misclassifications between them will receive partial credit proportional to their distance based on expression,
+i.e., more partial credit will be given to more similar cell types. 
 Since we have the cell type hierarchy information, we can adjust the raw weighted penalty matrix:
 
 ```{r}
@@ -217,7 +216,8 @@ Another option we provide is gene weight. In the default mode, all the genes are
 However, in certain cases, genes with certain features are preferred.
 For example, genes with more probes could potentially lead to more robust signal and higher sensitivity.
 Therefore, in this example, we generate gene weight based on the number of probes that can 
-be designed to target each gene. 
+be designed to target each gene. By incorporating this information into gene panel selection,
+genes with more probes will be preferred during the optimization.
 
 ```{r, include = TRUE, fig.height=5, fig.width=5, fig.align='center'}
 gene.weight = probe_count[, c("gene_name", "probe_count")]
@@ -226,7 +226,7 @@ colnames(gene.weight) = c("gene", "weight")
 #one gene could show up as multiple rows
 #In this case, we choose the highest probe count as its weight
 gene.weight = data.table::as.data.table(gene.weight)
-gene.weight = gene.weight[gene.weight[, .I[which.max(weight)], by=gene]$V1]     #keep only the first entry that has the max AUC value for each gene
+gene.weight = gene.weight[gene.weight[, .I[which.max(weight)], by=gene]$V1]     
 gene.weight = as.data.frame(gene.weight)
 rownames(gene.weight) = gene.weight$gene
 
@@ -238,19 +238,17 @@ gene.weight[gene.weight$weight>15, "weight"] = 15
 
 #convert it to the gene weight format: 
 #A data frame. Each row is one gene and its weight. The weight of all genes sum up to 1. Genes with higher weight are more likely to be included in the panel)
-gene.list=rownames(norm_sc_count)
-weight.list=rep(NA, length(gene.list))
-names(weight.list)=gene.list
-overlap.gene=intersect(gene.list, gene.weight$gene)
-weight.list[overlap.gene]=gene.weight[overlap.gene, "weight"]
-#assign a small value to genes with no probe count
-weight.list[is.na(weight.list)]=0.01
-weight.list=weight.list/sum(weight.list)
+gene.list = rownames(norm_sc_count)
+weight.list = rep(NA, length(gene.list))
+names(weight.list) = gene.list
+overlap.gene = intersect(gene.list, gene.weight$gene)
+weight.list[overlap.gene] = gene.weight[overlap.gene, "weight"]
+weight.list = weight.list/sum(weight.list)
 
 gene.weight=data.frame(gene=gene.list, weight=weight.list)
 
 #Distribution of final gene weight
-hist(gene.weight$weight, xlab = "gene weight", main = "histogram of gene weight")
+hist(gene.weight$weight, xlab = "gene weight", main = "")
 ```
 
 ### Initialize population for gene panel selection
@@ -269,7 +267,7 @@ diff_expr_result = diff_expr$diff_result
 #statistics for the population
 pop_size = 100          #population size: number of gene panels in a population
 panel_size = 100        #panel size: number of genes in a gene panel
-num.random.panel = 99   #number of panels that we initialize randomly
+num.random.panel = 98   #number of panels that we initialize randomly
 num.DE.panel = pop_size-num.random.panel    #number of panels initialized using DEGs
 
 #initialize panels with DEGs
@@ -288,7 +286,7 @@ initpop = rbind(initpop.DE, initpop.random)
 
 After having all the information, we can perform gene panel selection.
 In this example, we use just one core (specified by the `cluster` parameter). 
-You can adjust it based on the settings of your system and use more cores for parallel computing, which will significantly shortens the time.
+You can adjust it based on the settings of your system and use more cores for parallel computing, which will significantly shortens the computation time.
 Of note, depending on the availability of the cores, sometimes some of the cores might fail and you will receive an error. 
 Most of the time, if you re-run the optimization, the problem will be gone. 
 However, if you encounter this problem multiple times, it is suggested to reduce the number of cores.
@@ -299,11 +297,11 @@ In real optimizations, it is suggested to use more iterations, larger population
 and keep more cells for each cell type (at least 50 cells for each cross validation). 
 
 ```{r, include = TRUE}
-GA = gpsFISH_optimize(earlyterm = 3,
+GA = gpsFISH_optimize(earlyterm = 10,
                       converge.cutoff = 0.01,
                       n = dim(norm_sc_count)[1],
                       k = panel_size,
-                      ngen = 3,
+                      ngen = 10,
                       popsize = pop_size,
                       verbose = 1,
                       cluster = 1,
@@ -320,7 +318,7 @@ GA = gpsFISH_optimize(earlyterm = 3,
                       use_average_cluster_profiles = FALSE,
                       save.intermediate = FALSE,
                       full_count_table = as.data.frame(t(norm_sc_count)),
-                      cell_cluster_conversion = sc_cluster,       #this needs to contain the same set of cells as full_count_table and the order must be the same
+                      cell_cluster_conversion = sc_cluster,       
                       relative_prop = relative_prop,
                       simulation_parameter = simulation_params,
                       gene2include.id = gene2include.id,
@@ -340,6 +338,9 @@ marker_panel
 ```
 
 ### Average expression per cell type for selected genes 
+
+Check the average expression per cell type for genes in the gene panel:
+
 ```{r, include = TRUE, fig.height=5, fig.width=5, fig.align='center'}
 ave_expr = ave_count_ik_all_gene[marker_panel,]
 pheatmap::pheatmap(ave_expr, scale="row",
@@ -359,7 +360,7 @@ if (!is.null(weight_penalty)){
   plot_confusion_matrix(confusion.matrix=weighted.cm)
 }
 
-#normalized confusion matrix
+#normalized confusion matrix (numbers corresponding to percentage, e.g., 0.5 will show as 50)
 norm.cm=GA$norm_best_confusionMatrix[[GA$bestgeneration]]
 num.cell.by.class=round(colSums(cm))     #add number of cells of each cluster to the column name
 colnames(norm.cm)=paste(colnames(norm.cm), paste("(", num.cell.by.class, ")",sep=""), sep=" ")
