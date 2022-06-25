@@ -39,7 +39,8 @@ Imports:
     caret (>= 6.0.88),
     naivebayes (>= 0.9.7),
     splitTools (>= 0.3.1),
-    pROC (>= 1.17.0.1)
+    pROC (>= 1.17.0.1),
+    e1071 (>= 1.7.8)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
