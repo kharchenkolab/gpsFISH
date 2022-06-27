@@ -15,7 +15,7 @@ vignette: >
 - [Fit the Bayesian model](#fit-the-bayesian-model)
 - [Inspect model fitting result](#inspect-model-fitting-result)
 - [Save result for future use](#save-result-for-future-use)
-- [Simulate spatial transcriptomics measurement from scRNA-seq data using the Bayesian model](#simulate-spatial-transcriptomics-measurement-from-scRNA-seq-data-using-the-Bayesian-model)
+- [Simulate spatial transcriptomics measurement from single cell RNA sequencing data using the Bayesian model](#simulate-spatial-transcriptomics-measurement-from-single-cell-RNA-sequencing-data-using-the-Bayesian-model)
 - [Session Info](#session-info)
   
 In this tutorial, we will go over the analysis of estimating platform effect between 
@@ -257,7 +257,7 @@ names(simulation.params.trimmed)
 ```
 
 
-## Simulate spatial transcriptomics measurement from scRNA-seq data using the Bayesian model
+## Simulate spatial transcriptomics measurement from single cell RNA sequencing data using the Bayesian model
 
 After having the Bayesian model, we can use it to simulating spatial transcriptomics measurement for genes in the transcriptome using their expression information measured by scRNA-seq.
 
