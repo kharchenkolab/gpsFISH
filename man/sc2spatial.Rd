@@ -71,7 +71,7 @@ relative_prop[["cell.level"]] = t(t(sc_count)/colSums(sc_count))
 #simulation spatial transcriptomics data
 genes2simulate = sample(rownames(sc_count), 100)
 class_label_per_cell = as.character(sc_cluster[colnames(sc_count),"class_label"])
-simulate_sc_count = sc2spatial(count_table = sc_count[genes2simulate,],
+simulate_sp_count = sc2spatial(count_table = sc_count[genes2simulate,],
                                cell_cluster_conversion = class_label_per_cell,
                                relative_prop = relative_prop,
                                sample_new_levels = "old_levels",
