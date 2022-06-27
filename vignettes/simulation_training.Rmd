@@ -15,6 +15,7 @@ vignette: >
 - [Fit the Bayesian model](#fit-the-bayesian-model)
 - [Inspect model fitting result](#inspect-model-fitting-result)
 - [Save result for future use](#save-result-for-future-use)
+- [Simulate spatial transcriptomics measurement from scRNA-seq data using the Bayesian model](#simulate-spatial-transcriptomics-measurement-from-scRNA-seq-data using-the-Bayesian-model)
 - [Session Info](#session-info)
   
 In this tutorial, we will go over the analysis of estimating platform effect between 
@@ -253,6 +254,48 @@ Specifically, what is changed is that we replaced the `distortion_model` slot fr
 names(simulation.params)
 
 names(simulation.params.trimmed)
+```
+
+
+## Simulate spatial transcriptomics measurement from scRNA-seq data using the Bayesian model
+
+After having the Bayesian model, we can use it to simulating spatial transcriptomics measurement for genes in the transcriptome using their expression information measured by scRNA-seq.
+
+In order to do so, we need to calculate relative expression for each gene. 
+This is the key input for simulating spatial transcriptomics measurement from scRNA-seq data.
+To make relative expression consistent across datasets, 
+we calculate it based on all genes in the transcriptome.
+
+```{r}
+#cluster-wise relative expression
+relative_prop = list()
+relative_prop[["cluster.average"]] = sapply(unique_cluster_label, gene_list=rownames(sc_count), relative_freq,
+                                          count_matrix=sc_count,             
+                                          cell_cluster_conversion=sc_cluster)
+#individual cell level relative expression
+relative_prop[["cell.level"]] = t(t(sc_count)/colSums(sc_count))
+```
+
+Then we can use it together with the Bayesian model as input to simulate spatial transcriptomics measurement.
+
+```{r, include = TRUE}
+genes2simulate = sample(rownames(sc_count), 100)       #randomly select 100 genes to simulate their spatial transcriptomics measurement
+
+class_label_per_cell = as.character(sc_cluster[colnames(sc_count),"class_label"])     #cell type for each cell
+
+#simulate spatial transcriptomics data
+simulate_sp_count = sc2spatial(count_table = sc_count[genes2simulate,],
+                               cell_cluster_conversion = class_label_per_cell,
+                               relative_prop = relative_prop,
+                               sample_new_levels = "old_levels",
+                               use_average_cluster_profiles = FALSE,
+                               simulation_type = "Simulation",
+                               simulation_parameter = simulation_params,
+                               simulation_model = "ZINB")
+
+dim(simulate_sp_count)
+
+simulate_sp_count[1:5,1:5]
 ```
 
 
