@@ -6,14 +6,6 @@
 "sc_count"
 
 
-#' Normalized scRNA-seq count data.
-#'
-#' A dataset containing the normalized expression of 19,972 genes in 550 cells.
-#'
-#' @format A count matrix with 19,972 rows and 550 columns:
-"norm_sc_count"
-
-
 #' scRNA-seq count data cell annotation.
 #'
 #' A dataset containing the cell type label of the 550 cells in the scRNA-seq data.

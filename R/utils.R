@@ -260,9 +260,9 @@ distortion_test=function(prop_vector, group_label){
 #' @export
 #'
 #' @examples
-#' data(norm_sc_count)
+#' data(sc_count)
 #' data(sc_cluster)
-#' cluster_distance=cluster_dis(count_table = norm_sc_count, cell_cluster_conversion = sc_cluster,
+#' cluster_distance=cluster_dis(count_table = sc_count, cell_cluster_conversion = sc_cluster,
 #'                              cluster_metric = "complete", dist_metric = "correlation",
 #'                              log.transform = FALSE, top.var.gene = 1000)
 cluster_dis=function(count_table, cell_cluster_conversion, dist_metric = "correlation", cluster_metric = "complete", top.var.gene = 1000, log.transform = T){
@@ -359,9 +359,9 @@ merge_column=function(count_table, cell_cluster_conversion, current_label){
 #' @export
 #'
 #' @examples
-#' data(norm_sc_count)
+#' data(sc_count)
 #' data(sc_cluster)
-#' cluster_distance=cluster_dis(count_table = norm_sc_count, cell_cluster_conversion = sc_cluster,
+#' cluster_distance=cluster_dis(count_table = sc_count, cell_cluster_conversion = sc_cluster,
 #'                              cluster_metric = "complete", dist_metric = "correlation",
 #'                              log.transform = FALSE, top.var.gene = 1000)
 #' raw_weight_penalty = as.matrix(cluster_distance$distance_matrix)

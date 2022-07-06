@@ -40,9 +40,9 @@ Expression information of top highly expressed genes is used to calculate distan
 The calculated distance is finally used for hierarchical clustering.
 }
 \examples{
-data(norm_sc_count)
+data(sc_count)
 data(sc_cluster)
-cluster_distance=cluster_dis(count_table = norm_sc_count, cell_cluster_conversion = sc_cluster,
+cluster_distance=cluster_dis(count_table = sc_count, cell_cluster_conversion = sc_cluster,
                              cluster_metric = "complete", dist_metric = "correlation",
                              log.transform = FALSE, top.var.gene = 1000)
 }
