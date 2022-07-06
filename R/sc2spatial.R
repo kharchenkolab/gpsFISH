@@ -159,7 +159,6 @@ ZINB_predict=function(sc_prop, simulation_parameter, sample_new_levels,
                       gene_list, cell_list, num_gene, num_cell){          #get estimated.random.intercept is the slowest step (profiling doesn't show this though)
   posterior = simulation_parameter$posterior
   lib.size = simulation_parameter$lib.size
-  distortion.pattern = simulation_parameter$distortion_pattern
 
   #get posterior samples of parameters needed
   posterior.alpha = posterior$posterior.alpha
