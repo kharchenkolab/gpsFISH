@@ -65,10 +65,8 @@ Next we will load the example datasets needed for gene panel selection:
 
 ```{r}
 data(sc_count)            #raw count expression matrix
-data(norm_sc_count)       #normalized expression matrix
 data(sc_cluster)          #cell type annotation
 rownames(sc_count) = toupper(rownames(sc_count))
-rownames(norm_sc_count) = toupper(rownames(norm_sc_count))
 
 data(simulation_params)   #pre-trained simulation model. To reduce its size, we have set the "data2fit" and "model.summary" slot to NA. Information in these two slots will not be used and therefore, will not affect the gene panel selection.
 
@@ -154,12 +152,11 @@ cat(length(gene2keep), "genes pass the filters and will be used for gene panel s
 Subset the datasets based on genes passing all the filters:
 ```{r}
 sc_count = sc_count[gene2keep, ]
-norm_sc_count = norm_sc_count[gene2keep, ]
 relative_prop$cluster.average = relative_prop$cluster.average[gene2keep, ]
 relative_prop$cell.level = relative_prop$cell.level[gene2keep, ]
 
-gene2include.id = which(rownames(norm_sc_count) %in% gene2include.symbol)   #in the gene panel selection, genes will be encoded by their position in the gene list. Therefore, we need to get the position of curated marker genes here.
-gene2include.symbol = rownames(norm_sc_count)[gene2include.id]
+gene2include.id = which(rownames(sc_count) %in% gene2include.symbol)   #in the gene panel selection, genes will be encoded by their position in the gene list. Therefore, we need to get the position of curated marker genes here.
+gene2include.symbol = rownames(sc_count)[gene2include.id]
 ```
 
 ### Construct weighted penalty matrix based on cell type hierarchy
@@ -174,7 +171,7 @@ Here in this example, we construct the weighted penalty matrix based on cell typ
 First, we calculate distance between cell types:
 
 ```{r, include = TRUE, fig.height=5, fig.width=5, fig.align='center'}
-cluster_distance=cluster_dis(count_table = norm_sc_count,                       
+cluster_distance=cluster_dis(count_table = sc_count,                       
                             cell_cluster_conversion = sc_cluster,
                             cluster_metric = "complete",
                             dist_metric = "correlation",
@@ -239,7 +236,7 @@ gene.weight[gene.weight$weight>15, "weight"] = 15
 
 #convert it to the gene weight format: 
 #A data frame. Each row is one gene and its weight. The weight of all genes sum up to 1. Genes with higher weight are more likely to be included in the panel)
-gene.list = rownames(norm_sc_count)
+gene.list = rownames(sc_count)
 weight.list = rep(NA, length(gene.list))
 names(weight.list) = gene.list
 overlap.gene = intersect(gene.list, gene.weight$gene)
@@ -275,11 +272,11 @@ num.DE.panel = pop_size-num.random.panel    #number of panels initialized using 
 set.seed(11111)
 initpop.DE=initialize_population(pop.size = num.DE.panel, panel.size = panel_size,
                                  diff_expr_result = diff_expr_result, diff_metric = "AUC", diff_metric_cutoff = 0.7,
-                                 gene.list = rownames(norm_sc_count), gene2include = gene2include.symbol)
+                                 gene.list = rownames(sc_count), gene2include = gene2include.symbol)
 #initialize panels with randomly selected genes
 set.seed(11111)
 initpop.random=initialize_population_random(pop.size = num.random.panel, panel.size = panel_size,
-                                            gene.list = rownames(norm_sc_count), gene2include.id = gene2include.id)
+                                            gene.list = rownames(sc_count), gene2include.id = gene2include.id)
 initpop = rbind(initpop.DE, initpop.random)
 ```
 
@@ -314,7 +311,7 @@ This way, decreasing fitness means increasing accuracy.
 ```{r, include = TRUE}
 GA = gpsFISH_optimize(earlyterm = 10,
                       converge.cutoff = 0.01,
-                      n = dim(norm_sc_count)[1],
+                      n = dim(sc_count)[1],
                       k = panel_size,
                       ngen = 10,
                       popsize = pop_size,
@@ -332,7 +329,7 @@ GA = gpsFISH_optimize(earlyterm = 10,
                       sample_new_levels = "old_levels",
                       use_average_cluster_profiles = FALSE,
                       save.intermediate = FALSE,
-                      full_count_table = as.data.frame(t(norm_sc_count)),
+                      full_count_table = as.data.frame(t(sc_count)),
                       cell_cluster_conversion = sc_cluster,       
                       relative_prop = relative_prop,
                       simulation_parameter = simulation_params,
@@ -348,7 +345,7 @@ GA = gpsFISH_optimize(earlyterm = 10,
 
 ### Get the genes in the gene panel
 ```{r, include = TRUE}
-marker_panel = rownames(norm_sc_count)[GA$bestsol]
+marker_panel = rownames(sc_count)[GA$bestsol]
 marker_panel
 ```
 
@@ -477,7 +474,7 @@ Finally, we can perform clustering using selected gene panels to visualize its a
 of separating cells from different cell types.
 ```{r, include = TRUE, fig.height=7, fig.width=9, fig.align='center'}
 #~~~~~~~Seurat clustering on the marker genes~~~~~~~#
-sub_count_table = norm_sc_count[marker_panel, ]
+sub_count_table = sc_count[marker_panel, ]
 #this is to subsample the cells (same parameter with gpsFISH_optimize)
 subsub_count_table = subsample_sc(count_table = sub_count_table, cell_cluster_conversion = sc_cluster, rate = 1, cluster_size_max = 50, cluster_size_min = 30, sampling_type = "Subsampling_by_cluster", nCV = 5)
 Seurat_clustering(count_table = subsub_count_table, cell_cluster_conversion = sc_cluster)
