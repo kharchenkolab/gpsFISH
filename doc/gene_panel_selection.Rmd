@@ -70,7 +70,7 @@ data(sc_cluster)          #cell type annotation
 rownames(sc_count) = toupper(rownames(sc_count))
 rownames(norm_sc_count) = toupper(rownames(norm_sc_count))
 
-data(simulation_params)   #pre-trained simulation model
+data(simulation_params)   #pre-trained simulation model. To reduce its size, we have set the "data2fit" and "model.summary" slot to NA. Information in these two slots will not be used and therefore, will not affect the gene panel selection.
 
 #Optional information for additional features. Gene panel selection can be performed without them.
 data(probe_count)         #probe count per gene
@@ -298,6 +298,14 @@ To reduce running time, we also reduce the number of iterations and the populati
 Therefore, the optimization here is just for demonstration purpose. 
 In real optimizations, it is suggested to use more iterations, larger population size,
 and keep more cells for each cell type (at least 50 cells for each cross validation). 
+
+
+The pre-trained simulation model (`simulation_params`) contains information of the dataset used for model fitting and the model fitting result, which will not be used in gene panel selection.
+However, the dataset and model fitting result can be large. Therefore, to reduce memory usage, we can remove them from `simulation_params` before running our gene panel selection (we have already done so to the example `simulation_params`):
+```{r}
+simulation_params$data2fit = NA
+simulation_params$model.summary = NA
+```
 
 
 Another thing to note is that the goal of the optimization is to minimize fitness. Therefore, we use 1-accuracy as fitness.
