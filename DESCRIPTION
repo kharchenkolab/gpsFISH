@@ -25,34 +25,35 @@ Depends:
     R (>= 2.10)
 Imports: 
     bayesplot (>= 1.8.1),
-    data.table (>= 1.14.0),
     boot (>= 1.3-28),
+    caret (>= 6.0.88),
+    data.table (>= 1.14.0),
     deming (>= 1.4),
+    e1071 (>= 1.7.8),
     ggplot2,
     ggpointdensity (>= 0.1.0),
-    rstan (>= 2.21.2),
-    viridis (>= 0.6.1),
-    pagoda2 (>= 1.0.4),
     Matrix (>= 1.4.0),
-    parallel (>= 4.1.2),
-    ranger (>= 0.13.1),
-    caret (>= 6.0.88),
     naivebayes (>= 0.9.7),
-    splitTools (>= 0.3.1),
+    pagoda2 (>= 1.0.4),
+    parallel (>= 4.1.2),
     pROC (>= 1.17.0.1),
-    e1071 (>= 1.7.8)
+    ranger (>= 0.13.1),
+    rstan (>= 2.21.2),
+    splitTools (>= 0.3.1),
+    viridis (>= 0.6.1)
+Suggests: 
+    cowplot (>= 1.1.1),
+    dplyr (>= 1.0.7),
+    ggdendro (>= 0.1.22),
+    knitr,
+    pheatmap (>= 1.0.12),
+    reshape2 (>= 1.4.4),
+    rmarkdown,
+    Seurat (>= 4.0.3)
+VignetteBuilder: 
+    knitr
 Encoding: UTF-8
 LazyData: true
 LazyDataCompression: bzip2
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
-Suggests: 
-    rmarkdown,
-    knitr,
-    pheatmap (>= 1.0.12),
-    reshape2 (>= 1.4.4),
-    cowplot (>= 1.1.1),
-    dplyr (>= 1.0.7),
-    ggdendro (>= 0.1.22),
-    Seurat (>= 4.0.3)
-VignetteBuilder: knitr
