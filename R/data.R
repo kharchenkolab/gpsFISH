@@ -52,7 +52,7 @@
 #'
 #' @format A list with 7 slots:
 #' \describe{
-#'   \item{data2fit}{A data frame containing the input data for fitting the Bayesian model.}
+#'   \item{data2fit}{A data frame containing the input data for fitting the Bayesian model. To reduce the size of simulation_params, we removed information stored in this slot since it is not used in downstream examples, e.g., simulate spatial transcriptomics data.}
 #'   \item{model.summary}{A named list with elements \code{summary} and \code{c_summary}, which contain summaries of a stanfit object. To reduce the size of simulation_params, we removed information stored in this slot since it is not used in downstream examples, e.g., simulate spatial transcriptomics data.}
 #'   \item{fixed.effect}{A named list with elements \code{summary} and \code{c_summary}, which contain summaries of specified parameters.}
 #'   \item{c_i_full}{A matrix containing the estimated gene specific intercept \eqn{c_i} for each gene.}
