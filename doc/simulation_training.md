@@ -1,11 +1,5 @@
----
-title: "Platform effect estimation"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Platform effect estimation}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
+
+# Platform effect estimation
 
 - [Load the data](#load-the-data)
   * [Model fit summary](#model-fit-summary)

@@ -1,8 +1,8 @@
 ---
-title: "gene_panel_selection"
+title: "Gene panel selection"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{gene_panel_selection}
+  %\VignetteIndexEntry{Gene panel selection}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
