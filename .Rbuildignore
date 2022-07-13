@@ -1,3 +1,11 @@
-^gpsFISH\.Rproj$
+^.*\.Rproj$
 ^\.Rproj\.user$
+.travis.yml
+CHANGELOG.md
 ^LICENSE\.md$
+^docker$
+^doc$
+^Meta$
+^vignettes\*.md$
+^vignettes\figure$
+^\.circleci$

@@ -1,3 +1,6 @@
+
+[![<kharchenkolab>](https://circleci.com/gh/kharchenkolab/gpsFISH.svg?style=svg)](https://app.circleci.com/pipelines/github/kharchenkolab/gpsFISH)
+
 # gpsFISH
 - [Introduction](#introduction)
 - [Installation](#installation)
