@@ -4,7 +4,7 @@ Version: 0.1.0
 Authors@R: 
     person(given = "Yida",
            family = "Zhang",
-           role = c("aut", "cre"),
+           role = c("cre", "aut"),
            email = "yidazhang@ucla.edu")
 Description: Methods for spatial transcriptomic analysis based on highly
     multiplexed single-molecule fluorescence in situ hybridization
@@ -22,7 +22,7 @@ Description: Methods for spatial transcriptomic analysis based on highly
     custom preferences.
 License: MIT + file LICENSE
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5.0)
 Imports: 
     bayesplot (>= 1.8.1),
     boot (>= 1.3-28),
@@ -35,7 +35,7 @@ Imports:
     Matrix (>= 1.4.0),
     naivebayes (>= 0.9.7),
     pagoda2 (>= 1.0.4),
-    parallel (>= 4.1.2),
+    parallel,
     pROC (>= 1.17.0.1),
     ranger (>= 0.13.1),
     rstan (>= 2.21.2),
