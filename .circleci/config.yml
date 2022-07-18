@@ -12,9 +12,9 @@ jobs:
           command: R -e "devtools::install_deps(dep = TRUE)"
       - run:
           name: Build package
-          command: R CMD build .
+          command: R CMD build --no-build-vignettes --ignore-vignettes .
       - run:
           name: Check package
-          command: R CMD check --no-manual *tar.gz
+          command: R CMD check --no-manual --no-build-vignettes --ignore-vignettes *tar.gz
       - store_test_results:
           path: tmp/tests
