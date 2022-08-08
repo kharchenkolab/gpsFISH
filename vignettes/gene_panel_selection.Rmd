@@ -47,7 +47,8 @@ library(caret)
 library(pROC)        
 library(naivebayes)    
 library(splitTools)   
-library(boot)         
+library(boot)  
+library(Rfast)
 
 #optional packages for generating plots
 library(pheatmap)     
@@ -309,9 +310,12 @@ Another thing to note is that the goal of the optimization is to minimize fitnes
 This way, decreasing fitness means increasing accuracy.
 
 ```{r, include = TRUE}
+gene_list = rownames(sc_count)
+cell_list = colnames(sc_count)
+
 GA = gpsFISH_optimize(earlyterm = 10,
                       converge.cutoff = 0.01,
-                      n = dim(sc_count)[1],
+                      n = length(gene_list),
                       k = panel_size,
                       ngen = 10,
                       popsize = pop_size,
@@ -329,7 +333,8 @@ GA = gpsFISH_optimize(earlyterm = 10,
                       sample_new_levels = "old_levels",
                       use_average_cluster_profiles = FALSE,
                       save.intermediate = FALSE,
-                      full_count_table = as.data.frame(t(sc_count)),
+                      gene_list = gene_list,
+                      cell_list = cell_list,
                       cell_cluster_conversion = sc_cluster,       
                       relative_prop = relative_prop,
                       simulation_parameter = simulation_params,
@@ -345,7 +350,7 @@ GA = gpsFISH_optimize(earlyterm = 10,
 
 ### Get the genes in the gene panel
 ```{r, include = TRUE}
-marker_panel = rownames(sc_count)[GA$bestsol]
+marker_panel = gene_list[GA$bestsol]
 marker_panel
 ```
 
@@ -475,19 +480,12 @@ of separating cells from different cell types.
 ```{r, include = TRUE, fig.height=7, fig.width=9, fig.align='center'}
 #~~~~~~~Seurat clustering on the marker genes~~~~~~~#
 sub_count_table = sc_count[marker_panel, ]
-#this is to subsample the cells (same parameter with gpsFISH_optimize)
-subsub_count_table = subsample_sc(count_table = sub_count_table, cell_cluster_conversion = sc_cluster, rate = 1, cluster_size_max = 50, cluster_size_min = 30, sampling_type = "Subsampling_by_cluster", nCV = 5)
-Seurat_clustering(count_table = subsub_count_table, cell_cluster_conversion = sc_cluster)
 
-# simu.count.marker.expr=sc2spatial(count_table = subsub_count_table,
-#                                   cell_cluster_conversion = as.character(sc_cluster[colnames(subsub_count_table),"class_label"]),           
-#                                   relative_prop = relative_prop,
-#                                   sample_new_levels = "old_levels",
-#                                   use_average_cluster_profiles = FALSE,
-#                                   simulation_type = "Simulation",
-#                                   simulation_parameter = simulation_params,
-#                                   simulation_model = "ZINB")
-# Seurat_clustering(count_table = simu.count.marker.expr, cell_cluster_conversion = sc_cluster)
+#this is to subsample the cells (same parameter with gpsFISH_optimize)
+subsample_cells = subsample_sc(cell_list = colnames(sub_count_table), cell_cluster_conversion = sc_cluster, rate = 1, cluster_size_max = 50, cluster_size_min = 30, sampling_type = "Subsampling_by_cluster", nCV = 5)
+subsub_count_table = sub_count_table[, subsample_cells$cell_loc]
+
+Seurat_clustering(count_table = subsub_count_table, cell_cluster_conversion = sc_cluster)
 ```
 
 ## Session Info
