@@ -15,7 +15,8 @@ predict_MNB(object, newdata = NULL, type = c("class", "prob"))
 If "prob", the posterior probabilities for each class are returned.}
 }
 \value{
-
+A factor with class labels corresponding to the maximal conditional posterior probabilities (if \code{type = class})
+or a matrix with class label specific conditional posterior probabilities (if \code{type = prob}) .
 }
 \description{
 Classification based on the Multinomial Naive Bayes model.

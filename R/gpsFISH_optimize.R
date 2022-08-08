@@ -929,7 +929,8 @@ classifier_per_cv = function(current_round, cvlabel, gene_list, cell_list, class
 #' @param type if "class", new data points are classified according to the highest posterior probabilities.
 #' If "prob", the posterior probabilities for each class are returned.
 #'
-#' @return
+#' @return A factor with class labels corresponding to the maximal conditional posterior probabilities (if \code{type = class})
+#' or a matrix with class label specific conditional posterior probabilities (if \code{type = prob}) .
 #' @export
 #'
 predict_MNB = function (object, newdata = NULL, type = c("class", "prob")) {
