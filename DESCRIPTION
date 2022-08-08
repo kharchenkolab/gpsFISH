@@ -31,6 +31,7 @@ Imports:
     deming (>= 1.4),
     e1071 (>= 1.7.8),
     ggplot2,
+    inline (>= 0.3.19),
     ggpointdensity (>= 0.1.0),
     Matrix,
     naivebayes (>= 0.9.7),
@@ -40,7 +41,8 @@ Imports:
     ranger (>= 0.13.1),
     rstan (>= 2.21.2),
     splitTools (>= 0.3.1),
-    viridis (>= 0.6.1)
+    viridis (>= 0.6.1),
+    Rfast (>= 2.0.3)
 Suggests: 
     cowplot (>= 1.1.1),
     dplyr (>= 1.0.7),
