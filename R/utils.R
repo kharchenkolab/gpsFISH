@@ -910,7 +910,7 @@ zinb_generator=function(n, size, pie, mu){
   #for the rest, randomly generate them from a negative binomial distribution (second component of ZINB)
   bool = counts==1
   n.nb=sum(bool)
-  counts[which(bool)]=stats::rnbinom(n=n.nb, mu = mu[which(bool)], size = size[which(bool)])
+  counts[bool]=stats::rnbinom(n=n.nb, mu = mu[bool], size = size[bool])
   return(counts)
 }
 
