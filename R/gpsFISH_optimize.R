@@ -921,4 +921,97 @@ classifier_per_cv = function(current_round, cvlabel, gene_list, cell_list, class
 
 
 
+#' Predict method for multinomial naive bayes model
+#'
+#' @description Classification based on the Multinomial Naive Bayes model.
+#' @param object Object of class inheriting from "\code{multinomial_naive_bayes}" from the \code{naivebayes} package.
+#' @param newdata Matrix with non-negative integer predictors (only numeric matrix is accepted).
+#' @param type if "class", new data points are classified according to the highest posterior probabilities.
+#' If "prob", the posterior probabilities for each class are returned.
+#'
+#' @return
+#' @export
+#'
+predict_MNB = function (object, newdata = NULL, type = c("class", "prob")) {
+
+  if (is.null(newdata))
+    newdata = object$data$x
+  class_x = class(newdata)[1]
+  use_Matrix = class_x == "dgCMatrix"
+  if (!is.matrix(newdata) & !use_Matrix)
+    stop("predict.multinomial_naive_bayes(): newdata must be a numeric matrix or dgCMatrix (Matrix package) with at least one row and two named columns.", call. = FALSE)
+  if (is.matrix(newdata) & mode(newdata) != "numeric")
+    stop("predict.multinomial_naive_bayes(): newdata must be a numeric matrix.", call. = FALSE)
+  if (use_Matrix & !"Matrix" %in% rownames(utils::installed.packages()))
+    stop("predict.multinomial_naive_bayes(): please install Matrix package", call. = FALSE)
+
+  type = match.arg(type)
+  lev = object$levels
+  n_lev = length(lev)
+  n_obs = dim(newdata)[1L]
+  prior = object$prior
+  params = t(object$params)
+  col_names = colnames(newdata)
+  features = col_names[col_names %in% colnames(params)]
+  n_tables = ncol(params)
+  params = params[ ,features, drop = FALSE]
+  n_features = length(features)
+  n_features_newdata = ncol(newdata)
+
+  if (n_features == 0) {
+    warning(paste0("predict.multinomial_naive_bayes(): no feature in newdata corresponds to ",
+                   "features defined in the object. Classification is based on prior probabilities."), call. = FALSE)
+    if (type == "class") {
+      return(factor(rep(lev[which.max(prior)], n_obs), levels = lev))
+    } else {
+      return(matrix(prior, ncol = n_lev, nrow = n_obs, byrow = TRUE, dimnames = list(NULL, lev)))
+    }
+  }
+  if (n_features < n_tables) {
+    warning(paste0("predict.multinomial_naive_bayes(): only ", n_features, " feature(s) in newdata could be matched ",
+                   "with ", n_tables, " feature(s) defined in the object."), call. = FALSE)
+  }
+  if (n_features_newdata > n_features) {
+    warning(paste0("predict.multinomial_naive_bayes(): newdata contains feature(s) that could not be matched ",
+                   "with (", n_features, ") feature(s) defined in the object. Only matching features are used for calculation."), call. = FALSE)
+    newdata = newdata[ ,features, drop = FALSE]
+  }
+  NAx = anyNA(newdata)
+  if (NAx) {
+    ind_na = if (use_Matrix) Matrix::which(is.na(newdata)) else which(is.na(newdata))
+    len_na = length(ind_na)
+    warning("predict.multinomial_naive_bayes(): ", len_na, " missing", ifelse(len_na == 1, " value", " values"),
+            " discovered in the newdata. ", ifelse(len_na == 1, "It is", "They are"),
+            " not included in calculation.", call. = FALSE)
+    newdata[ind_na] = 0
+  }
+
+  post = if (use_Matrix) Matrix::tcrossprod(newdata, log(params)) else tcrossprod(newdata, log(params))
+
+  # for (ith_class in seq_along(lev)) {
+  #     post[ ,ith_class] = post[ ,ith_class] + log(prior[ith_class])
+  # }
+  post = post + Rfast::rep_row(log(prior), dim(post)[1])
+
+  if (type == "class") {
+    if (n_obs == 1) {
+      return(factor(lev[which.max(post)], levels = lev))
+    } else {
+      return(factor(lev[max.col(post, "first")], levels = lev))
+    }
+  }
+  else {
+    if (n_obs == 1) {
+      post = t(as.matrix(apply(post, 2, function(x) { 1 / sum(exp(post - x)) })))
+      colnames(post) = lev
+      return(post)
+    }
+    else {
+      colnames(post) = lev
+      # return(apply(post, 2, function(x) { 1 / if (use_Matrix) Matrix::rowSums(exp(post - x)) else rowSums(exp(post - x)) }))
+      post_exp = exp(post)
+      return(post_exp/Rfast::rowsums(post_exp))
+    }
+  }
+}
 
