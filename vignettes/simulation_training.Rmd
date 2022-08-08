@@ -43,6 +43,7 @@ library(ggpointdensity)
 library(viridis)          
 library(deming)          
 library(rstan)  
+library(Rfast)
 ```
 
 
@@ -284,7 +285,8 @@ genes2simulate = sample(rownames(sc_count), 100)       #randomly select 100 gene
 class_label_per_cell = as.character(sc_cluster[colnames(sc_count),"class_label"])     #cell type for each cell
 
 #simulate spatial transcriptomics data
-simulate_sp_count = sc2spatial(count_table = sc_count[genes2simulate,],
+simulate_sp_count = sc2spatial(gene_list = genes2simulate,
+                               cell_list = colnames(sc_count),
                                cell_cluster_conversion = class_label_per_cell,
                                relative_prop = relative_prop,
                                sample_new_levels = "old_levels",
