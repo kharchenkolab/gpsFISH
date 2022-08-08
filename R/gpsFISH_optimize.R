@@ -743,12 +743,14 @@ fitness=function(string, gene_list, cell_list, cell_cluster_conversion,
 #'
 #' @param current_round A character vector specifying the name of the current cross validation. Format should be "Fold1", "Fold2", etc.
 #' @param cvlabel A list with row indices per fold returned by create_folds.
-#' @param data4cv A numeric matrix containing the expression per gene per cell with gene name as row name and cell name as column name.
+#' @param gene_list A numeric vector containing the location of genes in the current gene panel among all genes for gene panel selection.
+#' @param cell_list A numeric vector containing the location of cells after subsampling among all cells for gene panel selection.
 #' @param class_label_per_cell A character vector specifying the cell type of each cell.
 #' @param metric A character specifying the metric to use for evaluating the gene panel's classification performance.
 #' Default is "Accuracy", which is the overall accuracy of classification.
 #' The other options is "Kappa", which is the Kappa statistics.
 #' @param method A character specifying the classification method to use. Default is naive Bayes ("NaiveBayes"). The other option is random forest ("RandomForest").
+#' @param RF_num_threads A numeric value specifying the number of threads for random forest.
 #' @param relative_prop A list with two elements:
 #'   * "cluster.average": A matrix containing the relative expression of each gene in each cell type with gene name as row name and cell type name as column name.
 #'   The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.
@@ -779,40 +781,49 @@ fitness=function(string, gene_list, cell_list, cell_cluster_conversion,
 #'   \item{AUC.byclass}{AUC per cell type of the current gene panel in the current cross validation.}
 #' @export
 #'
-classifier_per_cv = function(current_round, cvlabel, data4cv, class_label_per_cell,
-                             metric = "Accuracy", method = "NaiveBayes",
+classifier_per_cv = function(current_round, cvlabel, gene_list, cell_list, class_label_per_cell,
+                             metric = "Accuracy", method = "NaiveBayes", RF_num_threads = 1,
                              relative_prop=NULL, sample_new_levels = NULL, use_average_cluster_profiles = FALSE,
                              simulation_type, simulation_parameter, simulation_model = "ZINB",
                              cell_cluster_conversion, weight_penalty = NULL){
-  #simulate spatial data for data4cv
-  spatial_sc_count = sc2spatial(count_table = data4cv, cell_cluster_conversion = class_label_per_cell, simulation_type = simulation_type, simulation_parameter = simulation_parameter, simulation_model = simulation_model, relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)
-  cell.zero.count = which(base::colSums(spatial_sc_count)==0)          #we may have cells with 0 count
+  #simulate spatial data
+  spatial_sc_count = sc2spatial(gene_list = gene_list, cell_list = cell_list, cell_cluster_conversion = class_label_per_cell, simulation_type = simulation_type, simulation_parameter = simulation_parameter, simulation_model = simulation_model, relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)
+  cell_size = base::colSums(spatial_sc_count)
+  #spatial_sc_count_t = t(spatial_sc_count)
+
+  cell.zero.count = which(cell_size==0)          #we may have cells with 0 count
 
   #normalize spatial data
-  spatial_sc_count = (t(t(spatial_sc_count)/base::colSums(spatial_sc_count)))*mean(base::colSums(spatial_sc_count))
+  spatial_sc_count = (t(t(spatial_sc_count)/cell_size))*mean(cell_size)
   spatial_sc_count = log10(spatial_sc_count + 1)
 
-  #prepare data for classification
-  data2classify=data.frame(t(spatial_sc_count), check.names=T)      #check.names here needs to be true since there are special characters in the gene name and we need to fix them before feeding to random forest
-  data2classify$class_label=class_label_per_cell
-  data2classify$class_label=as.factor(data2classify$class_label)
-
-  #get training and testing data
-  #for cv preserving the cell cluster (split each cluster into k fold so that each fold contains all the cell clusters)
-  data_train = data2classify[cvlabel[[current_round]],]
-  cell_pos_testing = base::setdiff(unlist(cvlabel), cvlabel[[current_round]])
-  data_test = data2classify[cell_pos_testing,]
-
-  #remove the cell with zero count from training/testing data
-  if (length(cell.zero.count)>0){
-    data_train = data_train[!is.na(data_train[,1]), ]       #if a cell has 0 count, its value for all genes in spatial_sc_count will be NaN, which corresponds to all columns in data_train for a given row, so we only need to check one column
-
-    cell2keep.data_test = which(!is.na(data_test[,1]))      #cells in data_test that has > 0 count
-    data_test = data_test[cell2keep.data_test, ]
-    cell_pos_testing = cell_pos_testing[cell2keep.data_test]  #we need to update this because this is used later
-  }
-
   if (method=="RandomForest"){
+    #prepare data for classification
+    spatial_sc_count_cell_name = colnames(spatial_sc_count)
+    colnames(spatial_sc_count) = NULL
+    data2classify=data.frame(t(spatial_sc_count), check.names=T)
+    colnames(spatial_sc_count) = spatial_sc_count_cell_name
+
+    data2classify$class_label=class_label_per_cell
+    data2classify$class_label=as.factor(data2classify$class_label)
+
+    #get training and testing data
+    #for cv preserving the cell cluster (split each cluster into k fold so that each fold contains all the cell clusters)
+    current_cv_label = cvlabel[[current_round]]
+    data_train = data2classify[current_cv_label,]
+    cell_pos_testing = base::setdiff(1:length(class_label_per_cell), current_cv_label)
+    data_test = data2classify[cell_pos_testing,]
+
+    #remove the cell with zero count from training/testing data
+    if (length(cell.zero.count)>0){
+      data_train = data_train[!is.na(data_train[,1]), ]       #if a cell has 0 count, its value for all genes in spatial_sc_count will be NaN, which corresponds to all columns in data_train for a given row, so we only need to check one column
+
+      cell2keep.data_test = which(!is.na(data_test[,1]))      #cells in data_test that has > 0 count
+      data_test = data_test[cell2keep.data_test, ]
+      cell_pos_testing = cell_pos_testing[cell2keep.data_test]  #we need to update this because this is used later
+    }
+
+
     #fit random forest model
     classifier_model <- ranger::ranger(
       formula   = as.factor(class_label) ~ .,
@@ -821,31 +832,67 @@ classifier_per_cv = function(current_round, cvlabel, data4cv, class_label_per_ce
       num.trees = 100,
       importance = "none",
       #importance = "impurity_corrected",       #we have three options to calculate feature importance. "permutation" is very slow so use impurity_corrected
-      num.threads = 1,
+      num.threads = RF_num_threads,
       verbose   = FALSE
     )
     pred.prob = suppressWarnings(stats::predict(classifier_model, data_test, num.threads = 1)$predictions)    #we will have a warning if we use importance = "impurity_corrected" but it doesn't really affect the result
     rownames(pred.prob)=data_test$class_label                                         #rowname of pred.prob needs to be true cell type if we want to use it for AUC calculation
-    data_test$pred <- colnames(pred.prob)[apply(pred.prob,1,which.max)]
-    var.imp = rep(1, dim(data4cv)[1])
+    # data_test$pred <- colnames(pred.prob)[apply(pred.prob,1,which.max)]
+    data_test$pred <- colnames(pred.prob)[maxCol_col(pred.prob)]
+    var.imp = rep(1, length(gene_list))
+
+
+    #get confusion matrix
+    truth = as.factor(data_test$class_label)
+    data_test$pred = factor(data_test$pred, levels=levels(truth))      #there may be missing cell types in the prediction (no cell is predicted to this cell type)
+    cfmatrix = caret::confusionMatrix(data_test$pred, truth)
   }
 
   if (method=="NaiveBayes"){
+    #prepare data for classification
+    data2classify = t(spatial_sc_count)
+
+    #get training and testing data
+    #for cv preserving the cell cluster (split each cluster into k fold so that each fold contains all the cell clusters)
+    current_cv_label = cvlabel[[current_round]]
+    data_train = data2classify[current_cv_label,]
+    cell_pos_testing = base::setdiff(1:length(class_label_per_cell), current_cv_label)
+    data_test = data2classify[cell_pos_testing,]
+
+    train_label = class_label_per_cell[current_cv_label]
+    test_label = class_label_per_cell[cell_pos_testing]
+
+    #remove the cell with zero count from training/testing data
+    if (length(cell.zero.count)>0){
+      cell2keep.data.train = !is.na(data_train[,1])
+      data_train = data_train[cell2keep.data.train, ]       #if a cell has 0 count, its value for all genes in spatial_sc_count will be NaN, which corresponds to all columns in data_train for a given row, so we only need to check one column
+      train_label = train_label[cell2keep.data.train]
+
+      cell2keep.data_test = which(!is.na(data_test[,1]))      #cells in data_test that has > 0 count
+      data_test = data_test[cell2keep.data_test, ]
+      cell_pos_testing = cell_pos_testing[cell2keep.data_test]  #we need to update this because this is used later
+      test_label = test_label[cell2keep.data_test]
+    }
+
+
     #using naivebayes
     classifier_model = naivebayes::multinomial_naive_bayes(
-      x = as.matrix(data_train[, 1:(dim(data_train)[2]-1)]),
-      y = data_train$class_label)
-    pred.prob = stats::predict(classifier_model, as.matrix(data_test[, 1:(dim(data_test)[2]-1)]), type="prob")
+      x = data_train,
+      y = train_label)
+    # pred.prob = stats::predict(classifier_model, data_test, type="prob")
+    pred.prob = predict_MNB(classifier_model, data_test, type="prob")
 
-    rownames(pred.prob) = data_test$class_label                                         #rowname of pred.prob needs to be true cell type if we want to use it for AUC calculation
-    data_test$pred = colnames(pred.prob)[apply(pred.prob,1,which.max)]
-    var.imp = rep(1, dim(data4cv)[1])
+    rownames(pred.prob) = test_label                                         #rowname of pred.prob needs to be true cell type if we want to use it for AUC calculation
+    # data_test$pred = colnames(pred.prob)[apply(pred.prob,1,which.max)]
+    pred_label = colnames(pred.prob)[maxCol_col(pred.prob)]
+    var.imp = rep(1, length(gene_list))
+
+
+    truth = as.factor(test_label)
+    pred_label = factor(pred_label, levels=levels(truth))      #there may be missing cell types in the prediction (no cell is predicted to this cell type)
+    cfmatrix = caret::confusionMatrix(pred_label, truth)
   }
 
-  #get confusion matrix
-  truth = as.factor(data_test$class_label)
-  data_test$pred = factor(data_test$pred, levels=levels(truth))      #there may be missing cell types in the prediction (no cell is predicted to this cell type)
-  cfmatrix = caret::confusionMatrix(data_test$pred, truth)
 
   #get by class AUC
   #AUC.byclass=sapply(1:dim(pred.prob)[2], roc.cal, pred.prob=pred.prob)

@@ -7,10 +7,12 @@
 classifier_per_cv(
   current_round,
   cvlabel,
-  data4cv,
+  gene_list,
+  cell_list,
   class_label_per_cell,
   metric = "Accuracy",
   method = "NaiveBayes",
+  RF_num_threads = 1,
   relative_prop = NULL,
   sample_new_levels = NULL,
   use_average_cluster_profiles = FALSE,
@@ -26,7 +28,9 @@ classifier_per_cv(
 
 \item{cvlabel}{A list with row indices per fold returned by create_folds.}
 
-\item{data4cv}{A numeric matrix containing the expression per gene per cell with gene name as row name and cell name as column name.}
+\item{gene_list}{A numeric vector containing the location of genes in the current gene panel among all genes for gene panel selection.}
+
+\item{cell_list}{A numeric vector containing the location of cells after subsampling among all cells for gene panel selection.}
 
 \item{class_label_per_cell}{A character vector specifying the cell type of each cell.}
 
@@ -35,6 +39,8 @@ Default is "Accuracy", which is the overall accuracy of classification.
 The other options is "Kappa", which is the Kappa statistics.}
 
 \item{method}{A character specifying the classification method to use. Default is naive Bayes ("NaiveBayes"). The other option is random forest ("RandomForest").}
+
+\item{RF_num_threads}{A numeric value specifying the number of threads for random forest.}
 
 \item{relative_prop}{A list with two elements:
 \itemize{
