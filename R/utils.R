@@ -1140,9 +1140,6 @@ Seurat_clustering=function(count_table, cell_cluster_conversion){
 #' @return A numeric vector of index of the maximum value for each row of a matrix
 #' @export
 #'
-#' @examples
-#' m = matrix(rnorm(10000, 0, 1), 100, 100)
-#' maxCol_col(m)
 maxCol_col = inline::cfunction(sig = c(x = "matrix"), body = '
     int nr = INTEGER(getAttrib(x, R_DimSymbol))[0], nc = INTEGER(getAttrib(x, R_DimSymbol))[1];
     double *px = REAL(x), *buf = (double *) R_alloc(nr, sizeof(double));
