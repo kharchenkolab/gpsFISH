@@ -53,6 +53,8 @@ The other options is "Kappa", which is the Kappa statistics.}
 
 \item{method}{A character specifying the classification method to use. Default is naive Bayes ("NaiveBayes"). The other option is random forest ("RandomForest").}
 
+\item{RF_num_threads}{A numeric value specifying the number of threads for random forest. Default is 1.}
+
 \item{weight_penalty}{Optional. A weighted penalty matrix specifying the partial credit and extra penalty for correct and incorrect classifications between pairs of cell types.
 It should be a square matrix with cell types as both row and column name. Default is NULL.}
 
