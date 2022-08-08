@@ -17,7 +17,7 @@
 #' @param mutprob Mutation probability of each gene in a gene panel. This probability can be set indirectly through \code{mutfrac}. Default is 0.01.
 #' @param mutfrac The average fraction of offspring that will experience at least one mutation. Only used if mutprob is not supplied.
 #' @param initpop A numeric matrix specifying the initial population with each row representing one gene panel and each column representing one gene in a gene panel.
-#' The genes are encoded by their location in the column name of \code{full_count_table}.
+#' The genes are encoded by their location in \code{gene_list}.
 #' If not provided (default is NULL), it will be randomly initialized from all the candidate genes.
 #' The final populations from one gene panel selection can be passed as the initial population of the next selection.
 #' Possibly useful if using this function in an adaptive, iterative, or parallel scheme.
@@ -26,7 +26,7 @@
 #' Otherwise nothing is displayed. Default is zero (no display).
 #' @param cluster The number of cores to use, i.e. at most how many child processes will be run simultaneously. Must be at least one, and parallelization requires at least two cores.
 #' @param save.intermediate A logical value specifying whether intermediate populations are outputted to the current working directory. Default is FALSE.
-#' @param gene2include.id Optional. A numeric vector specifying the location of genes in the column name of \code{full_count_table} that must be included in each panel of the population. Default is NULL.
+#' @param gene2include.id Optional. A numeric vector specifying the location of genes in \code{gene_list} that must be included in each panel of the population. Default is NULL.
 #' @param gene.weight Optional. A data frame specifying the weight for each gene. Default is NULL.
 #' Each row is a gene. The first column contains the gene name. The second column contains the gene weight.
 #' Row name of the data frame is gene name.
@@ -213,7 +213,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
   ##############
   #for test run#
   ##############
-  # getfitness <- function(P, full_count_table, cell_cluster_conversion, nCV, rate, cluster_size_max, cluster_size_min, two_step_sampling_type, metric, method, simulation_parameter, simulation_model, weight_penalty, relative_prop, sample_new_levels, use_average_cluster_profiles) {         ###modified
+  # getfitness <- function(P, gene_list, cell_list, cell_cluster_conversion, nCV, rate, cluster_size_max, cluster_size_min, two_step_sampling_type, metric, method, simulation_parameter, simulation_model, weight_penalty, relative_prop, sample_new_levels, use_average_cluster_profiles) {         ###modified
   #  f <- vector(mode = "numeric", length = popsize)
   #  cfm <- vector(mode = "list", length = popsize)
   #  norm_cfm <- vector(mode = "list", length = popsize)
@@ -222,7 +222,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
   #  AUC_by_class <- vector(mode = "list", length = popsize)
   #  variable_importance <- vector(mode = "list", length = popsize)      #variable importance for each chromosome
   #  for (i in 1:popsize){
-  #    fitness_result <- OF(P[i, ], full_count_table = full_count_table, cell_cluster_conversion = cell_cluster_conversion, nCV = nCV, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, two_step_sampling_type = two_step_sampling_type, metric = metric, method = method, simulation_parameter = simulation_parameter, simulation_model = simulation_model, weight_penalty = weight_penalty, relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)   ###modified
+  #    fitness_result <- OF(P[i, ], gene_list = gene_list, cell_list = cell_list, cell_cluster_conversion = cell_cluster_conversion, nCV = nCV, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, two_step_sampling_type = two_step_sampling_type, metric = metric, method = method, simulation_parameter = simulation_parameter, simulation_model = simulation_model, weight_penalty = weight_penalty, relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)   ###modified
   #    f[i] <- fitness_result$fitness_value
   #    cfm[[i]] <- fitness_result$confusionMatrix
   #    norm_cfm[[i]] <- fitness_result$norm.confusionMatrix
@@ -300,7 +300,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
     ##############
     #for test run#
     ##############
-    #pop.fitness = getfitness(pop, full_count_table = full_count_table, cell_cluster_conversion = sc_cluster, nCV = nCV, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, two_step_sampling_type=two_step_sampling_type, metric=metric, method = method, simulation_parameter=simulation_parameter, simulation_model=simulation_model, weight_penalty=weight_penalty, relative_prop=relative_prop, sample_new_levels=sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)    ###modified
+    #pop.fitness = getfitness(pop, gene_list = gene_list, cell_list = cell_list, cell_cluster_conversion = sc_cluster, nCV = nCV, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, two_step_sampling_type=two_step_sampling_type, metric=metric, method = method, simulation_parameter=simulation_parameter, simulation_model=simulation_model, weight_penalty=weight_penalty, relative_prop=relative_prop, sample_new_levels=sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)    ###modified
 
     fitness.old = pop.fitness$f
 
@@ -325,7 +325,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
   ###output information of the current generation###
   if (verbose > 0) {
     base::cat("Initial population best OF value = ", old$obj[1],
-        ". Population diversity = ",  diversity[1], "\n")
+              ". Population diversity = ",  diversity[1], "\n")
   }
 
   #####################
@@ -335,7 +335,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
     ###generate offspring based on the performance on the initial population###
     ###Selection###
     Tourneys[, ] = t(replicate(popsize, sample(1:popsize,
-                                                2*tourneysize)))
+                                               2*tourneysize)))
     Tourneys1 = Tourneys[, 1:tourneysize]
     Tourneys2 = Tourneys[, (tourneysize + 1): (2*tourneysize)]
 
@@ -402,7 +402,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
 
     ###Mutation###
     chosen = matrix(as.logical(stats::rbinom(popsize * k, 1, mutprob)),           #randonly pick genes in each solution to mutate based on the mutation probability
-                     nrow = popsize)
+                    nrow = popsize)
     nchosen = apply(chosen, 1, sum)                                        #total number of genes to mutate for each solution
 
     for (i in 1:popsize) {                                                  #for each solution
