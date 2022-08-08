@@ -4,22 +4,33 @@
 \alias{subsampling_all}
 \title{Subsample scRNA-seq data by mixing cells from all cell types}
 \usage{
-subsampling_all(count_table, rate = 1)
+subsampling_all(cell_list, rate = 1, cell_cluster_conversion)
 }
 \arguments{
-\item{count_table}{A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.}
+\item{cell_list}{A character vector containing the cell names to subsample from.}
 
 \item{rate}{A value between 0 and 1 specifying the proportion of cells we want to keep for each cell type during subsampling. 0.8 means we keep 80\% of cells for each cell type. Default is 1.}
+
+\item{cell_cluster_conversion}{A data frame with each row representing information of one cell.}
 }
 \value{
-A subsampled matrix
+A list with elements:
+\item{cell_loc}{Location of selected cells in \code{cell_list} after subsampling.}
+\item{cell_class}{Cell type of selected cells after subsampling.}
 }
 \description{
 Subsample scRNA-seq data by mixing cells from all cell types
 }
 \examples{
 data(sc_count)
+data(sc_cluster)
+
 dim(sc_count)
-subsample_sc_count = subsampling_all(sc_count, 0.5)
-dim(subsample_sc_count)
+
+subsampled_sc_info = subsampling_all(cell_list = colnames(sc_count),
+                                     rate = 0.5,
+                                     cell_cluster_conversion = sc_cluster)
+
+length(subsampled_sc_info$cell_loc)
+table(subsampled_sc_info$cell_class)
 }
