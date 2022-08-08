@@ -627,7 +627,8 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
 #' Fitness function for evaluating the fitness of each gene panel
 #'
 #' @param string A numeric vector containing the gene panel.
-#' @param full_count_table A data frame containing the expression level of each gene in each cell with gene name as row name and cell name as column name.
+#' @param gene_list A character vector containing the gene names of all genes for gene panel selection.
+#' @param cell_list A character vector containing the cell names of all cells for gene panel selection.
 #' @param cell_cluster_conversion A data frame with each row representing information of one cell.
 #' First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
 #' @param nCV Number of cross validation.
@@ -641,6 +642,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
 #' Default is "Accuracy", which is the overall accuracy of classification.
 #' The other options is "Kappa", which is the Kappa statistics.
 #' @param method A character specifying the classification method to use. Default is naive Bayes ("NaiveBayes"). The other option is random forest ("RandomForest").
+#' @param RF_num_threads A numeric value specifying the number of threads for random forest. Default is 1.
 #' @param weight_penalty Optional. A weighted penalty matrix specifying the partial credit and extra penalty for correct and incorrect classifications between pairs of cell types.
 #' It should be a square matrix with cell types as both row and column name. Default is NULL.
 #' @param simulation_parameter A simulation model returned by simulation_training_ZINB_trim.
@@ -669,17 +671,15 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
 #'   \item{AUC_by_class}{Average AUC per cell type of the current gene panel over cross validations.}
 #' @export
 #'
-fitness=function(string, full_count_table, cell_cluster_conversion,
-                 nCV, rate = 1, cluster_size_max = 1000, cluster_size_min = 1, two_step_sampling_type, metric = "Accuracy", method = "NaiveBayes", weight_penalty = NULL,
+fitness=function(string, gene_list, cell_list, cell_cluster_conversion,
+                 nCV, rate = 1, cluster_size_max = 1000, cluster_size_min = 1, two_step_sampling_type, metric = "Accuracy",
+                 method = "NaiveBayes", RF_num_threads = 1, weight_penalty = NULL,
                  simulation_parameter, simulation_model = "ZINB", relative_prop = NULL, sample_new_levels = NULL, use_average_cluster_profiles = FALSE){      #this function is faster than fitness_default_cv
-  if (is.null(rownames(full_count_table))) stop("'full_count_table' should have gene name as column name")
-  if (is.null(colnames(full_count_table))) stop("'full_count_table' should have cell name as row name")
-
   if (!identical(colnames(cell_cluster_conversion), c("cell_name", "class_label"))) stop("'cell_cluster_conversion' should have column name as 'cell_name' and 'class_label'")
 
   if (!identical(names(relative_prop), c("cluster.average", "cell.level"))) stop("'relative_prop' should have column name as 'cluster.average' and 'cell.level'")
 
-  if (!identical(rownames(full_count_table), rownames(cell_cluster_conversion))) stop("'full_count_table' should have the same row name with 'cell_cluster_conversion'")
+  if (!identical(cell_list, rownames(cell_cluster_conversion))) stop("'cell_list' should have the same row name with 'cell_cluster_conversion'")
 
   if (length(base::setdiff(metric, c("Accuracy", "Kappa")))>0) stop("'metric' should be one of 'Accuracy' or 'Kappa'")
 
@@ -689,14 +689,16 @@ fitness=function(string, full_count_table, cell_cluster_conversion,
 
   if (rate > 1 || rate <0) stop("'rate' must be between 0 and 1")
 
-  sub_count_table = full_count_table[, string]                            #column subset of a data frame is the fastest. Then is row subset of a data table. The third is row subset of a matrix. Column subset of a matrix is the same. Row subset of a data frame is the worst.
-  sub_count_table = t(sub_count_table)
+  candidate_gene_panel_loc = string
 
   #we first do subsampling
-  subsub_count_table = subsample_sc(count_table = sub_count_table, cell_cluster_conversion = cell_cluster_conversion,
-                                    rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, sampling_type = two_step_sampling_type[1], nCV = nCV)
+  subsample_result = subsample_sc(cell_list = cell_list, cell_cluster_conversion = cell_cluster_conversion,
+                                  rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, sampling_type = two_step_sampling_type[1], nCV = nCV)
 
-  class_label_per_cell = as.character(cell_cluster_conversion[colnames(subsub_count_table),"class_label"])
+  #get subsampled cells (location) and corrersponding cell type
+  subsample_cell_loc = subsample_result$cell_loc
+  class_label_per_cell = subsample_result$cell_class
+  #class_label_per_cell = as.character(cell_cluster_conversion[colnames(subsub_count_table),"class_label"])
 
   #create CV
   #fold_per_cell = createFolds(factor(class_label_per_cell), k = nCV, list = FALSE)
@@ -705,8 +707,12 @@ fitness=function(string, full_count_table, cell_cluster_conversion,
 
   #run classification for each cross validation
   result = lapply(cvround, classifier_per_cv,
-                  cvlabel = cvlabel, data4cv = subsub_count_table, class_label_per_cell = class_label_per_cell,
-                  metric = metric, method = method,
+                  cvlabel = cvlabel,
+                  # data4cv = subsub_count_table,
+                  gene_list = candidate_gene_panel_loc,
+                  cell_list = subsample_cell_loc,
+                  class_label_per_cell = class_label_per_cell,
+                  metric = metric, method = method, RF_num_threads = RF_num_threads,
                   relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles,
                   simulation_type = two_step_sampling_type[2], simulation_parameter = simulation_parameter, simulation_model = simulation_model,
                   cell_cluster_conversion = cell_cluster_conversion, weight_penalty = weight_penalty)       #fit random forest for each round of cross validation
