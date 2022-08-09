@@ -6,6 +6,8 @@ Authors@R:
            family = "Zhang",
            role = c("cre", "aut"),
            email = "yidazhang@ucla.edu")
+Author: Yida Zhang [cre, aut]
+Maintainer: Yida Zhang <yidazhang@ucla.edu>
 Description: Methods for spatial transcriptomic analysis based on highly
     multiplexed single-molecule fluorescence in situ hybridization
     (hm-smFISH) hold particular promise in analysis of complex tissues.
@@ -21,6 +23,8 @@ Description: Methods for spatial transcriptomic analysis based on highly
     type relationships. We also provide flexible options for other complex
     custom preferences.
 License: MIT + file LICENSE
+URL: https://github.com/kharchenkolab/gpsFISH
+BugReports: https://github.com/kharchenkolab/gpsFISH/issues
 Depends: 
     R (>= 3.5.0)
 Imports: 
@@ -31,18 +35,19 @@ Imports:
     deming (>= 1.4),
     e1071 (>= 1.7.8),
     ggplot2,
-    inline (>= 0.3.19),
     ggpointdensity (>= 0.1.0),
+    inline (>= 0.3.19),
     Matrix,
     naivebayes (>= 0.9.7),
     pagoda2 (>= 1.0.4),
     parallel,
     pROC (>= 1.17.0.1),
     ranger (>= 0.13.1),
+    Rcpp,
+    Rfast (>= 2.0.3),
     rstan (>= 2.21.2),
     splitTools (>= 0.3.1),
-    viridis (>= 0.6.1),
-    Rfast (>= 2.0.3)
+    viridis (>= 0.6.1)
 Suggests: 
     cowplot (>= 1.1.1),
     dplyr (>= 1.0.7),
@@ -57,9 +62,6 @@ VignetteBuilder:
 Encoding: UTF-8
 LazyData: true
 LazyDataCompression: bzip2
+LinkingTo: Rcpp, RcppArmadillo
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
-URL: https://github.com/kharchenkolab/gpsFISH
-BugReports: https://github.com/kharchenkolab/gpsFISH/issues
-Author: Yida Zhang [cre, aut]
-Maintainer: Yida Zhang <yidazhang@ucla.edu>
