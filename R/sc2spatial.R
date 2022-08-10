@@ -210,7 +210,8 @@ ZINB_predict=function(sc_prop, simulation_parameter, sample_new_levels,
   new.cell.size = log(base::sample(lib.size, num_cell, replace = T))                  #we do log transform here to save time
 
   #calculate mu for each gene and each cell
-  mu = exp(alpha.global + log(lambda) + Rfast::rep_row(new.cell.size, dim(sc_prop)[1]))
+  # mu = exp(alpha.global + log(lambda) + Rfast::rep_row(new.cell.size, dim(sc_prop)[1]))
+  mu = exp(alpha.global + log(lambda) + rep_row(new.cell.size, dim(sc_prop)[1]))
 
   #make predictions
   simu.count = suppressWarnings(zinb_generator(n=num_gene*num_cell,
