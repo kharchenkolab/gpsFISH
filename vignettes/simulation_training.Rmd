@@ -43,7 +43,6 @@ library(ggpointdensity)
 library(viridis)          
 library(deming)          
 library(rstan)  
-library(Rfast)
 ```
 
 
