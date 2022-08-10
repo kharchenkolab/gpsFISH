@@ -43,7 +43,6 @@ Imports:
     parallel,
     pROC (>= 1.17.0.1),
     ranger (>= 0.13.1),
-    Rcpp,
     Rfast (>= 2.0.3),
     rstan (>= 2.21.2),
     splitTools (>= 0.3.1),
@@ -62,6 +61,5 @@ VignetteBuilder:
 Encoding: UTF-8
 LazyData: true
 LazyDataCompression: bzip2
-LinkingTo: Rcpp, RcppArmadillo
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
