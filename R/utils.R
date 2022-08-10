@@ -1161,32 +1161,3 @@ Seurat_clustering=function(count_table, cell_cluster_conversion){
   return(p)
 }
 
-
-
-#' Find the index of the maximum of each row of a matrix
-#'
-#' @param x A numeric matrix.
-#'
-#' @return A numeric vector of index of the maximum value for each row of a matrix
-#' @export
-#'
-maxCol_col = inline::cfunction(sig = c(x = "matrix"), body = '
-    int nr = INTEGER(getAttrib(x, R_DimSymbol))[0], nc = INTEGER(getAttrib(x, R_DimSymbol))[1];
-    double *px = REAL(x), *buf = (double *) R_alloc(nr, sizeof(double));
-    for(int i = 0; i < nr; i++) buf[i] = R_NegInf;
-
-    SEXP ans = PROTECT(allocVector(INTSXP, nr));
-    int *pans = INTEGER(ans);
-
-    for(int j = 0; j < nc; j++) {
-        for(int i = 0; i < nr; i++) {
-            if(px[i + j*nr] > buf[i]) {
-                buf[i] = px[i + j*nr];
-                pans[i] = j + 1;
-            }
-        }
-    }
-
-    UNPROTECT(1);
-    return(ans);
-', language = "C")
