@@ -2,7 +2,6 @@
 using namespace Rcpp;
 
 // https://stackoverflow.com/questions/35047929/fastest-way-to-find-the-index-of-the-maximum-of-each-row/35048449#35048449
-//
 
 // [[Rcpp::export]]
 Rcpp::NumericVector MaxCol(Rcpp::NumericMatrix m) {
