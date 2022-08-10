@@ -1,4 +1,4 @@
-#' @useDynLib gpsFish
+#' @useDynLib gpsFISH
 NULL
 
 #' scRNA-seq count data.
