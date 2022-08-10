@@ -838,7 +838,7 @@ classifier_per_cv = function(current_round, cvlabel, gene_list, cell_list, class
     pred.prob = suppressWarnings(stats::predict(classifier_model, data_test, num.threads = 1)$predictions)    #we will have a warning if we use importance = "impurity_corrected" but it doesn't really affect the result
     rownames(pred.prob)=data_test$class_label                                         #rowname of pred.prob needs to be true cell type if we want to use it for AUC calculation
     # data_test$pred <- colnames(pred.prob)[apply(pred.prob,1,which.max)]
-    data_test$pred <- colnames(pred.prob)[maxCol_col(pred.prob)]
+    data_test$pred <- colnames(pred.prob)[MaxCol(pred.prob)]
     var.imp = rep(1, length(gene_list))
 
 
@@ -884,7 +884,7 @@ classifier_per_cv = function(current_round, cvlabel, gene_list, cell_list, class
 
     rownames(pred.prob) = test_label                                         #rowname of pred.prob needs to be true cell type if we want to use it for AUC calculation
     # data_test$pred = colnames(pred.prob)[apply(pred.prob,1,which.max)]
-    pred_label = colnames(pred.prob)[maxCol_col(pred.prob)]
+    pred_label = colnames(pred.prob)[MaxCol(pred.prob)]
     var.imp = rep(1, length(gene_list))
 
 
