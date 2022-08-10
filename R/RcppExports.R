@@ -2,7 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' Find the index of the maximum value of each row in a matrix.
-#' https://stackoverflow.com/questions/35047929/fastest-way-to-find-the-index-of-the-maximum-of-each-row/35048449#35048449
 #'
 #' @param m Numeric matrix
 #'

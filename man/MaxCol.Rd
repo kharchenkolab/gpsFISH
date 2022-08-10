@@ -2,8 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{MaxCol}
 \alias{MaxCol}
-\title{Find the index of the maximum value of each row in a matrix.
-https://stackoverflow.com/questions/35047929/fastest-way-to-find-the-index-of-the-maximum-of-each-row/35048449#35048449}
+\title{Find the index of the maximum value of each row in a matrix.}
 \usage{
 MaxCol(m)
 }
@@ -15,5 +14,4 @@ A numeric vector containing the index for each row.
 }
 \description{
 Find the index of the maximum value of each row in a matrix.
-https://stackoverflow.com/questions/35047929/fastest-way-to-find-the-index-of-the-maximum-of-each-row/35048449#35048449
 }
