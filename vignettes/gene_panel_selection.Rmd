@@ -48,7 +48,6 @@ library(pROC)
 library(naivebayes)    
 library(splitTools)   
 library(boot)  
-# library(Rfast)
 
 #optional packages for generating plots
 library(pheatmap)     

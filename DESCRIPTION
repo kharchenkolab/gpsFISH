@@ -44,7 +44,7 @@ Imports:
     pROC (>= 1.17.0.1),
     ranger (>= 0.13.1),
     Rcpp (>= 1.0.7),
-    Rfast (>= 2.0.3),
+    Rfast (>= 2.0.6),
     rstan (>= 2.21.2),
     splitTools (>= 0.3.1),
     viridis (>= 0.6.1)
@@ -57,10 +57,11 @@ Suggests:
     reshape2 (>= 1.4.4),
     rmarkdown,
     Seurat (>= 4.0.3)
+LinkingTo: 
+    Rcpp
 VignetteBuilder: 
     knitr
 Encoding: UTF-8
-LinkingTo: Rcpp
 LazyData: true
 LazyDataCompression: bzip2
 Roxygen: list(markdown = TRUE)

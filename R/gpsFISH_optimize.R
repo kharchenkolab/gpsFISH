@@ -992,8 +992,8 @@ predict_MNB = function (object, newdata = NULL, type = c("class", "prob")) {
   # for (ith_class in seq_along(lev)) {
   #     post[ ,ith_class] = post[ ,ith_class] + log(prior[ith_class])
   # }
-  # post = post + Rfast::rep_row(log(prior), dim(post)[1])
-  post = post + rep_row(log(prior), dim(post)[1])
+  post = post + Rfast::rep_row(log(prior), dim(post)[1])
+  # post = post + rep_row(log(prior), dim(post)[1])
 
   if (type == "class") {
     if (n_obs == 1) {
@@ -1012,8 +1012,8 @@ predict_MNB = function (object, newdata = NULL, type = c("class", "prob")) {
       colnames(post) = lev
       # return(apply(post, 2, function(x) { 1 / if (use_Matrix) Matrix::rowSums(exp(post - x)) else rowSums(exp(post - x)) }))
       post_exp = exp(post)
-      # return(post_exp/Rfast::rowsums(post_exp))
-      return(post_exp/rowSums(post_exp))
+      return(post_exp/Rfast::rowsums(post_exp))
+      # return(post_exp/rowSums(post_exp))
     }
   }
 }
