@@ -158,7 +158,7 @@ maxexpr = apply(ave_count_ik_all_gene, 1, max)     #average expression in the hi
 hist(log10(maxexpr), col="gray", xlab="log10(max cluster average expression)", main = "")
 ```
 
-<img src="figure_simulation_training/unnamed-chunk-4-1.png" title="plot of chunk unnamed-chunk-4" alt="plot of chunk unnamed-chunk-4" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-4-1.png" title="plot of chunk unnamed-chunk-4" alt="plot of chunk unnamed-chunk-4" style="display: block; margin: auto;" />
 
 ```r
 
@@ -234,7 +234,7 @@ cluster_distance=cluster_dis(count_table = sc_count,
 plot(cluster_distance$hierarchy, hang = -1)      
 ```
 
-<img src="figure_simulation_training/unnamed-chunk-9-1.png" title="plot of chunk unnamed-chunk-9" alt="plot of chunk unnamed-chunk-9" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-9-1.png" title="plot of chunk unnamed-chunk-9" alt="plot of chunk unnamed-chunk-9" style="display: block; margin: auto;" />
 
 
 Then we can construct a raw weighted penalty matrix based on the cell type distance.
@@ -313,7 +313,7 @@ rownames(gene.weight) = gene.weight$gene
 hist(gene.weight$weight, xlab = "number of probe count per gene", main = "")
 ```
 
-<img src="figure_simulation_training/unnamed-chunk-12-1.png" title="plot of chunk unnamed-chunk-12" alt="plot of chunk unnamed-chunk-12" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-12-1.png" title="plot of chunk unnamed-chunk-12" alt="plot of chunk unnamed-chunk-12" style="display: block; margin: auto;" />
 
 ```r
 
@@ -335,7 +335,7 @@ gene.weight=data.frame(gene=gene.list, weight=weight.list)
 hist(gene.weight$weight, xlab = "gene weight", main = "")
 ```
 
-<img src="figure_simulation_training/unnamed-chunk-12-2.png" title="plot of chunk unnamed-chunk-12" alt="plot of chunk unnamed-chunk-12" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-12-2.png" title="plot of chunk unnamed-chunk-12" alt="plot of chunk unnamed-chunk-12" style="display: block; margin: auto;" />
 
 ### Initialize population for gene panel selection
 An initial population is needed for gene panel selection using the genetic algorithm.
@@ -487,7 +487,7 @@ pheatmap::pheatmap(ave_expr, scale="row",
                    angle = 90)
 ```
 
-<img src="figure_simulation_training/unnamed-chunk-17-1.png" title="plot of chunk unnamed-chunk-17" alt="plot of chunk unnamed-chunk-17" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-17-1.png" title="plot of chunk unnamed-chunk-17" alt="plot of chunk unnamed-chunk-17" style="display: block; margin: auto;" />
 
 ### Plot confusion matrix
 
@@ -497,7 +497,7 @@ cm=GA$best_confusionMatrix[[GA$bestgeneration]]
 plot_confusion_matrix(confusion.matrix=cm)
 ```
 
-<img src="figure_simulation_training/unnamed-chunk-18-1.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-18-1.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
 
 ```r
 
@@ -508,7 +508,7 @@ if (!is.null(weight_penalty)){
 }
 ```
 
-<img src="figure_simulation_training/unnamed-chunk-18-2.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-18-2.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
 
 ```r
 
@@ -519,7 +519,7 @@ colnames(norm.cm)=paste(colnames(norm.cm), paste("(", num.cell.by.class, ")",sep
 plot_norm_confusion_matrix(confusion.matrix=norm.cm)
 ```
 
-<img src="figure_simulation_training/unnamed-chunk-18-3.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-18-3.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
 
 ```r
 
@@ -532,7 +532,7 @@ if (!is.null(weight_penalty)){
 }
 ```
 
-<img src="figure_simulation_training/unnamed-chunk-18-4.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-18-4.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
 
 
 ```r
@@ -541,7 +541,7 @@ plot_norm_confusion_matrix_with_dendrogram(confusion.matrix = norm.cm, cluster.d
 #> Joining, by = "gene"Joining, by = "sample"
 ```
 
-<img src="figure_simulation_training/unnamed-chunk-19-1.png" title="plot of chunk unnamed-chunk-19" alt="plot of chunk unnamed-chunk-19" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-19-1.png" title="plot of chunk unnamed-chunk-19" alt="plot of chunk unnamed-chunk-19" style="display: block; margin: auto;" />
 
 ```r
 if (!is.null(weight_penalty)){
@@ -550,7 +550,7 @@ if (!is.null(weight_penalty)){
 #> Joining, by = "gene"Joining, by = "sample"
 ```
 
-<img src="figure_simulation_training/unnamed-chunk-19-2.png" title="plot of chunk unnamed-chunk-19" alt="plot of chunk unnamed-chunk-19" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-19-2.png" title="plot of chunk unnamed-chunk-19" alt="plot of chunk unnamed-chunk-19" style="display: block; margin: auto;" />
 
 ### Get the final population
 
@@ -569,7 +569,7 @@ Here we use 1-fitness, i.e., accuracy for plot.
 plot(x=seq(1:length(GA$old$obj)), y=(1-GA$old$obj), xlab="Iteration", ylab="Accuracy", type="l")
 ```
 
-<img src="figure_simulation_training/unnamed-chunk-21-1.png" title="plot of chunk unnamed-chunk-21" alt="plot of chunk unnamed-chunk-21" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-21-1.png" title="plot of chunk unnamed-chunk-21" alt="plot of chunk unnamed-chunk-21" style="display: block; margin: auto;" />
 
 
 ### Check classification statistics
@@ -606,7 +606,7 @@ p = ggplot(data=data2plot, aes(x=cluster, y=value)) +
 print(p)
 ```
 
-<img src="figure_simulation_training/unnamed-chunk-22-1.png" title="plot of chunk unnamed-chunk-22" alt="plot of chunk unnamed-chunk-22" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-22-1.png" title="plot of chunk unnamed-chunk-22" alt="plot of chunk unnamed-chunk-22" style="display: block; margin: auto;" />
 
 ```r
 
@@ -639,7 +639,7 @@ p<-ggplot(data=data2plot, aes(x=cluster, y=value)) +
 print(p)
 ```
 
-<img src="figure_simulation_training/unnamed-chunk-22-2.png" title="plot of chunk unnamed-chunk-22" alt="plot of chunk unnamed-chunk-22" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-22-2.png" title="plot of chunk unnamed-chunk-22" alt="plot of chunk unnamed-chunk-22" style="display: block; margin: auto;" />
 
 ### Clustering based on selected gene panel
 Finally, we can perform clustering using selected gene panels to visualize its ability
@@ -693,7 +693,7 @@ Seurat_clustering(count_table = subsub_count_table, cell_cluster_conversion = sc
 #> This message will be shown once per session
 ```
 
-<img src="figure_simulation_training/unnamed-chunk-23-1.png" title="plot of chunk unnamed-chunk-23" alt="plot of chunk unnamed-chunk-23" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-23-1.png" title="plot of chunk unnamed-chunk-23" alt="plot of chunk unnamed-chunk-23" style="display: block; margin: auto;" />
 
 ## Session Info
 
