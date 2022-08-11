@@ -1,3 +1,4 @@
+# Gene panel selection
 
 - [Load the data](#load-the-data)
 - [Prepare input](#prepare-input)

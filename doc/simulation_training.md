@@ -1,3 +1,4 @@
+# Platform effect estimation
 
 - [Load the data](#load-the-data)
   * [Model fit summary](#model-fit-summary)
