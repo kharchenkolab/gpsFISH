@@ -18,10 +18,16 @@ Here we describe gpsFISH, a computational method to perform such selection in a 
 <img src="inst/workflow.jpg" align="center" height="600">
 
 ## Installation
-To use the latest version of gpsFISH from GitHub, install with the following:
+To use gpsFISH from GitHub, install with the following:
 
 ``` r
 devtools::install_github("kharchenkolab/gpsFISH")
+```
+
+To install the development version (faster version) of gpsFISH:
+
+``` r
+devtools::install_github(repo = 'kharchenkolab/gpsFISH', ref = 'devel')
 ```
 
 ## Tutorials
@@ -29,12 +35,12 @@ devtools::install_github("kharchenkolab/gpsFISH")
 Please see the following tutorials for detailed examples of how to use gpsFISH: 
 
 ### Platform effect estimation:
-* [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/main/doc/simulation_training.html)
-* [Markdown version](doc/simulation_training.md)
+* [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/tree/feature/speed_up/doc/simulation_training.html)
+* [Markdown version](https://github.com/kharchenkolab/gpsFISH/tree/feature/speed_up/doc/simulation_training.md)
 
 ### Gene panel selection:
-* [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/main/doc/gene_panel_selection.html)
-* [Markdown version](doc/gene_panel_selection.md)
+* [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/tree/feature/speed_up/doc/gene_panel_selection.html)
+* [Markdown version](https://github.com/kharchenkolab/gpsFISH/tree/feature/speed_up/doc/gene_panel_selection.md)
 
 
 ## Citation
