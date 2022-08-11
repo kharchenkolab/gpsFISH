@@ -1,11 +1,3 @@
----
-title: "Gene panel selection"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Gene panel selection}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
 
 - [Load the data](#load-the-data)
 - [Prepare input](#prepare-input)
