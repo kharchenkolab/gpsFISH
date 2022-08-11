@@ -40,7 +40,7 @@ Please see the following tutorials for detailed examples of how to use gpsFISH:
 
 ### Gene panel selection:
 * [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/main/doc/gene_panel_selection.html)
-* [Markdown version](https://github.com/kharchenkolab/gpsFISH/blob/feature/speed_up/doc/gene_panel_selection.md)
+* [Markdown version](doc/gene_panel_selection.md)
 
 
 ## Citation
