@@ -223,7 +223,7 @@ params2check = c("alpha_tilde", "beta_tilde", "zi", "sigma_alpha", "sigma_beta",
 rstan::stan_dens(simulation.params$distortion_model, pars = params2check)
 ```
 
-![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8-1.png)
+![plot of chunk unnamed-chunk-8](figure_simulation_training/unnamed-chunk-8-1.png)
 
 
 ### Gene specific platform effect
@@ -269,7 +269,7 @@ qqplot(obs, pred[1,], xlab="observed data", ylab=paste("simulated data", 1), mai
 graphics::abline(0,1)
 ```
 
-<img src="figure/unnamed-chunk-10-1.png" title="plot of chunk unnamed-chunk-10" alt="plot of chunk unnamed-chunk-10" style="display: block; margin: auto;" />
+<img src="figure_simulation_training/unnamed-chunk-10-1.png" title="plot of chunk unnamed-chunk-10" alt="plot of chunk unnamed-chunk-10" style="display: block; margin: auto;" />
 
 
 We can also check the relationship between relative expression in scRNA-seq data and relative expression in observed vs. simulated spatial transcriptomics data:
@@ -309,7 +309,7 @@ densityscatter(x=data_transformation(as.numeric(as.matrix(prop_ik_sc)), "log", b
                  xlab="relative expression in scRNA-seq (log)", ylab="relative expression in spatial data (log)", main = "simulated spatial data")
 ```
 
-<img src="figure/unnamed-chunk-11-1.png" title="plot of chunk unnamed-chunk-11" alt="plot of chunk unnamed-chunk-11" style="display: block; margin: auto;" /><img src="figure/unnamed-chunk-11-2.png" title="plot of chunk unnamed-chunk-11" alt="plot of chunk unnamed-chunk-11" style="display: block; margin: auto;" />
+<img src="figure_simulation_training/unnamed-chunk-11-1.png" title="plot of chunk unnamed-chunk-11" alt="plot of chunk unnamed-chunk-11" style="display: block; margin: auto;" /><img src="figure_simulation_training/unnamed-chunk-11-2.png" title="plot of chunk unnamed-chunk-11" alt="plot of chunk unnamed-chunk-11" style="display: block; margin: auto;" />
 
 
 ### Other model fitting diagnostics
@@ -321,7 +321,7 @@ densityscatter(x=data_transformation(as.numeric(as.matrix(prop_ik_sc)), "log", b
 rstan::traceplot(simulation.params$distortion_model, pars = params2check)
 ```
 
-![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png)
+![plot of chunk unnamed-chunk-12](figure_simulation_training/unnamed-chunk-12-1.png)
 
 
 We can also check the autocorrelation of each Markov chain:
@@ -330,7 +330,7 @@ We can also check the autocorrelation of each Markov chain:
 bayesplot::mcmc_acf(simulation.params$distortion_model, pars = params2check, lags = 20)
 ```
 
-![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png)
+![plot of chunk unnamed-chunk-13](figure_simulation_training/unnamed-chunk-13-1.png)
 
 
 The plots are not that useful since we are using variational inference for model fitting. But the way these plots are generated is the same for model fitting using sampling. More diagnostic plot can be found in the package [bayesplot](https://mc-stan.org/bayesplot/articles/visual-mcmc-diagnostics.html)
