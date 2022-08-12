@@ -30,6 +30,34 @@ To install the development version (faster version) of gpsFISH:
 devtools::install_github(repo = 'kharchenkolab/gpsFISH', ref = 'devel')
 ```
 
+#### System dependencies
+
+GSL libraries need to be installed. It is inherited from `Rfast`. 
+
+##### Ubuntu dependencies
+
+To install system dependencies using `apt-get`, use the following:
+```sh
+apt-get install libgsl-dev
+```
+
+##### Red Hat-based distributions dependencies
+
+For Red Hat distributions using `yum`, use the following command:
+
+```sh
+yum -y install gsl
+```
+
+##### Mac OS
+
+Using the Mac OS package manager [Homebrew](https://brew.sh/), try the following command:
+
+```sh
+brew install gsl
+```
+
+
 ## Tutorials
 
 Please see the following tutorials for detailed examples of how to use gpsFISH: 
