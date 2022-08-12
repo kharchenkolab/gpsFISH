@@ -1,3 +1,6 @@
+#' @useDynLib gpsFISH
+NULL
+
 #' scRNA-seq count data.
 #'
 #' A dataset containing the expression of 19,972 genes in 550 cells.

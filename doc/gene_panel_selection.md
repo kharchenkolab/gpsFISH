@@ -29,22 +29,72 @@ First, let’s load libraries:
 ```r
 library(gpsFISH)
 library(data.table)    
+#> data.table 1.14.0 using 64 threads (see ?getDTthreads).  Latest news: r-datatable.com
 library(pagoda2)      
+#> Loading required package: Matrix
+#> Loading required package: igraph
+#> 
+#> Attaching package: 'igraph'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     decompose, spectrum
+#> The following object is masked from 'package:base':
+#> 
+#>     union
 library(parallel)      
 library(ranger)       
 library(caret)       
+#> Loading required package: lattice
+#> Loading required package: ggplot2
 library(pROC)        
+#> Type 'citation("pROC")' for a citation.
+#> 
+#> Attaching package: 'pROC'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     cov, smooth, var
 library(naivebayes)    
+#> naivebayes 0.9.7 loaded
+#> 
+#> Attaching package: 'naivebayes'
+#> The following object is masked from 'package:data.table':
+#> 
+#>     tables
 library(splitTools)   
-library(boot)         
+library(boot)  
+#> 
+#> Attaching package: 'boot'
+#> The following object is masked from 'package:lattice':
+#> 
+#>     melanoma
 
 #optional packages for generating plots
 library(pheatmap)     
 library(ggplot2)      
 library(reshape2)     
+#> 
+#> Attaching package: 'reshape2'
+#> The following objects are masked from 'package:data.table':
+#> 
+#>     dcast, melt
 library(Seurat)       
+#> Attaching SeuratObject
 library(ggdendro)     
 library(dplyr)       
+#> 
+#> Attaching package: 'dplyr'
+#> The following objects are masked from 'package:igraph':
+#> 
+#>     as_data_frame, groups, union
+#> The following objects are masked from 'package:data.table':
+#> 
+#>     between, first, last
+#> The following objects are masked from 'package:stats':
+#> 
+#>     filter, lag
+#> The following objects are masked from 'package:base':
+#> 
+#>     intersect, setdiff, setequal, union
 library(cowplot)    
 ```
 
@@ -109,7 +159,7 @@ maxexpr = apply(ave_count_ik_all_gene, 1, max)     #average expression in the hi
 hist(log10(maxexpr), col="gray", xlab="log10(max cluster average expression)", main = "")
 ```
 
-<img src="figure/unnamed-chunk-4-1.png" title="plot of chunk unnamed-chunk-4" alt="plot of chunk unnamed-chunk-4" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-4-1.png" title="plot of chunk unnamed-chunk-4" alt="plot of chunk unnamed-chunk-4" style="display: block; margin: auto;" />
 
 ```r
 
@@ -185,7 +235,7 @@ cluster_distance=cluster_dis(count_table = sc_count,
 plot(cluster_distance$hierarchy, hang = -1)      
 ```
 
-<img src="figure/unnamed-chunk-9-1.png" title="plot of chunk unnamed-chunk-9" alt="plot of chunk unnamed-chunk-9" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-9-1.png" title="plot of chunk unnamed-chunk-9" alt="plot of chunk unnamed-chunk-9" style="display: block; margin: auto;" />
 
 
 Then we can construct a raw weighted penalty matrix based on the cell type distance.
@@ -214,30 +264,30 @@ weight_penalty = hierarchical_penalty(weight.matrix = raw_weight_penalty, cell.t
 #change the diagonal value to 1. This is to make sure that correct predictions will stay unchanged
 diag(weight_penalty)=1
 weight_penalty
-#>                        Interneuron S1_Excitatory_L45a S1_Excitatory_L23 Hippocampus_Excitatory Oligo_Mature   Oligo_MF        Pvm       Vsmc
-#> Interneuron                      1         2.00000000        2.00000000             2.00000000   2.00000000 2.00000000 2.00000000 2.00000000
-#> S1_Excitatory_L45a               2         1.00000000        0.03280485             0.11655514   2.00000000 2.00000000 2.00000000 2.00000000
-#> S1_Excitatory_L23                2         0.03280485        1.00000000             0.08640677   2.00000000 2.00000000 2.00000000 2.00000000
-#> Hippocampus_Excitatory           2         0.11655514        0.08640677             1.00000000   2.00000000 2.00000000 2.00000000 2.00000000
-#> Oligo_Mature                     2         2.00000000        2.00000000             2.00000000   1.00000000 0.03333612 0.49578157 0.47298311
-#> Oligo_MF                         2         2.00000000        2.00000000             2.00000000   0.03333612 1.00000000 0.71547011 0.69181743
-#> Pvm                              2         2.00000000        2.00000000             2.00000000   0.49578157 0.71547011 1.00000000 0.04495902
-#> Vsmc                             2         2.00000000        2.00000000             2.00000000   0.47298311 0.69181743 0.04495902 1.00000000
-#> Endothelial2                     2         2.00000000        2.00000000             2.00000000   0.54079928 0.76849017 0.05825841 0.04492468
-#> Astrocyte2                       2         2.00000000        2.00000000             2.00000000   0.49729523 0.69685750 0.14602916 0.10530401
-#> Astrocyte1                       2         2.00000000        2.00000000             2.00000000   0.74782313 0.95550207 0.32128127 0.25959643
-#>                        Endothelial2 Astrocyte2 Astrocyte1
-#> Interneuron              2.00000000 2.00000000 2.00000000
-#> S1_Excitatory_L45a       2.00000000 2.00000000 2.00000000
-#> S1_Excitatory_L23        2.00000000 2.00000000 2.00000000
-#> Hippocampus_Excitatory   2.00000000 2.00000000 2.00000000
-#> Oligo_Mature             0.54079928 0.49729523 0.74782313
-#> Oligo_MF                 0.76849017 0.69685750 0.95550207
-#> Pvm                      0.05825841 0.14602916 0.32128127
-#> Vsmc                     0.04492468 0.10530401 0.25959643
-#> Endothelial2             1.00000000 0.16475047 0.32448244
-#> Astrocyte2               0.16475047 1.00000000 0.07929015
-#> Astrocyte1               0.32448244 0.07929015 1.00000000
+#>                        Interneuron S1_Excitatory_L45a S1_Excitatory_L23 Hippocampus_Excitatory Oligo_Mature   Oligo_MF
+#> Interneuron                      1         2.00000000        2.00000000             2.00000000   2.00000000 2.00000000
+#> S1_Excitatory_L45a               2         1.00000000        0.03280485             0.11655514   2.00000000 2.00000000
+#> S1_Excitatory_L23                2         0.03280485        1.00000000             0.08640677   2.00000000 2.00000000
+#> Hippocampus_Excitatory           2         0.11655514        0.08640677             1.00000000   2.00000000 2.00000000
+#> Oligo_Mature                     2         2.00000000        2.00000000             2.00000000   1.00000000 0.03333612
+#> Oligo_MF                         2         2.00000000        2.00000000             2.00000000   0.03333612 1.00000000
+#> Pvm                              2         2.00000000        2.00000000             2.00000000   0.49578157 0.71547011
+#> Vsmc                             2         2.00000000        2.00000000             2.00000000   0.47298311 0.69181743
+#> Endothelial2                     2         2.00000000        2.00000000             2.00000000   0.54079928 0.76849017
+#> Astrocyte2                       2         2.00000000        2.00000000             2.00000000   0.49729523 0.69685750
+#> Astrocyte1                       2         2.00000000        2.00000000             2.00000000   0.74782313 0.95550207
+#>                               Pvm       Vsmc Endothelial2 Astrocyte2 Astrocyte1
+#> Interneuron            2.00000000 2.00000000   2.00000000 2.00000000 2.00000000
+#> S1_Excitatory_L45a     2.00000000 2.00000000   2.00000000 2.00000000 2.00000000
+#> S1_Excitatory_L23      2.00000000 2.00000000   2.00000000 2.00000000 2.00000000
+#> Hippocampus_Excitatory 2.00000000 2.00000000   2.00000000 2.00000000 2.00000000
+#> Oligo_Mature           0.49578157 0.47298311   0.54079928 0.49729523 0.74782313
+#> Oligo_MF               0.71547011 0.69181743   0.76849017 0.69685750 0.95550207
+#> Pvm                    1.00000000 0.04495902   0.05825841 0.14602916 0.32128127
+#> Vsmc                   0.04495902 1.00000000   0.04492468 0.10530401 0.25959643
+#> Endothelial2           0.05825841 0.04492468   1.00000000 0.16475047 0.32448244
+#> Astrocyte2             0.14602916 0.10530401   0.16475047 1.00000000 0.07929015
+#> Astrocyte1             0.32128127 0.25959643   0.32448244 0.07929015 1.00000000
 ```
 
 ### Generate gene weight
@@ -264,7 +314,7 @@ rownames(gene.weight) = gene.weight$gene
 hist(gene.weight$weight, xlab = "number of probe count per gene", main = "")
 ```
 
-<img src="figure/unnamed-chunk-12-1.png" title="plot of chunk unnamed-chunk-12" alt="plot of chunk unnamed-chunk-12" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-12-1.png" title="plot of chunk unnamed-chunk-12" alt="plot of chunk unnamed-chunk-12" style="display: block; margin: auto;" />
 
 ```r
 
@@ -286,7 +336,7 @@ gene.weight=data.frame(gene=gene.list, weight=weight.list)
 hist(gene.weight$weight, xlab = "gene weight", main = "")
 ```
 
-<img src="figure/unnamed-chunk-12-2.png" title="plot of chunk unnamed-chunk-12" alt="plot of chunk unnamed-chunk-12" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-12-2.png" title="plot of chunk unnamed-chunk-12" alt="plot of chunk unnamed-chunk-12" style="display: block; margin: auto;" />
 
 ### Initialize population for gene panel selection
 An initial population is needed for gene panel selection using the genetic algorithm.
@@ -360,9 +410,12 @@ This way, decreasing fitness means increasing accuracy.
 
 
 ```r
+gene_list = rownames(sc_count)
+cell_list = colnames(sc_count)
+
 GA = gpsFISH_optimize(earlyterm = 10,
                       converge.cutoff = 0.01,
-                      n = dim(sc_count)[1],
+                      n = length(gene_list),
                       k = panel_size,
                       ngen = 10,
                       popsize = pop_size,
@@ -380,7 +433,8 @@ GA = gpsFISH_optimize(earlyterm = 10,
                       sample_new_levels = "old_levels",
                       use_average_cluster_profiles = FALSE,
                       save.intermediate = FALSE,
-                      full_count_table = as.data.frame(t(sc_count)),
+                      gene_list = gene_list,
+                      cell_list = cell_list,
                       cell_cluster_conversion = sc_cluster,       
                       relative_prop = relative_prop,
                       simulation_parameter = simulation_params,
@@ -408,17 +462,18 @@ GA = gpsFISH_optimize(earlyterm = 10,
 ### Get the genes in the gene panel
 
 ```r
-marker_panel = rownames(sc_count)[GA$bestsol]
+marker_panel = gene_list[GA$bestsol]
 marker_panel
-#>   [1] "CNR1"     "UGP2"     "SYT13"    "RNF11"    "TSPYL4"   "SLC32A1"  "ATP6V1B2" "RNF187"   "GNL3L"    "GAD1"     "GDE1"     "GAD2"    
-#>  [13] "CRHBP"    "VIP"      "ATAD2"    "FHOD3"    "TMEM215"  "KCNA1"    "OMG"      "RBFOX2"   "ETV1"     "LIN7A"    "SLC35F3"  "PLS3"    
-#>  [25] "RAB3C"    "MADD"     "PGM2L1"   "SNAP91"   "ITFG1"    "APLP1"    "UNC13A"   "DZIP3"    "FIBCD1"   "STXBP5"   "PHACTR1"  "ARF3"    
-#>  [37] "GPD2"     "ERC2"     "DOCK9"    "CYFIP2"   "SMIM13"   "RGS4"     "DPY19L3"  "WFS1"     "CACNA2D3" "EML1"     "PLXNB3"   "KCNJ10"  
-#>  [49] "PCYT2"    "GRB14"    "HADH"     "PTPRD"    "GALNT6"   "PRR5L"    "PLS1"     "RFTN2"    "LITAF"    "B3GALT5"  "GNG11"    "GPR34"   
-#>  [61] "PTPN6"    "B4GALT1"  "SLC22A8"  "EPAS1"    "VIM"      "GIMAP6"   "ITIH3"    "S1PR1"    "TIMP3"    "GPR37L1"  "SLC4A4"   "SOX9"    
-#>  [73] "TNFRSF19" "LAMB2"    "MYL9"     "COPA"     "RWDD1"    "TSPYL1"   "NUFIP2"   "APPBP2"   "PUM2"     "TBCE"     "RICTOR"   "NIPBL"   
-#>  [85] "SREBF2"   "CCDC50"   "AGPAT4"   "SRSF7"    "NAPG"     "RNMT"     "SF3B2"    "BLOC1S2"  "DNAJC10"  "ITGAV"    "NCEH1"    "ANAPC4"  
-#>  [97] "REEP1"    "MAN2B1"   "TLE3"     "TSR2"
+#>   [1] "CNR1"     "UGP2"     "SYT13"    "RNF11"    "TSPYL4"   "SLC32A1"  "ATP6V1B2" "RNF187"   "GNL3L"    "GAD1"    
+#>  [11] "GDE1"     "GAD2"     "CRHBP"    "VIP"      "ATAD2"    "FHOD3"    "TMEM215"  "KCNA1"    "OMG"      "RBFOX2"  
+#>  [21] "ETV1"     "LIN7A"    "SLC35F3"  "PLS3"     "RAB3C"    "MADD"     "PGM2L1"   "SNAP91"   "ITFG1"    "APLP1"   
+#>  [31] "UNC13A"   "DZIP3"    "FIBCD1"   "STXBP5"   "PHACTR1"  "ARF3"     "GPD2"     "ERC2"     "DOCK9"    "CYFIP2"  
+#>  [41] "SMIM13"   "RGS4"     "DPY19L3"  "WFS1"     "CACNA2D3" "EML1"     "PLXNB3"   "KCNJ10"   "PCYT2"    "GRB14"   
+#>  [51] "HADH"     "PTPRD"    "GALNT6"   "PRR5L"    "PLS1"     "RFTN2"    "LITAF"    "B3GALT5"  "GNG11"    "GPR34"   
+#>  [61] "PTPN6"    "B4GALT1"  "SLC22A8"  "EPAS1"    "VIM"      "GIMAP6"   "ITIH3"    "S1PR1"    "TIMP3"    "GPR37L1" 
+#>  [71] "SLC4A4"   "SOX9"     "TNFRSF19" "LAMB2"    "MYL9"     "COPA"     "RWDD1"    "TSPYL1"   "NUFIP2"   "APPBP2"  
+#>  [81] "PUM2"     "TBCE"     "RICTOR"   "NIPBL"    "SREBF2"   "CCDC50"   "AGPAT4"   "SRSF7"    "NAPG"     "RNMT"    
+#>  [91] "SF3B2"    "BLOC1S2"  "DNAJC10"  "ITGAV"    "NCEH1"    "ANAPC4"   "REEP1"    "MAN2B1"   "TLE3"     "TSR2"
 ```
 
 ### Average expression per cell type for selected genes 
@@ -433,7 +488,7 @@ pheatmap::pheatmap(ave_expr, scale="row",
                    angle = 90)
 ```
 
-<img src="figure/unnamed-chunk-17-1.png" title="plot of chunk unnamed-chunk-17" alt="plot of chunk unnamed-chunk-17" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-17-1.png" title="plot of chunk unnamed-chunk-17" alt="plot of chunk unnamed-chunk-17" style="display: block; margin: auto;" />
 
 ### Plot confusion matrix
 
@@ -443,7 +498,7 @@ cm=GA$best_confusionMatrix[[GA$bestgeneration]]
 plot_confusion_matrix(confusion.matrix=cm)
 ```
 
-<img src="figure/unnamed-chunk-18-1.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-18-1.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
 
 ```r
 
@@ -454,7 +509,7 @@ if (!is.null(weight_penalty)){
 }
 ```
 
-<img src="figure/unnamed-chunk-18-2.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-18-2.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
 
 ```r
 
@@ -465,7 +520,7 @@ colnames(norm.cm)=paste(colnames(norm.cm), paste("(", num.cell.by.class, ")",sep
 plot_norm_confusion_matrix(confusion.matrix=norm.cm)
 ```
 
-<img src="figure/unnamed-chunk-18-3.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-18-3.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
 
 ```r
 
@@ -478,7 +533,7 @@ if (!is.null(weight_penalty)){
 }
 ```
 
-<img src="figure/unnamed-chunk-18-4.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-18-4.png" title="plot of chunk unnamed-chunk-18" alt="plot of chunk unnamed-chunk-18" style="display: block; margin: auto;" />
 
 
 ```r
@@ -487,7 +542,7 @@ plot_norm_confusion_matrix_with_dendrogram(confusion.matrix = norm.cm, cluster.d
 #> Joining, by = "gene"Joining, by = "sample"
 ```
 
-<img src="figure/unnamed-chunk-19-1.png" title="plot of chunk unnamed-chunk-19" alt="plot of chunk unnamed-chunk-19" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-19-1.png" title="plot of chunk unnamed-chunk-19" alt="plot of chunk unnamed-chunk-19" style="display: block; margin: auto;" />
 
 ```r
 if (!is.null(weight_penalty)){
@@ -496,7 +551,7 @@ if (!is.null(weight_penalty)){
 #> Joining, by = "gene"Joining, by = "sample"
 ```
 
-<img src="figure/unnamed-chunk-19-2.png" title="plot of chunk unnamed-chunk-19" alt="plot of chunk unnamed-chunk-19" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-19-2.png" title="plot of chunk unnamed-chunk-19" alt="plot of chunk unnamed-chunk-19" style="display: block; margin: auto;" />
 
 ### Get the final population
 
@@ -515,7 +570,7 @@ Here we use 1-fitness, i.e., accuracy for plot.
 plot(x=seq(1:length(GA$old$obj)), y=(1-GA$old$obj), xlab="Iteration", ylab="Accuracy", type="l")
 ```
 
-<img src="figure/unnamed-chunk-21-1.png" title="plot of chunk unnamed-chunk-21" alt="plot of chunk unnamed-chunk-21" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-21-1.png" title="plot of chunk unnamed-chunk-21" alt="plot of chunk unnamed-chunk-21" style="display: block; margin: auto;" />
 
 
 ### Check classification statistics
@@ -524,8 +579,9 @@ plot(x=seq(1:length(GA$old$obj)), y=(1-GA$old$obj), xlab="Iteration", ylab="Accu
 statsbyclass=GA$best_stats_byclass[[GA$bestgeneration]]
 #statistics we can check:
 colnames(statsbyclass)
-#>  [1] "Sensitivity"          "Specificity"          "Pos Pred Value"       "Neg Pred Value"       "Precision"            "Recall"              
-#>  [7] "F1"                   "Prevalence"           "Detection Rate"       "Detection Prevalence" "Balanced Accuracy"
+#>  [1] "Sensitivity"          "Specificity"          "Pos Pred Value"       "Neg Pred Value"       "Precision"           
+#>  [6] "Recall"               "F1"                   "Prevalence"           "Detection Rate"       "Detection Prevalence"
+#> [11] "Balanced Accuracy"
 metric = "Specificity"      #we take specificity as an example
 data2plot=data.frame(cluster=rownames(statsbyclass), value=statsbyclass[,metric])
 
@@ -551,7 +607,7 @@ p = ggplot(data=data2plot, aes(x=cluster, y=value)) +
 print(p)
 ```
 
-<img src="figure/unnamed-chunk-22-1.png" title="plot of chunk unnamed-chunk-22" alt="plot of chunk unnamed-chunk-22" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-22-1.png" title="plot of chunk unnamed-chunk-22" alt="plot of chunk unnamed-chunk-22" style="display: block; margin: auto;" />
 
 ```r
 
@@ -584,7 +640,7 @@ p<-ggplot(data=data2plot, aes(x=cluster, y=value)) +
 print(p)
 ```
 
-<img src="figure/unnamed-chunk-22-2.png" title="plot of chunk unnamed-chunk-22" alt="plot of chunk unnamed-chunk-22" style="display: block; margin: auto;" />
+<img src="figure_gene_panel_selection/unnamed-chunk-22-2.png" title="plot of chunk unnamed-chunk-22" alt="plot of chunk unnamed-chunk-22" style="display: block; margin: auto;" />
 
 ### Clustering based on selected gene panel
 Finally, we can perform clustering using selected gene panels to visualize its ability
@@ -593,8 +649,11 @@ of separating cells from different cell types.
 ```r
 #~~~~~~~Seurat clustering on the marker genes~~~~~~~#
 sub_count_table = sc_count[marker_panel, ]
+
 #this is to subsample the cells (same parameter with gpsFISH_optimize)
-subsub_count_table = subsample_sc(count_table = sub_count_table, cell_cluster_conversion = sc_cluster, rate = 1, cluster_size_max = 50, cluster_size_min = 30, sampling_type = "Subsampling_by_cluster", nCV = 5)
+subsample_cells = subsample_sc(cell_list = colnames(sub_count_table), cell_cluster_conversion = sc_cluster, rate = 1, cluster_size_max = 50, cluster_size_min = 30, sampling_type = "Subsampling_by_cluster", nCV = 5)
+subsub_count_table = sub_count_table[, subsample_cells$cell_loc]
+
 Seurat_clustering(count_table = subsub_count_table, cell_cluster_conversion = sc_cluster)
 #> Warning: The following arguments are not used: row.names
 #> Warning in theta.ml(y = y, mu = fit$fitted): iteration limit reached
@@ -626,26 +685,16 @@ Seurat_clustering(count_table = subsub_count_table, cell_cluster_conversion = sc
 #> Warning in theta.ml(y = y, mu = fit$fitted): iteration limit reached
 
 #> Warning in theta.ml(y = y, mu = fit$fitted): iteration limit reached
-#> Warning: Invalid name supplied, making object name syntactically valid. New object name is Seurat..SCTransform.RNA; see ?make.names for more
-#> details on syntax validity
-#> Warning in irlba(A = t(x = object), nv = npcs, ...): You're computing too large a percentage of total singular values, use a standard svd
-#> instead.
+#> Warning: Invalid name supplied, making object name syntactically valid. New object name is Seurat..SCTransform.RNA;
+#> see ?make.names for more details on syntax validity
+#> Warning in irlba(A = t(x = object), nv = npcs, ...): You're computing too large a percentage of total singular values,
+#> use a standard svd instead.
+#> Warning: The default method for RunUMAP has changed from calling Python UMAP via reticulate to the R-native UWOT using the cosine metric
+#> To use Python UMAP via reticulate, set umap.method to 'umap-learn' and metric to 'correlation'
+#> This message will be shown once per session
 ```
 
-<img src="figure/unnamed-chunk-23-1.png" title="plot of chunk unnamed-chunk-23" alt="plot of chunk unnamed-chunk-23" style="display: block; margin: auto;" />
-
-```r
-
-# simu.count.marker.expr=sc2spatial(count_table = subsub_count_table,
-#                                   cell_cluster_conversion = as.character(sc_cluster[colnames(subsub_count_table),"class_label"]),           
-#                                   relative_prop = relative_prop,
-#                                   sample_new_levels = "old_levels",
-#                                   use_average_cluster_profiles = FALSE,
-#                                   simulation_type = "Simulation",
-#                                   simulation_parameter = simulation_params,
-#                                   simulation_model = "ZINB")
-# Seurat_clustering(count_table = simu.count.marker.expr, cell_cluster_conversion = sc_cluster)
-```
+<img src="figure_gene_panel_selection/unnamed-chunk-23-1.png" title="plot of chunk unnamed-chunk-23" alt="plot of chunk unnamed-chunk-23" style="display: block; margin: auto;" />
 
 ## Session Info
 
@@ -660,46 +709,50 @@ sessionInfo()
 #> LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1
 #> 
 #> locale:
-#>  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8   
-#>  [6] LC_MESSAGES=en_US.UTF-8    LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C            
-#> [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+#>  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+#>  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8    LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+#>  [9] LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
 #> 
 #> attached base packages:
 #> [1] parallel  stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#>  [1] rstan_2.21.2         StanHeaders_2.21.0-7 deming_1.4           viridis_0.6.1        viridisLite_0.4.0    ggpointdensity_0.1.0
-#>  [7] bayesplot_1.8.1      cowplot_1.1.1        dplyr_1.0.7          ggdendro_0.1.22      SeuratObject_4.0.2   Seurat_4.0.3        
-#> [13] reshape2_1.4.4       pheatmap_1.0.12      boot_1.3-28          splitTools_0.3.1     naivebayes_0.9.7     pROC_1.17.0.1       
-#> [19] caret_6.0-88         ggplot2_3.3.5        lattice_0.20-45      ranger_0.13.1        pagoda2_1.0.4        igraph_1.2.6        
-#> [25] Matrix_1.4-0         data.table_1.14.0    gpsFISH_0.0.0.9000   devtools_2.4.2       usethis_2.0.1       
+#>  [1] cowplot_1.1.1      dplyr_1.0.7        ggdendro_0.1.22    SeuratObject_4.0.2 Seurat_4.0.3       reshape2_1.4.4    
+#>  [7] pheatmap_1.0.12    boot_1.3-28        splitTools_0.3.1   naivebayes_0.9.7   pROC_1.17.0.1      caret_6.0-88      
+#> [13] ggplot2_3.3.5      lattice_0.20-45    ranger_0.13.1      pagoda2_1.0.4      igraph_1.2.6       Matrix_1.4-0      
+#> [19] data.table_1.14.0  gpsFISH_0.1.0     
 #> 
 #> loaded via a namespace (and not attached):
-#>   [1] utf8_1.2.2            reticulate_1.20       R.utils_2.10.1        tidyselect_1.1.1      htmlwidgets_1.5.3     grid_4.1.2           
-#>   [7] Rtsne_0.15            munsell_0.5.0         codetools_0.2-18      ica_1.0-2             future_1.21.0         miniUI_0.1.1.1       
-#>  [13] withr_2.4.2           colorspace_2.0-2      highr_0.9             knitr_1.33            stats4_4.1.2          ROCR_1.0-11          
-#>  [19] tensor_1.5            listenv_0.8.0         labeling_0.4.2        urltools_1.7.3        polyclip_1.10-0       farver_2.1.0         
-#>  [25] rprojroot_2.0.2       parallelly_1.27.0     vctrs_0.4.1           generics_0.1.0        ipred_0.9-11          xfun_0.24            
-#>  [31] R6_2.5.0              spatstat.utils_2.2-0  cachem_1.0.5          assertthat_0.2.1      promises_1.2.0.1      scales_1.1.1         
-#>  [37] nnet_7.3-16           gtable_0.3.0          globals_0.14.0        processx_3.5.2        goftest_1.2-2         drat_0.2.1           
-#>  [43] timeDate_3043.102     rlang_1.0.2           splines_4.1.2         lazyeval_0.2.2        ModelMetrics_1.2.2.2  spatstat.geom_2.4-0  
-#>  [49] brew_1.0-6            inline_0.3.19         yaml_2.2.1            abind_1.4-5           httpuv_1.6.1          tools_4.1.2          
-#>  [55] lava_1.6.9            sccore_1.0.1          ellipsis_0.3.2        spatstat.core_2.3-0   RColorBrewer_1.1-2    proxy_0.4-26         
-#>  [61] sessioninfo_1.1.1     ggridges_0.5.3        Rcpp_1.0.7            plyr_1.8.6            purrr_0.3.4           ps_1.6.0             
-#>  [67] prettyunits_1.1.1     dendsort_0.3.4        rpart_4.1-15          deldir_1.0-6          pbapply_1.4-3         zoo_1.8-9            
-#>  [73] ggrepel_0.9.1         cluster_2.1.2         fs_1.5.0              magrittr_2.0.1        RSpectra_0.16-0       scattermore_0.7      
-#>  [79] triebeard_0.3.0       lmtest_0.9-38         RANN_2.6.1            fitdistrplus_1.1-5    matrixStats_0.60.0    pkgload_1.2.1        
-#>  [85] patchwork_1.1.1       mime_0.11             evaluate_0.14         xtable_1.8-4          RMTstat_0.3           N2R_0.1.1            
-#>  [91] gridExtra_2.3         testthat_3.0.4        compiler_4.1.2        tibble_3.1.7          KernSmooth_2.23-20    V8_3.4.2             
-#>  [97] crayon_1.4.1          R.oo_1.24.0           htmltools_0.5.1.1     mgcv_1.8-38           later_1.2.0           tidyr_1.1.3          
-#> [103] RcppParallel_5.1.4    lubridate_1.7.10      DBI_1.1.1             MASS_7.3-54           cli_3.3.0             R.methodsS3_1.8.1    
-#> [109] gower_0.2.2           pkgconfig_2.0.3       plotly_4.9.4.1        spatstat.sparse_2.0-0 recipes_0.1.16        foreach_1.5.1        
-#> [115] prodlim_2019.11.13    stringr_1.4.0         callr_3.7.0           digest_0.6.27         sctransform_0.3.2     RcppAnnoy_0.0.18     
-#> [121] spatstat.data_2.1-0   rmarkdown_2.9         leiden_0.3.9          Rook_1.1-1            uwot_0.1.10           curl_4.3.2           
-#> [127] shiny_1.6.0           rjson_0.2.20          lifecycle_1.0.0       nlme_3.1-152          jsonlite_1.7.2        desc_1.3.0           
-#> [133] fansi_0.5.0           pillar_1.7.0          loo_2.4.1             fastmap_1.1.0         httr_1.4.2            pkgbuild_1.2.0       
-#> [139] survival_3.2-13       glue_1.6.2            remotes_2.4.0         png_0.1-7             iterators_1.0.13      class_7.3-19         
-#> [145] stringi_1.7.3         memoise_2.0.0         e1071_1.7-8           irlba_2.3.3           future.apply_1.7.0
+#>   [1] N2R_0.1.1             plyr_1.8.6            lazyeval_0.2.2        splines_4.1.2         listenv_0.8.0        
+#>   [6] scattermore_0.7       inline_0.3.19         urltools_1.7.3        digest_0.6.27         foreach_1.5.1        
+#>  [11] htmltools_0.5.1.1     fansi_0.5.0           magrittr_2.0.1        RMTstat_0.3           tensor_1.5           
+#>  [16] cluster_2.1.2         ROCR_1.0-11           recipes_0.1.16        globals_0.14.0        gower_0.2.2          
+#>  [21] RcppParallel_5.1.4    matrixStats_0.60.0    R.utils_2.10.1        spatstat.sparse_2.0-0 sccore_1.0.1         
+#>  [26] prettyunits_1.1.1     colorspace_2.0-2      ggrepel_0.9.1         xfun_0.24             callr_3.7.0          
+#>  [31] crayon_1.4.1          jsonlite_1.7.2        spatstat.data_2.1-0   brew_1.0-6            survival_3.2-13      
+#>  [36] zoo_1.8-9             iterators_1.0.13      glue_1.6.2            polyclip_1.10-0       gtable_0.3.0         
+#>  [41] ipred_0.9-11          leiden_0.3.9          V8_3.4.2              pkgbuild_1.2.0        RcppZiggurat_0.1.6   
+#>  [46] Rook_1.1-1            rstan_2.21.2          future.apply_1.7.0    abind_1.4-5           scales_1.1.1         
+#>  [51] DBI_1.1.1             miniUI_0.1.1.1        Rcpp_1.0.7            viridisLite_0.4.0     xtable_1.8-4         
+#>  [56] spatstat.core_2.3-0   reticulate_1.20       proxy_0.4-26          stats4_4.1.2          lava_1.6.9           
+#>  [61] StanHeaders_2.21.0-7  prodlim_2019.11.13    htmlwidgets_1.5.3     httr_1.4.2            RColorBrewer_1.1-2   
+#>  [66] ellipsis_0.3.2        ica_1.0-2             farver_2.1.0          pkgconfig_2.0.3       loo_2.4.1            
+#>  [71] R.methodsS3_1.8.1     uwot_0.1.10           deldir_1.0-6          nnet_7.3-16           utf8_1.2.2           
+#>  [76] labeling_0.4.2        tidyselect_1.1.1      rlang_1.0.2           later_1.2.0           munsell_0.5.0        
+#>  [81] tools_4.1.2           cli_3.3.0             generics_0.1.0        ggridges_0.5.3        evaluate_0.14        
+#>  [86] stringr_1.4.0         fastmap_1.1.0         goftest_1.2-2         yaml_2.2.1            ModelMetrics_1.2.2.2 
+#>  [91] processx_3.5.2        knitr_1.33            fitdistrplus_1.1-5    purrr_0.3.4           RANN_2.6.1           
+#>  [96] pbapply_1.4-3         future_1.21.0         nlme_3.1-152          mime_0.11             R.oo_1.24.0          
+#> [101] compiler_4.1.2        bayesplot_1.8.1       plotly_4.9.4.1        curl_4.3.2            png_0.1-7            
+#> [106] e1071_1.7-8           spatstat.utils_2.2-0  tibble_3.1.7          stringi_1.7.3         highr_0.9            
+#> [111] ps_1.6.0              drat_0.2.1            RSpectra_0.16-0       vctrs_0.4.1           pillar_1.7.0         
+#> [116] lifecycle_1.0.0       spatstat.geom_2.4-0   triebeard_0.3.0       lmtest_0.9-38         RcppAnnoy_0.0.18     
+#> [121] irlba_2.3.3           httpuv_1.6.1          patchwork_1.1.1       R6_2.5.0              promises_1.2.0.1     
+#> [126] KernSmooth_2.23-20    gridExtra_2.3         parallelly_1.27.0     codetools_0.2-18      MASS_7.3-54          
+#> [131] assertthat_0.2.1      rjson_0.2.20          withr_2.4.2           sctransform_0.3.2     mgcv_1.8-38          
+#> [136] grid_4.1.2            rpart_4.1-15          timeDate_3043.102     tidyr_1.1.3           class_7.3-19         
+#> [141] Rfast_2.0.6           rmarkdown_2.9         dendsort_0.3.4        Rtsne_0.15            shiny_1.6.0          
+#> [146] lubridate_1.7.10
 ```
 
 

@@ -15,7 +15,8 @@ subsample(
 }
 \arguments{
 \item{cell_cluster_conversion}{A data frame with each row representing information of one cell.
-First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.}
+First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+Subsampling is performed on all cells in the data frame. Therefore, make sure the row name of \code{cell_cluster_conversion} is the same with \code{cell_list}.}
 
 \item{class_label}{A character specifying the cell type}
 
@@ -28,7 +29,9 @@ First column contains the cell name. Second column contains the corresponding ce
 \item{nCV}{Number of cross validation to perform on the subsampled data. This is to ensure that we have enough cells for cross validation. Default is 1.}
 }
 \value{
-A subsampled matrix
+A list with elements:
+\item{selected_cell_list}{Location of selected cells in \code{cell_cluster_conversion} after subsampling.}
+\item{selected_cell_type}{Cell type of selected cells after subsampling.}
 }
 \description{
 Subsample cells from one cell type

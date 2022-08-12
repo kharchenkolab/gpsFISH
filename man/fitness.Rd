@@ -6,7 +6,8 @@
 \usage{
 fitness(
   string,
-  full_count_table,
+  gene_list,
+  cell_list,
   cell_cluster_conversion,
   nCV,
   rate = 1,
@@ -15,6 +16,7 @@ fitness(
   two_step_sampling_type,
   metric = "Accuracy",
   method = "NaiveBayes",
+  RF_num_threads = 1,
   weight_penalty = NULL,
   simulation_parameter,
   simulation_model = "ZINB",
@@ -26,7 +28,9 @@ fitness(
 \arguments{
 \item{string}{A numeric vector containing the gene panel.}
 
-\item{full_count_table}{A data frame containing the expression level of each gene in each cell with gene name as row name and cell name as column name.}
+\item{gene_list}{A character vector containing the gene names of all genes for gene panel selection.}
+
+\item{cell_list}{A character vector containing the cell names of all cells for gene panel selection.}
 
 \item{cell_cluster_conversion}{A data frame with each row representing information of one cell.
 First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.}
@@ -48,6 +52,8 @@ Default is "Accuracy", which is the overall accuracy of classification.
 The other options is "Kappa", which is the Kappa statistics.}
 
 \item{method}{A character specifying the classification method to use. Default is naive Bayes ("NaiveBayes"). The other option is random forest ("RandomForest").}
+
+\item{RF_num_threads}{A numeric value specifying the number of threads for random forest. Default is 1.}
 
 \item{weight_penalty}{Optional. A weighted penalty matrix specifying the partial credit and extra penalty for correct and incorrect classifications between pairs of cell types.
 It should be a square matrix with cell types as both row and column name. Default is NULL.}

@@ -5,18 +5,21 @@
 \title{Simulation spatial transcriptomics data from scRNA-seq data}
 \usage{
 sc2spatial(
-  count_table,
+  gene_list,
+  cell_list,
   cell_cluster_conversion = NULL,
   relative_prop = NULL,
   sample_new_levels = NULL,
   use_average_cluster_profiles = FALSE,
-  simulation_type,
+  simulation_type = "Simulation",
   simulation_parameter = NULL,
   simulation_model = "ZINB"
 )
 }
 \arguments{
-\item{count_table}{A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.}
+\item{gene_list}{A numeric vector containing the location of genes we want to simulate among all genes in the scRNA-seq data.}
+
+\item{cell_list}{A numeric vector containing the location of cells we want to simulate among all cells in the scRNA-seq data.}
 
 \item{cell_cluster_conversion}{A character vector containing the cell type of each cell.}
 
@@ -26,6 +29,7 @@ sc2spatial(
 The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.
 \item "cell.level": A matrix containing the relative expression of each gene in each cell with gene name as row name and cell name as column name.
 The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.
+Both matrices are derived from the scRNA-seq data and should have the same genes and cells with the scRNA-seq data.
 }}
 
 \item{sample_new_levels}{A character specifying how simulation is performed for genes we have observed in the data used to train the Bayesian model.
@@ -39,7 +43,7 @@ If TRUE, then value in \code{relative_prop$cluster.average} is used. And for eac
 If FALSE, then we use the relative expression per cell as input, i.e., \code{relative_prop$cell.level}.
 Default is FALSE.}
 
-\item{simulation_type}{A character specifying whether simulation is performed. There are two options. "No_simulation" means no simulation. "Simulation" means we do simulation.}
+\item{simulation_type}{A character specifying whether simulation is performed. Default is "Simulation", meaning we do simulation.}
 
 \item{simulation_parameter}{A simulation model returned by simulation_training_ZINB_trim.}
 
@@ -71,7 +75,8 @@ relative_prop[["cell.level"]] = t(t(sc_count)/colSums(sc_count))
 #simulation spatial transcriptomics data
 genes2simulate = sample(rownames(sc_count), 100)
 class_label_per_cell = as.character(sc_cluster[colnames(sc_count),"class_label"])
-simulate_sp_count = sc2spatial(count_table = sc_count[genes2simulate,],
+simulate_sp_count = sc2spatial(gene_list = genes2simulate,
+                               cell_list = colnames(sc_count),
                                cell_cluster_conversion = class_label_per_cell,
                                relative_prop = relative_prop,
                                sample_new_levels = "old_levels",

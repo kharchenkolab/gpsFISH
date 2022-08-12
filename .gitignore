@@ -3,3 +3,5 @@
 .RData
 .Ruserdata
 gpsFISH*.tar.gz
+src/*.o
+src/*.so

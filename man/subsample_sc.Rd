@@ -5,8 +5,8 @@
 \title{Subsample scRNA-seq data}
 \usage{
 subsample_sc(
-  count_table,
-  cell_cluster_conversion = NULL,
+  cell_list,
+  cell_cluster_conversion,
   rate = 1,
   cluster_size_max = 1000,
   cluster_size_min = 1,
@@ -15,7 +15,7 @@ subsample_sc(
 )
 }
 \arguments{
-\item{count_table}{A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.}
+\item{cell_list}{A character vector containing the cell names to subsample from.}
 
 \item{cell_cluster_conversion}{A data frame with each row representing information of one cell.
 First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
@@ -34,10 +34,12 @@ Default is "Subsampling_by_cluster".}
 \item{nCV}{Number of cross validation to perform on the subsampled data. This is to ensure that we have enough cells for cross validation. Default is 1. Only needed if \code{sampling_type} is "Subsampling_by_cluster".}
 }
 \value{
-A subsampled matrix
+A list with elements:
+\item{cell_loc}{Location of selected cells in \code{cell_list} after subsampling.}
+\item{cell_class}{Cell type of selected cells after subsampling.}
 }
 \description{
-subsample_sc takes scRNA-seq data as input and subsample it by selecting a subset of cells.
+subsample_sc takes cell name of cells in a scRNA-seq data as input and subsample it by selecting a subset of cells.
 }
 \examples{
 data(sc_count)
@@ -47,21 +49,23 @@ data(sc_cluster)
 table(sc_cluster[colnames(sc_count), "class_label"])
 
 #subsample by cell type
-subsample_sc_count = subsample_sc(count_table = sc_count,
-                                  cell_cluster_conversion = sc_cluster,
-                                  rate = 1,
-                                  cluster_size_max = 30,
-                                  cluster_size_min = 5,
-                                  sampling_type = "Subsampling_by_cluster",
-                                  nCV = 5)
+subsample_sc_info = subsample_sc(cell_list = colnames(sc_count),
+                                 cell_cluster_conversion = sc_cluster,
+                                 rate = 1,
+                                 cluster_size_max = 30,
+                                 cluster_size_min = 5,
+                                 sampling_type = "Subsampling_by_cluster",
+                                 nCV = 5)
 
 #number of cells per cell type after subsample
-table(sc_cluster[colnames(subsample_sc_count), "class_label"])
+table(subsample_sc_info$cell_class)
 
 #subsample cells from all cell types together
 dim(sc_count)
-subsample_sc_count = subsample_sc(count_table = sc_count,
+subsample_sc_info = subsample_sc(cell_list = colnames(sc_count),
                                   rate = 0.5,
+                                  cell_cluster_conversion = sc_cluster,
                                   sampling_type = "Subsampling")
-dim(subsample_sc_count)
+length(subsample_sc_info$cell_loc)
+table(subsample_sc_info$cell_class)
 }
