@@ -38,7 +38,7 @@ GSL libraries need to be installed. It is inherited from `Rfast`.
 
 To install system dependencies using `apt-get`, use the following:
 ```sh
-apt-get install libgsl-dev
+sudo apt-get install libgsl-dev
 ```
 
 ##### Red Hat-based distributions dependencies
@@ -46,7 +46,7 @@ apt-get install libgsl-dev
 For Red Hat distributions using `yum`, use the following command:
 
 ```sh
-yum -y install gsl
+sudo yum -y install gsl
 ```
 
 ##### Mac OS
