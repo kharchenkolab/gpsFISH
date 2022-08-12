@@ -25,9 +25,9 @@ When we simulate spatial transcriptomics data for genes we have already seen in 
 we can use their estimated platform effect \eqn{\gamma_i} and \eqn{c_i} ("old_levels"), or we can randomly sample \eqn{\gamma_i} and \eqn{c_i} from their posterior distribution ("random").
 For genes not in the training data, we will randomly sample \eqn{\gamma_i} and \eqn{c_i} from their posterior distribution since we don't have their estimation.}
 
-\item{gene_list}{A character vector of gene names.}
+\item{gene_list}{A character vector containing the name of genes we want to simulate.}
 
-\item{cell_list}{A character vector of cell names.}
+\item{cell_list}{A character vector containing the name of cells we want to simulate.}
 
 \item{num_gene}{Number of genes.}
 

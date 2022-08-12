@@ -1,4 +1,3 @@
-
 # Platform effect estimation
 
 - [Load the data](#load-the-data)
@@ -97,10 +96,12 @@ sc_cluster[1:5,]
 
 table(sc_cluster$class_label)
 #> 
-#>             Astrocyte1             Astrocyte2           Endothelial2 Hippocampus_Excitatory            Interneuron           Oligo_Mature 
-#>                     50                     50                     50                     50                     50                     50 
-#>               Oligo_MF                    Pvm      S1_Excitatory_L23     S1_Excitatory_L45a                   Vsmc 
-#>                     50                     50                     50                     50                     50
+#>             Astrocyte1             Astrocyte2           Endothelial2 Hippocampus_Excitatory            Interneuron 
+#>                     50                     50                     50                     50                     50 
+#>           Oligo_Mature               Oligo_MF                    Pvm      S1_Excitatory_L23     S1_Excitatory_L45a 
+#>                     50                     50                     50                     50                     50 
+#>                   Vsmc 
+#>                     50
 
 dim(spatial_count)
 #> [1]  33 537
@@ -126,10 +127,12 @@ spatial_cluster[1:5,]
 
 table(spatial_cluster$class_label)
 #> 
-#>             Astrocyte1             Astrocyte2           Endothelial2 Hippocampus_Excitatory            Interneuron           Oligo_Mature 
-#>                     50                     50                     50                     50                     50                     50 
-#>               Oligo_MF                    Pvm      S1_Excitatory_L23     S1_Excitatory_L45a                   Vsmc 
-#>                     50                     50                     50                     50                     37
+#>             Astrocyte1             Astrocyte2           Endothelial2 Hippocampus_Excitatory            Interneuron 
+#>                     50                     50                     50                     50                     50 
+#>           Oligo_Mature               Oligo_MF                    Pvm      S1_Excitatory_L23     S1_Excitatory_L45a 
+#>                     50                     50                     50                     50                     50 
+#>                   Vsmc 
+#>                     37
 ```
 
 
@@ -180,8 +183,8 @@ simulation.params=simulation_training_ZINB(sc_count = sc_count,
 #> Chain 1: 
 #> Chain 1: 
 #> Chain 1: 
-#> Chain 1: Gradient evaluation took 0.012531 seconds
-#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 125.31 seconds.
+#> Chain 1: Gradient evaluation took 0.013262 seconds
+#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 132.62 seconds.
 #> Chain 1: Adjust your expectations accordingly!
 #> Chain 1: 
 #> Chain 1: 
@@ -201,8 +204,8 @@ simulation.params=simulation_training_ZINB(sc_count = sc_count,
 #> Chain 1: 
 #> Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
 #> Chain 1: COMPLETED.
-#> Warning: Pareto k diagnostic value is 83.79. Resampling is disabled. Decreasing tol_rel_obj may help if variational algorithm has terminated
-#> prematurely. Otherwise consider using sampling instead.
+#> Warning: Pareto k diagnostic value is 83.79. Resampling is disabled. Decreasing tol_rel_obj may help if variational
+#> algorithm has terminated prematurely. Otherwise consider using sampling instead.
 #> [1] "Return result"
 ```
 
@@ -223,7 +226,7 @@ params2check = c("alpha_tilde", "beta_tilde", "zi", "sigma_alpha", "sigma_beta",
 rstan::stan_dens(simulation.params$distortion_model, pars = params2check)
 ```
 
-![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8-1.png)
+![plot of chunk unnamed-chunk-8](figure_simulation_training/unnamed-chunk-8-1.png)
 
 
 ### Gene specific platform effect
@@ -269,7 +272,7 @@ qqplot(obs, pred[1,], xlab="observed data", ylab=paste("simulated data", 1), mai
 graphics::abline(0,1)
 ```
 
-<img src="figure/unnamed-chunk-10-1.png" title="plot of chunk unnamed-chunk-10" alt="plot of chunk unnamed-chunk-10" style="display: block; margin: auto;" />
+<img src="figure_simulation_training/unnamed-chunk-10-1.png" title="plot of chunk unnamed-chunk-10" alt="plot of chunk unnamed-chunk-10" style="display: block; margin: auto;" />
 
 
 We can also check the relationship between relative expression in scRNA-seq data and relative expression in observed vs. simulated spatial transcriptomics data:
@@ -309,7 +312,7 @@ densityscatter(x=data_transformation(as.numeric(as.matrix(prop_ik_sc)), "log", b
                  xlab="relative expression in scRNA-seq (log)", ylab="relative expression in spatial data (log)", main = "simulated spatial data")
 ```
 
-<img src="figure/unnamed-chunk-11-1.png" title="plot of chunk unnamed-chunk-11" alt="plot of chunk unnamed-chunk-11" style="display: block; margin: auto;" /><img src="figure/unnamed-chunk-11-2.png" title="plot of chunk unnamed-chunk-11" alt="plot of chunk unnamed-chunk-11" style="display: block; margin: auto;" />
+<img src="figure_simulation_training/unnamed-chunk-11-1.png" title="plot of chunk unnamed-chunk-11" alt="plot of chunk unnamed-chunk-11" style="display: block; margin: auto;" /><img src="figure_simulation_training/unnamed-chunk-11-2.png" title="plot of chunk unnamed-chunk-11" alt="plot of chunk unnamed-chunk-11" style="display: block; margin: auto;" />
 
 
 ### Other model fitting diagnostics
@@ -321,7 +324,7 @@ densityscatter(x=data_transformation(as.numeric(as.matrix(prop_ik_sc)), "log", b
 rstan::traceplot(simulation.params$distortion_model, pars = params2check)
 ```
 
-![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png)
+![plot of chunk unnamed-chunk-12](figure_simulation_training/unnamed-chunk-12-1.png)
 
 
 We can also check the autocorrelation of each Markov chain:
@@ -330,7 +333,7 @@ We can also check the autocorrelation of each Markov chain:
 bayesplot::mcmc_acf(simulation.params$distortion_model, pars = params2check, lags = 20)
 ```
 
-![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png)
+![plot of chunk unnamed-chunk-13](figure_simulation_training/unnamed-chunk-13-1.png)
 
 
 The plots are not that useful since we are using variational inference for model fitting. But the way these plots are generated is the same for model fitting using sampling. More diagnostic plot can be found in the package [bayesplot](https://mc-stan.org/bayesplot/articles/visual-mcmc-diagnostics.html)
@@ -363,7 +366,8 @@ Specifically, what is changed is that we replaced the `distortion_model` slot fr
 
 ```r
 names(simulation.params)
-#> [1] "distortion_model" "data2fit"         "model.summary"    "fixed.effect"     "c_i_full"         "gamma_i_full"     "lib.size"
+#> [1] "distortion_model" "data2fit"         "model.summary"    "fixed.effect"     "c_i_full"         "gamma_i_full"    
+#> [7] "lib.size"
 
 names(simulation.params.trimmed)
 #> [1] "data2fit"      "model.summary" "fixed.effect"  "c_i_full"      "gamma_i_full"  "lib.size"      "posterior"
@@ -399,7 +403,8 @@ genes2simulate = sample(rownames(sc_count), 100)       #randomly select 100 gene
 class_label_per_cell = as.character(sc_cluster[colnames(sc_count),"class_label"])     #cell type for each cell
 
 #simulate spatial transcriptomics data
-simulate_sp_count = sc2spatial(count_table = sc_count[genes2simulate,],
+simulate_sp_count = sc2spatial(gene_list = genes2simulate,
+                               cell_list = colnames(sc_count),
                                cell_cluster_conversion = class_label_per_cell,
                                relative_prop = relative_prop,
                                sample_new_levels = "old_levels",
@@ -412,12 +417,12 @@ dim(simulate_sp_count)
 #> [1] 100 550
 
 simulate_sp_count[1:5,1:5]
-#>        1772071035_H02 1772066099_C11 1772067093_F03 1772067083_D10 1772067065_A12
-#> Zfp106              0              3              1              4              2
-#> Whamm               1              2              1              1              0
-#> Galnt7              2              0              1              7              6
-#> Aspdh               0              1              0              0              0
-#> Npm3                1              4              8              0              0
+#>               1772071035_H02 1772066099_C11 1772067093_F03 1772067083_D10 1772067065_A12
+#> Nefm                       0              1              0              1              2
+#> Ap1b1                      7              1              0              0              5
+#> Mir5126                    0              1              0              0              0
+#> 1700092E19Rik              2              0              0              0              0
+#> Ppa2                      54             26              1              1             26
 ```
 
 
@@ -434,44 +439,27 @@ sessionInfo()
 #> LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1
 #> 
 #> locale:
-#>  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8   
-#>  [6] LC_MESSAGES=en_US.UTF-8    LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C            
-#> [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+#>  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+#>  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8    LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+#>  [9] LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
 #> 
 #> attached base packages:
-#> [1] parallel  stats     graphics  grDevices utils     datasets  methods   base     
+#> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#>  [1] rstan_2.21.2         StanHeaders_2.21.0-7 deming_1.4           viridis_0.6.1        viridisLite_0.4.0    ggpointdensity_0.1.0
-#>  [7] bayesplot_1.8.1      cowplot_1.1.1        dplyr_1.0.7          ggdendro_0.1.22      SeuratObject_4.0.2   Seurat_4.0.3        
-#> [13] reshape2_1.4.4       pheatmap_1.0.12      boot_1.3-28          splitTools_0.3.1     naivebayes_0.9.7     pROC_1.17.0.1       
-#> [19] caret_6.0-88         ggplot2_3.3.5        lattice_0.20-45      ranger_0.13.1        pagoda2_1.0.4        igraph_1.2.6        
-#> [25] Matrix_1.4-0         data.table_1.14.0    gpsFISH_0.0.0.9000   devtools_2.4.2       usethis_2.0.1       
+#>  [1] rstan_2.21.2         StanHeaders_2.21.0-7 deming_1.4           viridis_0.6.1        viridisLite_0.4.0   
+#>  [6] ggpointdensity_0.1.0 bayesplot_1.8.1      boot_1.3-28          ggplot2_3.3.5        gpsFISH_0.1.0       
 #> 
 #> loaded via a namespace (and not attached):
-#>   [1] utf8_1.2.2            reticulate_1.20       R.utils_2.10.1        tidyselect_1.1.1      htmlwidgets_1.5.3     grid_4.1.2           
-#>   [7] Rtsne_0.15            munsell_0.5.0         codetools_0.2-18      ica_1.0-2             future_1.21.0         miniUI_0.1.1.1       
-#>  [13] withr_2.4.2           colorspace_2.0-2      highr_0.9             knitr_1.33            stats4_4.1.2          ROCR_1.0-11          
-#>  [19] tensor_1.5            listenv_0.8.0         labeling_0.4.2        urltools_1.7.3        polyclip_1.10-0       farver_2.1.0         
-#>  [25] rprojroot_2.0.2       parallelly_1.27.0     vctrs_0.4.1           generics_0.1.0        ipred_0.9-11          xfun_0.24            
-#>  [31] R6_2.5.0              spatstat.utils_2.2-0  cachem_1.0.5          assertthat_0.2.1      promises_1.2.0.1      scales_1.1.1         
-#>  [37] nnet_7.3-16           gtable_0.3.0          globals_0.14.0        processx_3.5.2        goftest_1.2-2         drat_0.2.1           
-#>  [43] timeDate_3043.102     rlang_1.0.2           splines_4.1.2         lazyeval_0.2.2        ModelMetrics_1.2.2.2  spatstat.geom_2.4-0  
-#>  [49] brew_1.0-6            inline_0.3.19         yaml_2.2.1            abind_1.4-5           httpuv_1.6.1          tools_4.1.2          
-#>  [55] lava_1.6.9            sccore_1.0.1          ellipsis_0.3.2        spatstat.core_2.3-0   RColorBrewer_1.1-2    proxy_0.4-26         
-#>  [61] sessioninfo_1.1.1     ggridges_0.5.3        Rcpp_1.0.7            plyr_1.8.6            purrr_0.3.4           ps_1.6.0             
-#>  [67] prettyunits_1.1.1     dendsort_0.3.4        rpart_4.1-15          deldir_1.0-6          pbapply_1.4-3         zoo_1.8-9            
-#>  [73] ggrepel_0.9.1         cluster_2.1.2         fs_1.5.0              magrittr_2.0.1        RSpectra_0.16-0       scattermore_0.7      
-#>  [79] triebeard_0.3.0       lmtest_0.9-38         RANN_2.6.1            fitdistrplus_1.1-5    matrixStats_0.60.0    pkgload_1.2.1        
-#>  [85] patchwork_1.1.1       mime_0.11             evaluate_0.14         xtable_1.8-4          RMTstat_0.3           N2R_0.1.1            
-#>  [91] gridExtra_2.3         testthat_3.0.4        compiler_4.1.2        tibble_3.1.7          KernSmooth_2.23-20    V8_3.4.2             
-#>  [97] crayon_1.4.1          R.oo_1.24.0           htmltools_0.5.1.1     mgcv_1.8-38           later_1.2.0           tidyr_1.1.3          
-#> [103] RcppParallel_5.1.4    lubridate_1.7.10      DBI_1.1.1             MASS_7.3-54           cli_3.3.0             R.methodsS3_1.8.1    
-#> [109] gower_0.2.2           pkgconfig_2.0.3       plotly_4.9.4.1        spatstat.sparse_2.0-0 recipes_0.1.16        foreach_1.5.1        
-#> [115] prodlim_2019.11.13    stringr_1.4.0         callr_3.7.0           digest_0.6.27         sctransform_0.3.2     RcppAnnoy_0.0.18     
-#> [121] spatstat.data_2.1-0   rmarkdown_2.9         leiden_0.3.9          Rook_1.1-1            uwot_0.1.10           curl_4.3.2           
-#> [127] shiny_1.6.0           rjson_0.2.20          lifecycle_1.0.0       nlme_3.1-152          jsonlite_1.7.2        desc_1.3.0           
-#> [133] fansi_0.5.0           pillar_1.7.0          loo_2.4.1             fastmap_1.1.0         httr_1.4.2            pkgbuild_1.2.0       
-#> [139] survival_3.2-13       glue_1.6.2            remotes_2.4.0         png_0.1-7             iterators_1.0.13      class_7.3-19         
-#> [145] stringi_1.7.3         memoise_2.0.0         e1071_1.7-8           irlba_2.3.3           future.apply_1.7.0
+#>  [1] Rcpp_1.0.7         prettyunits_1.1.1  ps_1.6.0           assertthat_0.2.1   digest_0.6.27      utf8_1.2.2        
+#>  [7] V8_3.4.2           R6_2.5.0           plyr_1.8.6         ggridges_0.5.3     RcppZiggurat_0.1.6 stats4_4.1.2      
+#> [13] evaluate_0.14      highr_0.9          pillar_1.7.0       rlang_1.0.2        curl_4.3.2         callr_3.7.0       
+#> [19] rmarkdown_2.9      labeling_0.4.2     stringr_1.4.0      loo_2.4.1          munsell_0.5.0      compiler_4.1.2    
+#> [25] xfun_0.24          pkgconfig_2.0.3    pkgbuild_1.2.0     htmltools_0.5.1.1  tidyselect_1.1.1   tibble_3.1.7      
+#> [31] gridExtra_2.3      codetools_0.2-18   matrixStats_0.60.0 fansi_0.5.0        crayon_1.4.1       dplyr_1.0.7       
+#> [37] withr_2.4.2        grid_4.1.2         jsonlite_1.7.2     gtable_0.3.0       lifecycle_1.0.0    DBI_1.1.1         
+#> [43] magrittr_2.0.1     scales_1.1.1       Rfast_2.0.6        RcppParallel_5.1.4 cli_3.3.0          stringi_1.7.3     
+#> [49] farver_2.1.0       reshape2_1.4.4     ellipsis_0.3.2     generics_0.1.0     vctrs_0.4.1        tools_4.1.2       
+#> [55] glue_1.6.2         purrr_0.3.4        processx_3.5.2     parallel_4.1.2     yaml_2.2.1         inline_0.3.19     
+#> [61] colorspace_2.0-2   knitr_1.33
 ```

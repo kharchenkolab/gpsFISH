@@ -5,7 +5,8 @@
 \title{Simulating spatial transcriptomics data from scRNA-seq data using Bayesian modelling}
 \usage{
 simulation_ZINB(
-  count_table,
+  gene_list,
+  cell_list,
   cell_cluster_conversion,
   relative_prop,
   simulation_parameter,
@@ -14,7 +15,9 @@ simulation_ZINB(
 )
 }
 \arguments{
-\item{count_table}{A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.}
+\item{gene_list}{A numeric vector containing the location of genes we want to simulate among all genes in the scRNA-seq data.}
+
+\item{cell_list}{A numeric vector containing the location of cells we want to simulate among all cells in the scRNA-seq data.}
 
 \item{cell_cluster_conversion}{A character vector containing the cell type of each cell.}
 

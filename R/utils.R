@@ -652,9 +652,9 @@ popDiv = function(x) {
 
 #' Subsample scRNA-seq data
 #'
-#' @description subsample_sc takes scRNA-seq data as input and subsample it by selecting a subset of cells.
+#' @description subsample_sc takes cell name of cells in a scRNA-seq data as input and subsample it by selecting a subset of cells.
 #'
-#' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.
+#' @param cell_list A character vector containing the cell names to subsample from.
 #' @param cell_cluster_conversion A data frame with each row representing information of one cell.
 #' First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
 #' Only needed if \code{sampling_type} is "Subsampling_by_cluster".
@@ -666,7 +666,9 @@ popDiv = function(x) {
 #' Default is "Subsampling_by_cluster".
 #' @param nCV Number of cross validation to perform on the subsampled data. This is to ensure that we have enough cells for cross validation. Default is 1. Only needed if \code{sampling_type} is "Subsampling_by_cluster".
 #'
-#' @return A subsampled matrix
+#' @return A list with elements:
+#'   \item{cell_loc}{Location of selected cells in \code{cell_list} after subsampling.}
+#'   \item{cell_class}{Cell type of selected cells after subsampling.}
 #' @export
 #'
 #' @examples
@@ -677,33 +679,35 @@ popDiv = function(x) {
 #' table(sc_cluster[colnames(sc_count), "class_label"])
 #'
 #' #subsample by cell type
-#' subsample_sc_count = subsample_sc(count_table = sc_count,
-#'                                   cell_cluster_conversion = sc_cluster,
-#'                                   rate = 1,
-#'                                   cluster_size_max = 30,
-#'                                   cluster_size_min = 5,
-#'                                   sampling_type = "Subsampling_by_cluster",
-#'                                   nCV = 5)
+#' subsample_sc_info = subsample_sc(cell_list = colnames(sc_count),
+#'                                  cell_cluster_conversion = sc_cluster,
+#'                                  rate = 1,
+#'                                  cluster_size_max = 30,
+#'                                  cluster_size_min = 5,
+#'                                  sampling_type = "Subsampling_by_cluster",
+#'                                  nCV = 5)
 #'
 #' #number of cells per cell type after subsample
-#' table(sc_cluster[colnames(subsample_sc_count), "class_label"])
+#' table(subsample_sc_info$cell_class)
 #'
 #' #subsample cells from all cell types together
 #' dim(sc_count)
-#' subsample_sc_count = subsample_sc(count_table = sc_count,
+#' subsample_sc_info = subsample_sc(cell_list = colnames(sc_count),
 #'                                   rate = 0.5,
+#'                                   cell_cluster_conversion = sc_cluster,
 #'                                   sampling_type = "Subsampling")
-#' dim(subsample_sc_count)
-subsample_sc=function(count_table, cell_cluster_conversion = NULL,
+#' length(subsample_sc_info$cell_loc)
+#' table(subsample_sc_info$cell_class)
+subsample_sc=function(cell_list, cell_cluster_conversion,
                       rate = 1, cluster_size_max = 1000, cluster_size_min = 1,
                       sampling_type = "Subsampling_by_cluster",
                       nCV = 1){
   if (sampling_type=="Subsampling"){
-    result = subsampling_all(count_table = count_table, rate = rate)
+    result = subsampling_all(cell_list = cell_list, rate = rate, cell_cluster_conversion = cell_cluster_conversion)
     return(result)
   }
   if (sampling_type=="Subsampling_by_cluster"){
-    result = subsampling_by_cluster(count_table = count_table, cell_cluster_conversion = cell_cluster_conversion, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, nCV = nCV)
+    result = subsampling_by_cluster(cell_list = cell_list, cell_cluster_conversion = cell_cluster_conversion, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, nCV = nCV)
     return(result)
   }
 }
@@ -711,30 +715,43 @@ subsample_sc=function(count_table, cell_cluster_conversion = NULL,
 
 #' Subsample scRNA-seq data by mixing cells from all cell types
 #'
-#' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.
+#' @param cell_list A character vector containing the cell names to subsample from.
 #' @param rate A value between 0 and 1 specifying the proportion of cells we want to keep for each cell type during subsampling. 0.8 means we keep 80% of cells for each cell type. Default is 1.
+#' @param cell_cluster_conversion A data frame with each row representing information of one cell.
 #'
-#' @return A subsampled matrix
+#' @return A list with elements:
+#'   \item{cell_loc}{Location of selected cells in \code{cell_list} after subsampling.}
+#'   \item{cell_class}{Cell type of selected cells after subsampling.}
 #' @export
 #'
 #' @examples
 #' data(sc_count)
+#' data(sc_cluster)
+#'
 #' dim(sc_count)
-#' subsample_sc_count = subsampling_all(sc_count, 0.5)
-#' dim(subsample_sc_count)
-subsampling_all=function(count_table, rate = 1){        #subsampling from all cells
+#'
+#' subsampled_sc_info = subsampling_all(cell_list = colnames(sc_count),
+#'                                      rate = 0.5,
+#'                                      cell_cluster_conversion = sc_cluster)
+#'
+#' length(subsampled_sc_info$cell_loc)
+#' table(subsampled_sc_info$cell_class)
+subsampling_all=function(cell_list, rate = 1, cell_cluster_conversion){        #subsampling from all cells
   if (rate > 1 || rate <0) stop("'rate' must be between 0 and 1")
 
-  num.cells = base::round(dim(count_table)[2]*rate)
-  selected.cells = base::sample(seq(1:dim(count_table)[2]), num.cells, replace = FALSE)
-  simulated_count_table = count_table[,selected.cells]
-  return(simulated_count_table)
+  num.all.cells = length(cell_list)
+  num.cells = base::round(num.all.cells*rate)
+  selected.cells = base::sample(seq(1:num.all.cells), num.cells, replace = FALSE)
+
+  selected.cells.type = cell_cluster_conversion[cell_list[selected.cells],"class_label"]
+  return(list(cell_loc = selected.cells,
+              cell_class = selected.cells.type))
 }
 
 
 #' Subsample scRNA-seq data by cell type
 #'
-#' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.
+#' @param cell_list A character vector containing the cell names to subsample from.
 #' @param cell_cluster_conversion A data frame with each row representing information of one cell.
 #' First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
 #' @param rate A value between 0 and 1 specifying the proportion of cells we want to keep for each cell type during subsampling. 0.8 means we keep 80% of cells for each cell type. Default is 1.
@@ -742,23 +759,30 @@ subsampling_all=function(count_table, rate = 1){        #subsampling from all ce
 #' @param cluster_size_min Minimum number of cells to keep for each cell type during subsampling. Default is 1.
 #' @param nCV Number of cross validation to perform on the subsampled data. This is to ensure that we have enough cells for cross validation. Default is 1.
 #'
-#' @return A subsampled matrix
+#' @return A list with elements:
+#'   \item{cell_loc}{Location of selected cells in \code{cell_list} after subsampling.}
+#'   \item{cell_class}{Cell type of selected cells after subsampling.}
 #' @export
 #'
-subsampling_by_cluster=function(count_table, cell_cluster_conversion, rate = 1, cluster_size_max = 1000, cluster_size_min = 1, nCV = 1){      #subsampling by cluster (this perserves the same number of cell clusters)
-  if (is.null(rownames(count_table))) stop("'count_table' should have gene name as row name")
-  if (is.null(colnames(count_table))) stop("'count_table' should have cell name as column name")
-
+subsampling_by_cluster=function(cell_list, cell_cluster_conversion, rate = 1, cluster_size_max = 1000, cluster_size_min = 1, nCV = 1){      #subsampling by cluster (this perserves the same number of cell clusters)
   if (!identical(colnames(cell_cluster_conversion), c("cell_name", "class_label"))) stop("'cell_cluster_conversion' should have column name as 'cell_name' and 'class_label'")
 
-  if (length(base::setdiff(colnames(count_table), rownames(cell_cluster_conversion)))>0) stop("There are cells in 'count_table' that are not in 'cell_cluster_conversion'")
+  if (length(base::setdiff(cell_list, rownames(cell_cluster_conversion)))>0) stop("There are cells in 'count_table' that are not in 'cell_cluster_conversion'")
 
   if (rate > 1 || rate <0) stop("'rate' should between 0 and 1")
 
-  unique_cluster_label = unique(cell_cluster_conversion$class_label)              #This works when the cells in cell_cluster_conversion are the same set of cells in count_table
-  selected.cells = unlist(lapply(unique_cluster_label, subsample, cell_cluster_conversion = cell_cluster_conversion, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, nCV = nCV))
-  simulated_count_table = count_table[, selected.cells]
-  return(simulated_count_table)
+  if (length(cell_list) != dim(cell_cluster_conversion)[1]){           #if the cell pool (cell_list) is not the same with cells in cell_cluster_conversion
+    cell_cluster_conversion = cell_cluster_conversion[cell_list, ]     #this ensures that the cell location in cell_cluster_conversion is the same with cell location in cell_list
+  }
+
+  unique_cluster_label = unique(cell_cluster_conversion$class_label)
+  selected.cells.info = lapply(unique_cluster_label, subsample, cell_cluster_conversion = cell_cluster_conversion, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, nCV = nCV)
+  selected.cells = unlist(lapply(1:length(selected.cells.info), function(x) selected.cells.info[[x]]$selected_cell_list))
+  selected.cells.type = unlist(lapply(1:length(selected.cells.info), function(x) selected.cells.info[[x]]$selected_cell_type))
+  #selected.cells.type = cell_cluster_conversion[cell_list[selected.cells],"class_label"]
+
+  return(list(cell_loc = selected.cells,
+              cell_class = selected.cells.type))
 }
 
 
@@ -766,13 +790,16 @@ subsampling_by_cluster=function(count_table, cell_cluster_conversion, rate = 1, 
 #'
 #' @param cell_cluster_conversion A data frame with each row representing information of one cell.
 #' First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
+#' Subsampling is performed on all cells in the data frame. Therefore, make sure the row name of \code{cell_cluster_conversion} is the same with \code{cell_list}.
 #' @param class_label A character specifying the cell type
 #' @param rate A value between 0 and 1 specifying the proportion of cells we want to keep for each cell type during subsampling. 0.8 means we keep 80% of cells for each cell type. Default is 1.
 #' @param cluster_size_max Maximum number of cells to keep for each cell type during subsampling. Default is 1000.
 #' @param cluster_size_min Minimum number of cells to keep for each cell type during subsampling. Default is 1.
 #' @param nCV Number of cross validation to perform on the subsampled data. This is to ensure that we have enough cells for cross validation. Default is 1.
 #'
-#' @return A subsampled matrix
+#' @return A list with elements:
+#'   \item{selected_cell_list}{Location of selected cells in \code{cell_cluster_conversion} after subsampling.}
+#'   \item{selected_cell_type}{Cell type of selected cells after subsampling.}
 #' @export
 #'
 subsample=function(cell_cluster_conversion, class_label, rate = 1, cluster_size_max = 1000, cluster_size_min = 1, nCV = 1){
@@ -789,7 +816,7 @@ subsample=function(cell_cluster_conversion, class_label, rate = 1, cluster_size_
 
   #list of cells in the current cluster
   #original_cell_list=as.character(rownames(cell_cluster_conversion)[which(cell_cluster_conversion$class_label == class_label)])       #This works when the cells in cell_cluster_conversion are the same set of cells in count_table
-  original_cell_list=which(cell_cluster_conversion$class_label == class_label)
+  original_cell_list = which(cell_cluster_conversion$class_label == class_label)
   #cellname=colnames(count_table)
   #original_cell_list=as.character(cellname[which(cell_cluster_conversion[cellname,"class_label"] == class_label)])
 
@@ -827,7 +854,10 @@ subsample=function(cell_cluster_conversion, class_label, rate = 1, cluster_size_
       selected_cell_list=original_cell_list[base::sample(seq(1:n.all.cell), cluster_size_min, replace = FALSE)]    #we sample without replacement
     }
   }
-  return(selected_cell_list)
+
+  selected_cell_type = rep(class_label, length(selected_cell_list))
+  return(list(selected_cell_list = selected_cell_list,
+              selected_cell_type = selected_cell_type))
 }
 
 
@@ -880,7 +910,7 @@ zinb_generator=function(n, size, pie, mu){
   #for the rest, randomly generate them from a negative binomial distribution (second component of ZINB)
   bool = counts==1
   n.nb=sum(bool)
-  counts[which(bool)]=stats::rnbinom(n=n.nb, mu = mu[which(bool)], size = size[which(bool)])
+  counts[bool]=stats::rnbinom(n=n.nb, mu = mu[bool], size = size[bool])
   return(counts)
 }
 
@@ -1130,3 +1160,4 @@ Seurat_clustering=function(count_table, cell_cluster_conversion){
   p = Seurat::DimPlot(data, reduction = "umap", group.by="new.ident", label=TRUE) + Seurat::NoLegend()
   return(p)
 }
+

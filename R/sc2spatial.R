@@ -1,12 +1,14 @@
 #' Simulation spatial transcriptomics data from scRNA-seq data
 #'
-#' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.
+#' @param gene_list A numeric vector containing the location of genes we want to simulate among all genes in the scRNA-seq data.
+#' @param cell_list A numeric vector containing the location of cells we want to simulate among all cells in the scRNA-seq data.
 #' @param cell_cluster_conversion A character vector containing the cell type of each cell.
 #' @param relative_prop A list with two elements:
 #'   * "cluster.average": A matrix containing the relative expression of each gene in each cell type with gene name as row name and cell type name as column name.
 #'   The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.
 #'   * "cell.level": A matrix containing the relative expression of each gene in each cell with gene name as row name and cell name as column name.
 #'   The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.
+#'   Both matrices are derived from the scRNA-seq data and should have the same genes and cells with the scRNA-seq data.
 #' @param sample_new_levels A character specifying how simulation is performed for genes we have observed in the data used to train the Bayesian model.
 #' Specifically, during the training of the Bayesian model, we have estimations of the platform effect for genes in the training data.
 #' When we simulate spatial transcriptomics data for genes we have already seen in the training data,
@@ -16,7 +18,7 @@
 #' If TRUE, then value in \code{relative_prop$cluster.average} is used. And for each gene, cells from the same cell type will have the same value.
 #' If FALSE, then we use the relative expression per cell as input, i.e., \code{relative_prop$cell.level}.
 #' Default is FALSE.
-#' @param simulation_type A character specifying whether simulation is performed. There are two options. "No_simulation" means no simulation. "Simulation" means we do simulation.
+#' @param simulation_type A character specifying whether simulation is performed. Default is "Simulation", meaning we do simulation.
 #' @param simulation_parameter A simulation model returned by simulation_training_ZINB_trim.
 #' @param simulation_model A character specifying the type of simulation model. Default is the Bayesian model ("ZINB").
 #'
@@ -43,7 +45,8 @@
 #' #simulation spatial transcriptomics data
 #' genes2simulate = sample(rownames(sc_count), 100)
 #' class_label_per_cell = as.character(sc_cluster[colnames(sc_count),"class_label"])
-#' simulate_sp_count = sc2spatial(count_table = sc_count[genes2simulate,],
+#' simulate_sp_count = sc2spatial(gene_list = genes2simulate,
+#'                                cell_list = colnames(sc_count),
 #'                                cell_cluster_conversion = class_label_per_cell,
 #'                                relative_prop = relative_prop,
 #'                                sample_new_levels = "old_levels",
@@ -51,29 +54,26 @@
 #'                                simulation_type = "Simulation",
 #'                                simulation_parameter = simulation_params,
 #'                                simulation_model = "ZINB")
-sc2spatial=function(count_table,
+sc2spatial=function(gene_list, cell_list,
                     cell_cluster_conversion = NULL,
                     relative_prop = NULL,
                     sample_new_levels = NULL,
                     use_average_cluster_profiles = FALSE,
-                    simulation_type,
+                    simulation_type = "Simulation",
                     simulation_parameter = NULL,
                     simulation_model = "ZINB"){
-  if (simulation_type=="No_simulation"){
-    result = count_table
-    return(result)
-  }
+  # if (simulation_type=="No_simulation"){
+  #   result = count_table
+  #   return(result)
+  # }
   if (simulation_type=="Simulation"){
-    if (is.null(rownames(count_table))) stop("'count_table' should have gene name as row name")
-    if (is.null(colnames(count_table))) stop("'count_table' should have cell name as column name")
-
-    if (dim(count_table)[2] != length(cell_cluster_conversion)) stop("Length of 'cell_cluster_conversion' should equal to the number of columns in 'count_table'")
+    if (length(cell_list) != length(cell_cluster_conversion)) stop("Length of 'cell_cluster_conversion' should equal to the length of 'cell_list'")
 
     # if (simulation_model=="Naive_simulation_with_probe_failure" || simulation_model=="Naive_simulation_without_probe_failure"){
     #   result=simulation_naive(count_table = count_table, simulation_parameter = simulation_parameter, relative_prop = relative_prop)
     # }
     if (simulation_model=="ZINB"){
-      result=simulation_ZINB(count_table = count_table, cell_cluster_conversion = cell_cluster_conversion, relative_prop = relative_prop, simulation_parameter = simulation_parameter, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)
+      result=simulation_ZINB(gene_list = gene_list, cell_list = cell_list, cell_cluster_conversion = cell_cluster_conversion, relative_prop = relative_prop, simulation_parameter = simulation_parameter, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)
     }
     return(result)
   }
@@ -83,7 +83,8 @@ sc2spatial=function(count_table,
 
 #' Simulating spatial transcriptomics data from scRNA-seq data using Bayesian modelling
 #'
-#' @param count_table A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.
+#' @param gene_list A numeric vector containing the location of genes we want to simulate among all genes in the scRNA-seq data.
+#' @param cell_list A numeric vector containing the location of cells we want to simulate among all cells in the scRNA-seq data.
 #' @param cell_cluster_conversion A character vector containing the cell type of each cell.
 #' @param relative_prop A list with two elements:
 #'   * "cluster.average": A matrix containing the relative expression of each gene in each cell type with gene name as row name and cell type name as column name.
@@ -104,16 +105,14 @@ sc2spatial=function(count_table,
 #' @return A matrix containing the simulated spatial transcriptomics data. Rows and columns are the same with \code{count_table}.
 #' @export
 #'
-simulation_ZINB=function(count_table, cell_cluster_conversion, relative_prop, simulation_parameter, sample_new_levels, use_average_cluster_profiles = FALSE){
-  gene_list=rownames(count_table)
-  cell_list=colnames(count_table)
+simulation_ZINB=function(gene_list, cell_list, cell_cluster_conversion, relative_prop, simulation_parameter, sample_new_levels, use_average_cluster_profiles = FALSE){
   num_gene=length(gene_list)
   num_cell=length(cell_list)
 
   #get relative proportion
   if (use_average_cluster_profiles){                                         #for the same gene, all cells in the same cell type will have the same sc.prop
     sc_prop = relative_prop$cluster.average[gene_list, cell_cluster_conversion]
-    colnames(sc_prop) = cell_list
+    colnames(sc_prop) = colnames(relative_prop$cell.level)[cell_list]
   }else{
     sc_prop = relative_prop$cell.level[gene_list, cell_list]
   }
@@ -136,8 +135,8 @@ simulation_ZINB=function(count_table, cell_cluster_conversion, relative_prop, si
 #' When we simulate spatial transcriptomics data for genes we have already seen in the training data,
 #' we can use their estimated platform effect \eqn{\gamma_i} and \eqn{c_i} ("old_levels"), or we can randomly sample \eqn{\gamma_i} and \eqn{c_i} from their posterior distribution ("random").
 #' For genes not in the training data, we will randomly sample \eqn{\gamma_i} and \eqn{c_i} from their posterior distribution since we don't have their estimation.
-#' @param gene_list A character vector of gene names.
-#' @param cell_list A character vector of cell names.
+#' @param gene_list A character vector containing the name of genes we want to simulate.
+#' @param cell_list A character vector containing the name of cells we want to simulate.
 #' @param num_gene Number of genes.
 #' @param num_cell Number of cells.
 #'
@@ -157,6 +156,8 @@ simulation_ZINB=function(count_table, cell_cluster_conversion, relative_prop, si
 #'
 ZINB_predict=function(sc_prop, simulation_parameter, sample_new_levels,
                       gene_list, cell_list, num_gene, num_cell){          #get estimated.random.intercept is the slowest step (profiling doesn't show this though)
+  gene_list = rownames(sc_prop)
+
   posterior = simulation_parameter$posterior
   lib.size = simulation_parameter$lib.size
 
@@ -200,16 +201,17 @@ ZINB_predict=function(sc_prop, simulation_parameter, sample_new_levels,
   }
 
   #calculate lambda
-  lambda = boot::inv.logit(rep_col(gamma_i_gene, dim(sc_prop)[2]) * sqrt(sc_prop) + rep_col(c_i_gene, dim(sc_prop)[2]))          #for model 22.6
+  lambda = boot::inv.logit(gamma_i_gene * sqrt(sc_prop) + c_i_gene)          #for model 22.6
 
   #get theta for each gene and each cell
   shape = exp(beta.global + lambda)
 
   #random sample new cell size for each new cell from cell size distribution
-  new.cell.size = base::sample(log(lib.size), num_cell, replace = T)                  #we do log transform here to save time
+  new.cell.size = log(base::sample(lib.size, num_cell, replace = T))                  #we do log transform here to save time
 
   #calculate mu for each gene and each cell
-  mu = exp(alpha.global + log(lambda) + rep_row(new.cell.size, dim(sc_prop)[1]))
+  mu = exp(alpha.global + log(lambda) + Rfast::rep_row(new.cell.size, dim(sc_prop)[1]))
+  # mu = exp(alpha.global + log(lambda) + rep_row(new.cell.size, dim(sc_prop)[1]))
 
   #make predictions
   simu.count = suppressWarnings(zinb_generator(n=num_gene*num_cell,

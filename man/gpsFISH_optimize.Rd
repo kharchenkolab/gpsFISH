@@ -46,7 +46,7 @@ Additional arguments can be passed to \code{OF} through \code{\dots}. See \link[
 \item{mutfrac}{The average fraction of offspring that will experience at least one mutation. Only used if mutprob is not supplied.}
 
 \item{initpop}{A numeric matrix specifying the initial population with each row representing one gene panel and each column representing one gene in a gene panel.
-The genes are encoded by their location in the column name of \code{full_count_table}.
+The genes are encoded by their location in \code{gene_list}.
 If not provided (default is NULL), it will be randomly initialized from all the candidate genes.
 The final populations from one gene panel selection can be passed as the initial population of the next selection.
 Possibly useful if using this function in an adaptive, iterative, or parallel scheme.}
@@ -59,7 +59,7 @@ Otherwise nothing is displayed. Default is zero (no display).}
 
 \item{save.intermediate}{A logical value specifying whether intermediate populations are outputted to the current working directory. Default is FALSE.}
 
-\item{gene2include.id}{Optional. A numeric vector specifying the location of genes in the column name of \code{full_count_table} that must be included in each panel of the population. Default is NULL.}
+\item{gene2include.id}{Optional. A numeric vector specifying the location of genes in \code{gene_list} that must be included in each panel of the population. Default is NULL.}
 
 \item{gene.weight}{Optional. A data frame specifying the weight for each gene. Default is NULL.
 Each row is a gene. The first column contains the gene name. The second column contains the gene weight.

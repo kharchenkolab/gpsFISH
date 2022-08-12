@@ -17,7 +17,7 @@
 #' @param mutprob Mutation probability of each gene in a gene panel. This probability can be set indirectly through \code{mutfrac}. Default is 0.01.
 #' @param mutfrac The average fraction of offspring that will experience at least one mutation. Only used if mutprob is not supplied.
 #' @param initpop A numeric matrix specifying the initial population with each row representing one gene panel and each column representing one gene in a gene panel.
-#' The genes are encoded by their location in the column name of \code{full_count_table}.
+#' The genes are encoded by their location in \code{gene_list}.
 #' If not provided (default is NULL), it will be randomly initialized from all the candidate genes.
 #' The final populations from one gene panel selection can be passed as the initial population of the next selection.
 #' Possibly useful if using this function in an adaptive, iterative, or parallel scheme.
@@ -26,7 +26,7 @@
 #' Otherwise nothing is displayed. Default is zero (no display).
 #' @param cluster The number of cores to use, i.e. at most how many child processes will be run simultaneously. Must be at least one, and parallelization requires at least two cores.
 #' @param save.intermediate A logical value specifying whether intermediate populations are outputted to the current working directory. Default is FALSE.
-#' @param gene2include.id Optional. A numeric vector specifying the location of genes in the column name of \code{full_count_table} that must be included in each panel of the population. Default is NULL.
+#' @param gene2include.id Optional. A numeric vector specifying the location of genes in \code{gene_list} that must be included in each panel of the population. Default is NULL.
 #' @param gene.weight Optional. A data frame specifying the weight for each gene. Default is NULL.
 #' Each row is a gene. The first column contains the gene name. The second column contains the gene weight.
 #' Row name of the data frame is gene name.
@@ -213,7 +213,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
   ##############
   #for test run#
   ##############
-  # getfitness <- function(P, full_count_table, cell_cluster_conversion, nCV, rate, cluster_size_max, cluster_size_min, two_step_sampling_type, metric, method, simulation_parameter, simulation_model, weight_penalty, relative_prop, sample_new_levels, use_average_cluster_profiles) {         ###modified
+  # getfitness <- function(P, gene_list, cell_list, cell_cluster_conversion, nCV, rate, cluster_size_max, cluster_size_min, two_step_sampling_type, metric, method, simulation_parameter, simulation_model, weight_penalty, relative_prop, sample_new_levels, use_average_cluster_profiles) {         ###modified
   #  f <- vector(mode = "numeric", length = popsize)
   #  cfm <- vector(mode = "list", length = popsize)
   #  norm_cfm <- vector(mode = "list", length = popsize)
@@ -222,7 +222,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
   #  AUC_by_class <- vector(mode = "list", length = popsize)
   #  variable_importance <- vector(mode = "list", length = popsize)      #variable importance for each chromosome
   #  for (i in 1:popsize){
-  #    fitness_result <- OF(P[i, ], full_count_table = full_count_table, cell_cluster_conversion = cell_cluster_conversion, nCV = nCV, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, two_step_sampling_type = two_step_sampling_type, metric = metric, method = method, simulation_parameter = simulation_parameter, simulation_model = simulation_model, weight_penalty = weight_penalty, relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)   ###modified
+  #    fitness_result <- OF(P[i, ], gene_list = gene_list, cell_list = cell_list, cell_cluster_conversion = cell_cluster_conversion, nCV = nCV, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, two_step_sampling_type = two_step_sampling_type, metric = metric, method = method, simulation_parameter = simulation_parameter, simulation_model = simulation_model, weight_penalty = weight_penalty, relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)   ###modified
   #    f[i] <- fitness_result$fitness_value
   #    cfm[[i]] <- fitness_result$confusionMatrix
   #    norm_cfm[[i]] <- fitness_result$norm.confusionMatrix
@@ -300,7 +300,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
     ##############
     #for test run#
     ##############
-    #pop.fitness = getfitness(pop, full_count_table = full_count_table, cell_cluster_conversion = sc_cluster, nCV = nCV, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, two_step_sampling_type=two_step_sampling_type, metric=metric, method = method, simulation_parameter=simulation_parameter, simulation_model=simulation_model, weight_penalty=weight_penalty, relative_prop=relative_prop, sample_new_levels=sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)    ###modified
+    #pop.fitness = getfitness(pop, gene_list = gene_list, cell_list = cell_list, cell_cluster_conversion = sc_cluster, nCV = nCV, rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, two_step_sampling_type=two_step_sampling_type, metric=metric, method = method, simulation_parameter=simulation_parameter, simulation_model=simulation_model, weight_penalty=weight_penalty, relative_prop=relative_prop, sample_new_levels=sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)    ###modified
 
     fitness.old = pop.fitness$f
 
@@ -325,7 +325,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
   ###output information of the current generation###
   if (verbose > 0) {
     base::cat("Initial population best OF value = ", old$obj[1],
-        ". Population diversity = ",  diversity[1], "\n")
+              ". Population diversity = ",  diversity[1], "\n")
   }
 
   #####################
@@ -335,7 +335,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
     ###generate offspring based on the performance on the initial population###
     ###Selection###
     Tourneys[, ] = t(replicate(popsize, sample(1:popsize,
-                                                2*tourneysize)))
+                                               2*tourneysize)))
     Tourneys1 = Tourneys[, 1:tourneysize]
     Tourneys2 = Tourneys[, (tourneysize + 1): (2*tourneysize)]
 
@@ -402,7 +402,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
 
     ###Mutation###
     chosen = matrix(as.logical(stats::rbinom(popsize * k, 1, mutprob)),           #randonly pick genes in each solution to mutate based on the mutation probability
-                     nrow = popsize)
+                    nrow = popsize)
     nchosen = apply(chosen, 1, sum)                                        #total number of genes to mutate for each solution
 
     for (i in 1:popsize) {                                                  #for each solution
@@ -627,7 +627,8 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
 #' Fitness function for evaluating the fitness of each gene panel
 #'
 #' @param string A numeric vector containing the gene panel.
-#' @param full_count_table A data frame containing the expression level of each gene in each cell with gene name as row name and cell name as column name.
+#' @param gene_list A character vector containing the gene names of all genes for gene panel selection.
+#' @param cell_list A character vector containing the cell names of all cells for gene panel selection.
 #' @param cell_cluster_conversion A data frame with each row representing information of one cell.
 #' First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.
 #' @param nCV Number of cross validation.
@@ -641,6 +642,7 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
 #' Default is "Accuracy", which is the overall accuracy of classification.
 #' The other options is "Kappa", which is the Kappa statistics.
 #' @param method A character specifying the classification method to use. Default is naive Bayes ("NaiveBayes"). The other option is random forest ("RandomForest").
+#' @param RF_num_threads A numeric value specifying the number of threads for random forest. Default is 1.
 #' @param weight_penalty Optional. A weighted penalty matrix specifying the partial credit and extra penalty for correct and incorrect classifications between pairs of cell types.
 #' It should be a square matrix with cell types as both row and column name. Default is NULL.
 #' @param simulation_parameter A simulation model returned by simulation_training_ZINB_trim.
@@ -669,17 +671,15 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
 #'   \item{AUC_by_class}{Average AUC per cell type of the current gene panel over cross validations.}
 #' @export
 #'
-fitness=function(string, full_count_table, cell_cluster_conversion,
-                 nCV, rate = 1, cluster_size_max = 1000, cluster_size_min = 1, two_step_sampling_type, metric = "Accuracy", method = "NaiveBayes", weight_penalty = NULL,
+fitness=function(string, gene_list, cell_list, cell_cluster_conversion,
+                 nCV, rate = 1, cluster_size_max = 1000, cluster_size_min = 1, two_step_sampling_type, metric = "Accuracy",
+                 method = "NaiveBayes", RF_num_threads = 1, weight_penalty = NULL,
                  simulation_parameter, simulation_model = "ZINB", relative_prop = NULL, sample_new_levels = NULL, use_average_cluster_profiles = FALSE){      #this function is faster than fitness_default_cv
-  if (is.null(rownames(full_count_table))) stop("'full_count_table' should have gene name as column name")
-  if (is.null(colnames(full_count_table))) stop("'full_count_table' should have cell name as row name")
-
   if (!identical(colnames(cell_cluster_conversion), c("cell_name", "class_label"))) stop("'cell_cluster_conversion' should have column name as 'cell_name' and 'class_label'")
 
   if (!identical(names(relative_prop), c("cluster.average", "cell.level"))) stop("'relative_prop' should have column name as 'cluster.average' and 'cell.level'")
 
-  if (!identical(rownames(full_count_table), rownames(cell_cluster_conversion))) stop("'full_count_table' should have the same row name with 'cell_cluster_conversion'")
+  if (!identical(cell_list, rownames(cell_cluster_conversion))) stop("'cell_list' should have the same row name with 'cell_cluster_conversion'")
 
   if (length(base::setdiff(metric, c("Accuracy", "Kappa")))>0) stop("'metric' should be one of 'Accuracy' or 'Kappa'")
 
@@ -689,14 +689,16 @@ fitness=function(string, full_count_table, cell_cluster_conversion,
 
   if (rate > 1 || rate <0) stop("'rate' must be between 0 and 1")
 
-  sub_count_table = full_count_table[, string]                            #column subset of a data frame is the fastest. Then is row subset of a data table. The third is row subset of a matrix. Column subset of a matrix is the same. Row subset of a data frame is the worst.
-  sub_count_table = t(sub_count_table)
+  candidate_gene_panel_loc = string
 
   #we first do subsampling
-  subsub_count_table = subsample_sc(count_table = sub_count_table, cell_cluster_conversion = cell_cluster_conversion,
-                                    rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, sampling_type = two_step_sampling_type[1], nCV = nCV)
+  subsample_result = subsample_sc(cell_list = cell_list, cell_cluster_conversion = cell_cluster_conversion,
+                                  rate = rate, cluster_size_max = cluster_size_max, cluster_size_min = cluster_size_min, sampling_type = two_step_sampling_type[1], nCV = nCV)
 
-  class_label_per_cell = as.character(cell_cluster_conversion[colnames(subsub_count_table),"class_label"])
+  #get subsampled cells (location) and corrersponding cell type
+  subsample_cell_loc = subsample_result$cell_loc
+  class_label_per_cell = subsample_result$cell_class
+  #class_label_per_cell = as.character(cell_cluster_conversion[colnames(subsub_count_table),"class_label"])
 
   #create CV
   #fold_per_cell = createFolds(factor(class_label_per_cell), k = nCV, list = FALSE)
@@ -705,8 +707,12 @@ fitness=function(string, full_count_table, cell_cluster_conversion,
 
   #run classification for each cross validation
   result = lapply(cvround, classifier_per_cv,
-                  cvlabel = cvlabel, data4cv = subsub_count_table, class_label_per_cell = class_label_per_cell,
-                  metric = metric, method = method,
+                  cvlabel = cvlabel,
+                  # data4cv = subsub_count_table,
+                  gene_list = candidate_gene_panel_loc,
+                  cell_list = subsample_cell_loc,
+                  class_label_per_cell = class_label_per_cell,
+                  metric = metric, method = method, RF_num_threads = RF_num_threads,
                   relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles,
                   simulation_type = two_step_sampling_type[2], simulation_parameter = simulation_parameter, simulation_model = simulation_model,
                   cell_cluster_conversion = cell_cluster_conversion, weight_penalty = weight_penalty)       #fit random forest for each round of cross validation
@@ -737,12 +743,14 @@ fitness=function(string, full_count_table, cell_cluster_conversion,
 #'
 #' @param current_round A character vector specifying the name of the current cross validation. Format should be "Fold1", "Fold2", etc.
 #' @param cvlabel A list with row indices per fold returned by create_folds.
-#' @param data4cv A numeric matrix containing the expression per gene per cell with gene name as row name and cell name as column name.
+#' @param gene_list A numeric vector containing the location of genes in the current gene panel among all genes for gene panel selection.
+#' @param cell_list A numeric vector containing the location of cells after subsampling among all cells for gene panel selection.
 #' @param class_label_per_cell A character vector specifying the cell type of each cell.
 #' @param metric A character specifying the metric to use for evaluating the gene panel's classification performance.
 #' Default is "Accuracy", which is the overall accuracy of classification.
 #' The other options is "Kappa", which is the Kappa statistics.
 #' @param method A character specifying the classification method to use. Default is naive Bayes ("NaiveBayes"). The other option is random forest ("RandomForest").
+#' @param RF_num_threads A numeric value specifying the number of threads for random forest.
 #' @param relative_prop A list with two elements:
 #'   * "cluster.average": A matrix containing the relative expression of each gene in each cell type with gene name as row name and cell type name as column name.
 #'   The denominator for relative expression calculation needs to be all genes in the transcriptome before filtering out lowly expressed genes.
@@ -773,40 +781,49 @@ fitness=function(string, full_count_table, cell_cluster_conversion,
 #'   \item{AUC.byclass}{AUC per cell type of the current gene panel in the current cross validation.}
 #' @export
 #'
-classifier_per_cv = function(current_round, cvlabel, data4cv, class_label_per_cell,
-                             metric = "Accuracy", method = "NaiveBayes",
+classifier_per_cv = function(current_round, cvlabel, gene_list, cell_list, class_label_per_cell,
+                             metric = "Accuracy", method = "NaiveBayes", RF_num_threads = 1,
                              relative_prop=NULL, sample_new_levels = NULL, use_average_cluster_profiles = FALSE,
                              simulation_type, simulation_parameter, simulation_model = "ZINB",
                              cell_cluster_conversion, weight_penalty = NULL){
-  #simulate spatial data for data4cv
-  spatial_sc_count = sc2spatial(count_table = data4cv, cell_cluster_conversion = class_label_per_cell, simulation_type = simulation_type, simulation_parameter = simulation_parameter, simulation_model = simulation_model, relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)
-  cell.zero.count = which(base::colSums(spatial_sc_count)==0)          #we may have cells with 0 count
+  #simulate spatial data
+  spatial_sc_count = sc2spatial(gene_list = gene_list, cell_list = cell_list, cell_cluster_conversion = class_label_per_cell, simulation_type = simulation_type, simulation_parameter = simulation_parameter, simulation_model = simulation_model, relative_prop = relative_prop, sample_new_levels = sample_new_levels, use_average_cluster_profiles = use_average_cluster_profiles)
+  cell_size = base::colSums(spatial_sc_count)
+  #spatial_sc_count_t = t(spatial_sc_count)
+
+  cell.zero.count = which(cell_size==0)          #we may have cells with 0 count
 
   #normalize spatial data
-  spatial_sc_count = (t(t(spatial_sc_count)/base::colSums(spatial_sc_count)))*mean(base::colSums(spatial_sc_count))
+  spatial_sc_count = (t(t(spatial_sc_count)/cell_size))*mean(cell_size)
   spatial_sc_count = log10(spatial_sc_count + 1)
 
-  #prepare data for classification
-  data2classify=data.frame(t(spatial_sc_count), check.names=T)      #check.names here needs to be true since there are special characters in the gene name and we need to fix them before feeding to random forest
-  data2classify$class_label=class_label_per_cell
-  data2classify$class_label=as.factor(data2classify$class_label)
-
-  #get training and testing data
-  #for cv preserving the cell cluster (split each cluster into k fold so that each fold contains all the cell clusters)
-  data_train = data2classify[cvlabel[[current_round]],]
-  cell_pos_testing = base::setdiff(unlist(cvlabel), cvlabel[[current_round]])
-  data_test = data2classify[cell_pos_testing,]
-
-  #remove the cell with zero count from training/testing data
-  if (length(cell.zero.count)>0){
-    data_train = data_train[!is.na(data_train[,1]), ]       #if a cell has 0 count, its value for all genes in spatial_sc_count will be NaN, which corresponds to all columns in data_train for a given row, so we only need to check one column
-
-    cell2keep.data_test = which(!is.na(data_test[,1]))      #cells in data_test that has > 0 count
-    data_test = data_test[cell2keep.data_test, ]
-    cell_pos_testing = cell_pos_testing[cell2keep.data_test]  #we need to update this because this is used later
-  }
-
   if (method=="RandomForest"){
+    #prepare data for classification
+    spatial_sc_count_cell_name = colnames(spatial_sc_count)
+    colnames(spatial_sc_count) = NULL
+    data2classify=data.frame(t(spatial_sc_count), check.names=T)
+    colnames(spatial_sc_count) = spatial_sc_count_cell_name
+
+    data2classify$class_label=class_label_per_cell
+    data2classify$class_label=as.factor(data2classify$class_label)
+
+    #get training and testing data
+    #for cv preserving the cell cluster (split each cluster into k fold so that each fold contains all the cell clusters)
+    current_cv_label = cvlabel[[current_round]]
+    data_train = data2classify[current_cv_label,]
+    cell_pos_testing = base::setdiff(1:length(class_label_per_cell), current_cv_label)
+    data_test = data2classify[cell_pos_testing,]
+
+    #remove the cell with zero count from training/testing data
+    if (length(cell.zero.count)>0){
+      data_train = data_train[!is.na(data_train[,1]), ]       #if a cell has 0 count, its value for all genes in spatial_sc_count will be NaN, which corresponds to all columns in data_train for a given row, so we only need to check one column
+
+      cell2keep.data_test = which(!is.na(data_test[,1]))      #cells in data_test that has > 0 count
+      data_test = data_test[cell2keep.data_test, ]
+      cell_pos_testing = cell_pos_testing[cell2keep.data_test]  #we need to update this because this is used later
+    }
+
+
     #fit random forest model
     classifier_model <- ranger::ranger(
       formula   = as.factor(class_label) ~ .,
@@ -815,31 +832,67 @@ classifier_per_cv = function(current_round, cvlabel, data4cv, class_label_per_ce
       num.trees = 100,
       importance = "none",
       #importance = "impurity_corrected",       #we have three options to calculate feature importance. "permutation" is very slow so use impurity_corrected
-      num.threads = 1,
+      num.threads = RF_num_threads,
       verbose   = FALSE
     )
     pred.prob = suppressWarnings(stats::predict(classifier_model, data_test, num.threads = 1)$predictions)    #we will have a warning if we use importance = "impurity_corrected" but it doesn't really affect the result
     rownames(pred.prob)=data_test$class_label                                         #rowname of pred.prob needs to be true cell type if we want to use it for AUC calculation
-    data_test$pred <- colnames(pred.prob)[apply(pred.prob,1,which.max)]
-    var.imp = rep(1, dim(data4cv)[1])
+    # data_test$pred <- colnames(pred.prob)[apply(pred.prob,1,which.max)]
+    data_test$pred <- colnames(pred.prob)[MaxCol(pred.prob)]
+    var.imp = rep(1, length(gene_list))
+
+
+    #get confusion matrix
+    truth = as.factor(data_test$class_label)
+    data_test$pred = factor(data_test$pred, levels=levels(truth))      #there may be missing cell types in the prediction (no cell is predicted to this cell type)
+    cfmatrix = caret::confusionMatrix(data_test$pred, truth)
   }
 
   if (method=="NaiveBayes"){
+    #prepare data for classification
+    data2classify = t(spatial_sc_count)
+
+    #get training and testing data
+    #for cv preserving the cell cluster (split each cluster into k fold so that each fold contains all the cell clusters)
+    current_cv_label = cvlabel[[current_round]]
+    data_train = data2classify[current_cv_label,]
+    cell_pos_testing = base::setdiff(1:length(class_label_per_cell), current_cv_label)
+    data_test = data2classify[cell_pos_testing,]
+
+    train_label = class_label_per_cell[current_cv_label]
+    test_label = class_label_per_cell[cell_pos_testing]
+
+    #remove the cell with zero count from training/testing data
+    if (length(cell.zero.count)>0){
+      cell2keep.data.train = !is.na(data_train[,1])
+      data_train = data_train[cell2keep.data.train, ]       #if a cell has 0 count, its value for all genes in spatial_sc_count will be NaN, which corresponds to all columns in data_train for a given row, so we only need to check one column
+      train_label = train_label[cell2keep.data.train]
+
+      cell2keep.data_test = which(!is.na(data_test[,1]))      #cells in data_test that has > 0 count
+      data_test = data_test[cell2keep.data_test, ]
+      cell_pos_testing = cell_pos_testing[cell2keep.data_test]  #we need to update this because this is used later
+      test_label = test_label[cell2keep.data_test]
+    }
+
+
     #using naivebayes
     classifier_model = naivebayes::multinomial_naive_bayes(
-      x = as.matrix(data_train[, 1:(dim(data_train)[2]-1)]),
-      y = data_train$class_label)
-    pred.prob = stats::predict(classifier_model, as.matrix(data_test[, 1:(dim(data_test)[2]-1)]), type="prob")
+      x = data_train,
+      y = train_label)
+    # pred.prob = stats::predict(classifier_model, data_test, type="prob")
+    pred.prob = predict_MNB(classifier_model, data_test, type="prob")
 
-    rownames(pred.prob) = data_test$class_label                                         #rowname of pred.prob needs to be true cell type if we want to use it for AUC calculation
-    data_test$pred = colnames(pred.prob)[apply(pred.prob,1,which.max)]
-    var.imp = rep(1, dim(data4cv)[1])
+    rownames(pred.prob) = test_label                                         #rowname of pred.prob needs to be true cell type if we want to use it for AUC calculation
+    # data_test$pred = colnames(pred.prob)[apply(pred.prob,1,which.max)]
+    pred_label = colnames(pred.prob)[MaxCol(pred.prob)]
+    var.imp = rep(1, length(gene_list))
+
+
+    truth = as.factor(test_label)
+    pred_label = factor(pred_label, levels=levels(truth))      #there may be missing cell types in the prediction (no cell is predicted to this cell type)
+    cfmatrix = caret::confusionMatrix(pred_label, truth)
   }
 
-  #get confusion matrix
-  truth = as.factor(data_test$class_label)
-  data_test$pred = factor(data_test$pred, levels=levels(truth))      #there may be missing cell types in the prediction (no cell is predicted to this cell type)
-  cfmatrix = caret::confusionMatrix(data_test$pred, truth)
 
   #get by class AUC
   #AUC.byclass=sapply(1:dim(pred.prob)[2], roc.cal, pred.prob=pred.prob)
@@ -868,4 +921,100 @@ classifier_per_cv = function(current_round, cvlabel, data4cv, class_label_per_ce
 
 
 
+#' Predict method for multinomial naive bayes model
+#'
+#' @description Classification based on the Multinomial Naive Bayes model.
+#' @param object Object of class inheriting from "\code{multinomial_naive_bayes}" from the \code{naivebayes} package.
+#' @param newdata Matrix with non-negative integer predictors (only numeric matrix is accepted).
+#' @param type if "class", new data points are classified according to the highest posterior probabilities.
+#' If "prob", the posterior probabilities for each class are returned.
+#'
+#' @return A factor with class labels corresponding to the maximal conditional posterior probabilities (if \code{type = class})
+#' or a matrix with class label specific conditional posterior probabilities (if \code{type = prob}) .
+#' @export
+#'
+predict_MNB = function (object, newdata = NULL, type = c("class", "prob")) {
+
+  if (is.null(newdata))
+    newdata = object$data$x
+  class_x = class(newdata)[1]
+  use_Matrix = class_x == "dgCMatrix"
+  if (!is.matrix(newdata) & !use_Matrix)
+    stop("predict.multinomial_naive_bayes(): newdata must be a numeric matrix or dgCMatrix (Matrix package) with at least one row and two named columns.", call. = FALSE)
+  if (is.matrix(newdata) & mode(newdata) != "numeric")
+    stop("predict.multinomial_naive_bayes(): newdata must be a numeric matrix.", call. = FALSE)
+  if (use_Matrix & !"Matrix" %in% rownames(utils::installed.packages()))
+    stop("predict.multinomial_naive_bayes(): please install Matrix package", call. = FALSE)
+
+  type = match.arg(type)
+  lev = object$levels
+  n_lev = length(lev)
+  n_obs = dim(newdata)[1L]
+  prior = object$prior
+  params = t(object$params)
+  col_names = colnames(newdata)
+  features = col_names[col_names %in% colnames(params)]
+  n_tables = ncol(params)
+  params = params[ ,features, drop = FALSE]
+  n_features = length(features)
+  n_features_newdata = ncol(newdata)
+
+  if (n_features == 0) {
+    warning(paste0("predict.multinomial_naive_bayes(): no feature in newdata corresponds to ",
+                   "features defined in the object. Classification is based on prior probabilities."), call. = FALSE)
+    if (type == "class") {
+      return(factor(rep(lev[which.max(prior)], n_obs), levels = lev))
+    } else {
+      return(matrix(prior, ncol = n_lev, nrow = n_obs, byrow = TRUE, dimnames = list(NULL, lev)))
+    }
+  }
+  if (n_features < n_tables) {
+    warning(paste0("predict.multinomial_naive_bayes(): only ", n_features, " feature(s) in newdata could be matched ",
+                   "with ", n_tables, " feature(s) defined in the object."), call. = FALSE)
+  }
+  if (n_features_newdata > n_features) {
+    warning(paste0("predict.multinomial_naive_bayes(): newdata contains feature(s) that could not be matched ",
+                   "with (", n_features, ") feature(s) defined in the object. Only matching features are used for calculation."), call. = FALSE)
+    newdata = newdata[ ,features, drop = FALSE]
+  }
+  NAx = anyNA(newdata)
+  if (NAx) {
+    ind_na = if (use_Matrix) Matrix::which(is.na(newdata)) else which(is.na(newdata))
+    len_na = length(ind_na)
+    warning("predict.multinomial_naive_bayes(): ", len_na, " missing", ifelse(len_na == 1, " value", " values"),
+            " discovered in the newdata. ", ifelse(len_na == 1, "It is", "They are"),
+            " not included in calculation.", call. = FALSE)
+    newdata[ind_na] = 0
+  }
+
+  post = if (use_Matrix) Matrix::tcrossprod(newdata, log(params)) else tcrossprod(newdata, log(params))
+
+  # for (ith_class in seq_along(lev)) {
+  #     post[ ,ith_class] = post[ ,ith_class] + log(prior[ith_class])
+  # }
+  post = post + Rfast::rep_row(log(prior), dim(post)[1])
+  # post = post + rep_row(log(prior), dim(post)[1])
+
+  if (type == "class") {
+    if (n_obs == 1) {
+      return(factor(lev[which.max(post)], levels = lev))
+    } else {
+      return(factor(lev[max.col(post, "first")], levels = lev))
+    }
+  }
+  else {
+    if (n_obs == 1) {
+      post = t(as.matrix(apply(post, 2, function(x) { 1 / sum(exp(post - x)) })))
+      colnames(post) = lev
+      return(post)
+    }
+    else {
+      colnames(post) = lev
+      # return(apply(post, 2, function(x) { 1 / if (use_Matrix) Matrix::rowSums(exp(post - x)) else rowSums(exp(post - x)) }))
+      post_exp = exp(post)
+      return(post_exp/Rfast::rowsums(post_exp))
+      # return(post_exp/rowSums(post_exp))
+    }
+  }
+}
 

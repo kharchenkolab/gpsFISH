@@ -5,7 +5,7 @@
 \title{Subsample scRNA-seq data by cell type}
 \usage{
 subsampling_by_cluster(
-  count_table,
+  cell_list,
   cell_cluster_conversion,
   rate = 1,
   cluster_size_max = 1000,
@@ -14,7 +14,7 @@ subsampling_by_cluster(
 )
 }
 \arguments{
-\item{count_table}{A matrix containing the expression level of each gene in each cell with gene name as row name and cell name as column name.}
+\item{cell_list}{A character vector containing the cell names to subsample from.}
 
 \item{cell_cluster_conversion}{A data frame with each row representing information of one cell.
 First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.}
@@ -28,7 +28,9 @@ First column contains the cell name. Second column contains the corresponding ce
 \item{nCV}{Number of cross validation to perform on the subsampled data. This is to ensure that we have enough cells for cross validation. Default is 1.}
 }
 \value{
-A subsampled matrix
+A list with elements:
+\item{cell_loc}{Location of selected cells in \code{cell_list} after subsampling.}
+\item{cell_class}{Cell type of selected cells after subsampling.}
 }
 \description{
 Subsample scRNA-seq data by cell type
