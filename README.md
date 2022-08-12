@@ -34,7 +34,7 @@ devtools::install_github(repo = 'kharchenkolab/gpsFISH', ref = 'devel')
 
 #### System dependencies
 
-GSL libraries need to be installed. It is inherited from `Rfast`. 
+GSL libraries need to be installed to use the development version. It is inherited from `Rfast`. 
 
 ##### Ubuntu dependencies
 
