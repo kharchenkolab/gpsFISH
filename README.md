@@ -48,7 +48,7 @@ sudo apt-get install libgsl-dev
 For Red Hat distributions using `yum`, use the following command:
 
 ```sh
-sudo yum -y install gsl
+sudo yum install gsl
 ```
 
 ##### Mac OS
