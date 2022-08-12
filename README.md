@@ -18,10 +18,45 @@ Here we describe gpsFISH, a computational method to perform such selection in a 
 <img src="inst/workflow.jpg" align="center" height="600">
 
 ## Installation
-To use the latest version of gpsFISH from GitHub, install with the following:
+To use gpsFISH from GitHub, install with the following:
 
 ``` r
+install.packages('devtools')
 devtools::install_github("kharchenkolab/gpsFISH")
+```
+
+To install the development version (faster version) of gpsFISH:
+
+``` r
+install.packages('devtools')
+devtools::install_github(repo = 'kharchenkolab/gpsFISH', ref = 'devel')
+```
+
+#### System dependencies
+
+GSL libraries need to be installed to use the development version. It is inherited from `Rfast`. 
+
+##### Ubuntu dependencies
+
+To install system dependencies using `apt-get`, use the following:
+```sh
+sudo apt-get install libgsl-dev
+```
+
+##### Red Hat-based distributions dependencies
+
+For Red Hat distributions using `yum`, use the following command:
+
+```sh
+sudo yum -y install gsl
+```
+
+##### Mac OS
+
+Using the Mac OS package manager [Homebrew](https://brew.sh/), try the following command:
+
+```sh
+brew install gsl
 ```
 
 ## Tutorials
@@ -30,11 +65,11 @@ Please see the following tutorials for detailed examples of how to use gpsFISH:
 
 ### Platform effect estimation:
 * [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/main/doc/simulation_training.html)
-* [Markdown version](doc/simulation_training.md)
+* [Markdown version](https://github.com/kharchenkolab/gpsFISH/blob/main/doc/simulation_training.md)
 
 ### Gene panel selection:
 * [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/main/doc/gene_panel_selection.html)
-* [Markdown version](doc/gene_panel_selection.md)
+* [Markdown version](https://github.com/kharchenkolab/gpsFISH/blob/main/doc/gene_panel_selection.md)
 
 
 ## Citation
