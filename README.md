@@ -65,13 +65,9 @@ brew install gsl
 Please see the following tutorials for detailed examples of how to use gpsFISH: 
 
 ### Platform effect estimation:
-<<<<<<< HEAD
+
 * [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/devel/doc/simulation_training.html)
 * [Markdown version](https://github.com/kharchenkolab/gpsFISH/blob/devel/doc/simulation_training.md)
-=======
-* [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/main/doc/simulation_training.html)
-* [Markdown version](https://github.com/kharchenkolab/gpsFISH/blob/feature/speed_up/doc/simulation_training.md)
->>>>>>> 4865855a81375e19fd3883cf4258102634562833
 
 ### Gene panel selection:
 * [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/devel/doc/gene_panel_selection.html)
