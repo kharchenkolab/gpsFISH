@@ -29,12 +29,12 @@ devtools::install_github("kharchenkolab/gpsFISH")
 Please see the following tutorials for detailed examples of how to use gpsFISH: 
 
 ### Platform effect estimation:
-* [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/main/doc/simulation_training.html)
-* [Markdown version](doc/simulation_training.md)
+* [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/devel/doc/simulation_training.html)
+* [Markdown version](https://github.com/kharchenkolab/gpsFISH/blob/devel/doc/simulation_training.md)
 
 ### Gene panel selection:
-* [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/main/doc/gene_panel_selection.html)
-* [Markdown version](doc/gene_panel_selection.md)
+* [HTML version](https://htmlpreview.github.io/?https://github.com/kharchenkolab/gpsFISH/blob/devel/doc/gene_panel_selection.html)
+* [Markdown version](https://github.com/kharchenkolab/gpsFISH/blob/devel/doc/gene_panel_selection.md)
 
 
 ## Citation
