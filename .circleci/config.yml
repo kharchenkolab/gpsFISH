@@ -9,7 +9,7 @@ jobs:
       - checkout
       - run:
           name: Install system dependencies
-          command: sudo apt-get update -y && sudo apt-get install libgsl-dev
+          command: sudo apt-get update -y && sudo apt-get install libgsl-dev -y
       - run:
           name: Install package dependencies
           command: R -e "devtools::install_deps(dep = TRUE)"
