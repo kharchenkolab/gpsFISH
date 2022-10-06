@@ -677,7 +677,7 @@ fitness=function(string, gene_list, cell_list, cell_cluster_conversion,
                  simulation_parameter, simulation_model = "ZINB", relative_prop = NULL, sample_new_levels = NULL, use_average_cluster_profiles = FALSE){      #this function is faster than fitness_default_cv
   if (!identical(colnames(cell_cluster_conversion), c("cell_name", "class_label"))) stop("'cell_cluster_conversion' should have column name as 'cell_name' and 'class_label'")
 
-  if (!identical(names(relative_prop), c("cluster.average", "cell.level"))) stop("'relative_prop' should have column name as 'cluster.average' and 'cell.level'")
+  if (!identical(sort(names(relative_prop)), sort(c("cluster.average", "cell.level")))) stop("'relative_prop' should have column name as 'cluster.average' and 'cell.level'")
 
   if (!identical(cell_list, rownames(cell_cluster_conversion))) stop("'cell_list' should have the same row name with 'cell_cluster_conversion'")
 
