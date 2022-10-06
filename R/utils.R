@@ -562,17 +562,19 @@ initialize_solution = function(sol.num, panel.size, diff_expr_result, diff_metri
   #for each cell type, add significant DE genes. We add the most significant ones first
   for(ct in cluster.list){
     DEG.table = subset(diff_expr_result[[ct]], diff_expr_result[[ct]][[diff_metric]]>diff_metric_cutoff)
-    #sort DEG table by AUC
-    DEG.table = DEG.table[base::order(DEG.table$AUC, decreasing = TRUE),]
-    DEGs = DEG.table$Gene
+    if (dim(DEG.table)[1]>0){
+      #sort DEG table by AUC
+      DEG.table = DEG.table[base::order(DEG.table$AUC, decreasing = TRUE),]
+      DEGs = DEG.table$Gene
 
-    DEG.pool = base::setdiff(DEGs, gene2include)         #we select from DEGs that are not in gene2include
-    all.DEGs = c(all.DEGs, DEG.pool)
+      DEG.pool = base::setdiff(DEGs, gene2include)         #we select from DEGs that are not in gene2include
+      all.DEGs = c(all.DEGs, DEG.pool)
 
-    if (length(DEG.pool)>=gene2include.per.ct){
-      candidate = c(candidate, sample(DEG.pool, gene2include.per.ct, prob = DEG.table[DEG.pool, diff_metric]))
-    }else{
-      candidate = c(candidate, DEG.pool)
+      if (length(DEG.pool)>=gene2include.per.ct){
+        candidate = c(candidate, sample(DEG.pool, gene2include.per.ct, prob = DEG.table[DEG.pool, diff_metric]))
+      }else{
+        candidate = c(candidate, DEG.pool)
+      }
     }
   }
 
