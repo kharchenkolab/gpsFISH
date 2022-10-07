@@ -1166,7 +1166,7 @@ Seurat_clustering=function(count_table, cell_cluster_conversion){
 
 #' Check if there is anything wrong with pop.fitness calculation during optimization
 #'
-#' @param pop.fitness
+#' @param pop.fitness A list containing the fitness result of each chromosome in a given population based on the fitness function
 #'
 #' @return A list with error message and whether we need to rerun the fitness calculation
 #' @export

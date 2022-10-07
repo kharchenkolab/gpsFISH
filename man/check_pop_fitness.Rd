@@ -7,7 +7,7 @@
 check_pop_fitness(pop.fitness)
 }
 \arguments{
-\item{pop.fitness}{}
+\item{pop.fitness}{A list containing the fitness result of each chromosome in a given population based on the fitness function}
 }
 \value{
 A list with error message and whether we need to rerun the fitness calculation

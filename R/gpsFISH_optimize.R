@@ -272,6 +272,34 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
     #multi-thread
     pop.fitness = getfitness(pop, cluster = cluster)                  #for multi-thread without shared memory, the getfitness function is the same with OF
 
+    #check if there is any problem with this run
+    pop.fitness.check = check_pop_fitness(pop.fitness)
+    if (pop.fitness.check$re.run){                       #if we have a problem, we need to re-run calculation
+      #first we save the fitness check result
+      saveRDS(pop.fitness.check, "pop_fitness_check_of_initial_population.rds")
+      #we also save the pop.fitness result
+      saveRDS(pop.fitness, "pop_fitness_of_initial_population.rds")
+      #we also save the population for debug
+      saveRDS(pop, paste0("pop_with_problem_initial_pop.rds"))
+
+      #start re-run until we have no problem
+      num.re.run = 1
+      re.run = T
+      while(re.run && num.re.run<=3){                 #we will try re-run at most 3 times
+        print(paste("re-run fitness calculation for initial population attempt", num.re.run))
+        pop.fitness = getfitness(pop, cluster = cluster)               #re-run fitness calculation
+        pop.fitness.check = check_pop_fitness(pop.fitness)             #check again
+        re.run = pop.fitness.check$re.run                              #update re.run status
+
+        if (re.run){             #if the problem is still there after re-run
+          saveRDS(pop.fitness.check, paste0("pop_fitness_check_of_initial_population_rerun_attempt", num.re.run, ".rds"))
+          saveRDS(pop.fitness, paste0("pop_fitness_of_initial_population_rerun_attempt", num.re.run, ".rds"))
+        }
+
+        num.re.run = num.re.run + 1
+      }
+    }
+
     fitness.old = sapply(1:length(pop.fitness), function(x) pop.fitness[[x]]$fitness_value)                   #get fitness value of each chromosome
     best.pos=which(fitness.old==min(fitness.old))[1]
 
@@ -458,6 +486,34 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
     if (useparallel){
       #multi-thread
       pop.fitness = getfitness(offspring, cluster = cluster)                  #for multi-thread without shared memory, the getfitness function is the same with OF
+
+      #check if there is any problem with this run
+      pop.fitness.check = check_pop_fitness(pop.fitness)
+      if (pop.fitness.check$re.run){                       #if we have a problem, we need to re-run calculation
+        #first we save the fitness check result
+        saveRDS(pop.fitness.check, paste0("pop_fitness_check_of_offspring", gen, ".rds"))
+        #we also save the pop.fitness result
+        saveRDS(pop.fitness, paste0("pop_fitness_of_offspring", gen, ".rds"))
+        #we also save the current population for debug
+        saveRDS(offspring, paste0("pop_with_problem",gen,".rds"))
+
+        #start re-run until we have no problem
+        num.re.run = 1
+        re.run = T
+        while(re.run && num.re.run<=3){                 #we will try re-run at most 3 times
+          print(paste("re-run fitness calculation for offspring", gen, "attempt", num.re.run))
+          pop.fitness = getfitness(offspring, cluster = cluster)               #re-run fitness calculation
+          pop.fitness.check = check_pop_fitness(pop.fitness)             #check again
+          re.run = pop.fitness.check$re.run                              #update re.run status
+
+          if (re.run){             #if the problem is still there after re-run
+            saveRDS(pop.fitness.check, paste0("pop_fitness_check_of_offspring", gen, "_rerun_attempt", num.re.run, ".rds"))
+            saveRDS(pop.fitness, paste0("pop_fitness_of_offspring", gen, "_rerun_attempt", num.re.run, ".rds"))
+          }
+
+          num.re.run = num.re.run + 1
+        }
+      }
 
       fitness.new = sapply(1:length(pop.fitness), function(x) pop.fitness[[x]]$fitness_value)
       best.pos=which(fitness.new==min(fitness.new))[1]
