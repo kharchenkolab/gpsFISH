@@ -1163,3 +1163,37 @@ Seurat_clustering=function(count_table, cell_cluster_conversion){
   return(p)
 }
 
+
+#' Check if there is anything wrong with pop.fitness calculation during optimization
+#'
+#' @param pop.fitness
+#'
+#' @return A list with error message and whether we need to rerun the fitness calculation
+#' @export
+check_pop_fitness=function(pop.fitness){
+  error.message.null = error.message.error = list()
+  re.run = F
+
+  null.returned.during.paralle.fitness.calculation = which(base::sapply(pop.fitness, is.null))
+  if (length(null.returned.during.paralle.fitness.calculation)>0){
+    #if any of the panels return null, it means there is some kind of connection problem or the process is killed due to low memory, in these cases, we want to re-run the calculation
+    re.run = T
+    error.message.null = list(paste("NULL is returned for these panels:", paste(null.returned.during.paralle.fitness.calculation, collapse = ", ")))
+  }
+
+  error.during.parallel.fitness.calculation = which(base::sapply(pop.fitness, class)=="try-error")
+  if (length(error.during.parallel.fitness.calculation)>0){
+    #if we have any panel that returns an error, we need to re-run the calculation
+    re.run = T
+    for (i in error.during.parallel.fitness.calculation){
+      error.message.error[[paste0("panel-",i)]]=pop.fitness[[i]][1]
+    }
+  }
+
+  error.message = list(return.null = error.message.null,
+                       return.error = error.message.error)
+
+  return(list(re.run = re.run,
+              error.message = error.message))
+}
+
