@@ -1066,9 +1066,9 @@ predict_MNB = function (object, newdata = NULL, type = c("class", "prob")) {
     }
     else {
       colnames(post) = lev
-      # return(apply(post, 2, function(x) { 1 / if (use_Matrix) Matrix::rowSums(exp(post - x)) else rowSums(exp(post - x)) }))
-      post_exp = exp(post)
-      return(post_exp/Rfast::rowsums(post_exp))
+      return(apply(post, 2, function(x) { 1 / if (use_Matrix) Matrix::rowSums(exp(post - x)) else rowSums(exp(post - x)) }))
+      # post_exp = exp(post)
+      # return(post_exp/Rfast::rowsums(post_exp))
       # return(post_exp/rowSums(post_exp))
     }
   }
