@@ -1159,7 +1159,7 @@ Seurat_clustering=function(count_table, cell_cluster_conversion){
   data = Seurat::FindClusters(data, resolution = 1, verbose = FALSE)
   data = Seurat::RunUMAP(data, dims = 1:min(30, dim(Seurat::Embeddings(data))[2]), verbose = FALSE)         #manual preprocessing shows that 10 is enough. Also based on UMAP given different dims, 10 looks the best. Higher values will generate more spread out patterns
 
-  p = Seurat::DimPlot(data, reduction = "umap", group.by="new.ident", label=TRUE) + Seurat::NoLegend()
+  p = Seurat::DimPlot(data, reduction = "umap", group.by="new.ident", label=TRUE, repel = TRUE) + Seurat::NoLegend()
   return(p)
 }
 
