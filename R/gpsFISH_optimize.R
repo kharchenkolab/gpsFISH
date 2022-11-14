@@ -146,17 +146,18 @@ gpsFISH_optimize = function (n, k, OF = fitness, popsize = 200, keepbest = floor
   ####################
   if (is.null(initpop)){                             #randomly generate initial population if it is not provided
     if (!is.null(gene2include.id)){                  #if we have gene we must include
-      pop1 = t(replicate(popsize, gene2include.id))
-      if (length(gene2include.id)<k){
-        if (length(base::setdiff(indices, gene2include.id))==1){
+      pop1 = t(replicate(popsize, gene2include.id))     #generate the first part with curated marker genes
+      if (length(gene2include.id)<k){                   #if we have room for genes other than curated marker genes
+        if (length(base::setdiff(indices, gene2include.id))==1){          #if we only have one candidate gene
           initpop.candidate = base::setdiff(indices, gene2include.id)
+          pop2 = t(replicate(popsize, initpop.candidate))
         }else{
-          initpop.candidate = sample(base::setdiff(indices, gene2include.id), (k-length(gene2include.id)))
+          pop2 = t(replicate(popsize,
+                             sample(base::setdiff(indices, gene2include.id), (k-length(gene2include.id)))))
         }
-        pop2 = t(replicate(popsize, initpop.candidate))
         pop = cbind(pop1, pop2)
       }
-      if (length(gene2include.id)==k){
+      if (length(gene2include.id)==k){              #if we don't have room for genes other than curated marker genes
         pop = pop1
       }
     }else{
