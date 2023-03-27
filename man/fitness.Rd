@@ -26,7 +26,7 @@ fitness(
 \arguments{
 \item{string}{A numeric vector containing the gene panel.}
 
-\item{full_count_table}{A data frame containing the expression level of each gene in each cell with gene name as row name and cell name as column name.}
+\item{full_count_table}{A data frame containing the expression level of each gene in each cell with gene name as column name and cell name as row name.}
 
 \item{cell_cluster_conversion}{A data frame with each row representing information of one cell.
 First column contains the cell name. Second column contains the corresponding cell type name. Row name of the data frame should be the cell name.}
