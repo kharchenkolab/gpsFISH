@@ -15,7 +15,7 @@ Methods for targeted spatial transcriptomic analysis hold particular promise in 
 
 Here we describe gpsFISH, a computational method to perform such selection in a way that optimizes detection of previously annotated cell types or cell type hierarchies. We show systematic difference of transcript detection rates between different technologies, which distorts the resulting transcriptional profile estimates. Such distortions reduce the resulting ability to distinguish cell types in the targeted spatial transcriptomics data relative to what would be expected from scRNA-seq data. gpsFISH was designed to model and adjust for the platform effects, yielding more informative gene panels and better cell type classification. In addition, gpsFISH can incorporate the hierarchical structure of cell types to better account for complex cell type relationships. Finally, we observed a high redundancy of gene panels, and extended gpsFISH to incorporate custom gene preferences. Overall, gpsFISH outperforms other gene selection methods, improving support for hierarchical cell classification as well as flexible options to accommodate diverse design requirements.
 
-<img src="inst/workflow.jpg" align="center" height="600">
+<img src="inst/workflow_updated.jpg" align="center" height="600">
 
 ## Installation
 To use gpsFISH from GitHub, install with the following:
