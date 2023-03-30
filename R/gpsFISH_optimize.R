@@ -701,8 +701,9 @@ fitness=function(string, full_count_table, cell_cluster_conversion,
 
   #create CV
   #fold_per_cell = createFolds(factor(class_label_per_cell), k = nCV, list = FALSE)
-  cvlabel = splitTools::create_folds(class_label_per_cell, k = nCV)
+  cvlabel = splitTools::create_folds(class_label_per_cell, k = nCV, use_names=F)
   cvround = paste0("Fold", seq(1:nCV))
+  names(cvlabel) = cvround
 
   #run classification for each cross validation
   result = lapply(cvround, classifier_per_cv,
