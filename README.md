@@ -76,4 +76,4 @@ Please see the following tutorials for detailed examples of how to use gpsFISH:
 
 If you find gpsFISH useful for your publication, please cite:
 
-[Yida	Zhang, Viktor	Petukhov, Evan Biederstedt, Richard	Que, Kun Zhang, Peter V. Kharchenko. Gene	panel	selection	for	targeted spatial transcriptomics.      Genome Biology 2024.](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-024-03174-1)
+[Yida	Zhang, Viktor	Petukhov, Evan Biederstedt, Richard	Que, Kun Zhang, Peter V. Kharchenko (2024). Gene	panel	selection	for	targeted spatial transcriptomics.        Genome Biology 2024.](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-024-03174-1)
